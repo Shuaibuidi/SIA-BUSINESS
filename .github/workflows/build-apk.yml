@@ -1,38 +1,114 @@
-name: Generate SIA Business Signing Key
+name: Build SIA Business Manager APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'logo.png'
+      - '.github/workflows/build-apk.yml'
 
 jobs:
-  generate:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Generate permanent signing key
-        run: |
-          keytool -genkeypair -v \
-            -keystore sia-business-release.jks \
-            -storepass "${{ secrets.KEYSTORE_PASSWORD || 'SiaBusiness2026!' }}" \
-            -alias siabusiness \
-            -keypass "${{ secrets.KEYSTORE_PASSWORD || 'SiaBusiness2026!' }}" \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=SIA BUSINESS,O=SIA TECH PRINT MEDIA,C=MW"
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Show SHA1 fingerprint
-        run: |
-          keytool -list -v \
-            -keystore sia-business-release.jks \
-            -storepass "SiaBusiness2026!" \
-            -alias siabusiness
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-      - name: Encode signing key
-        run: |
-          base64 -w 0 sia-business-release.jks > signing-key.txt
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Upload signing key artifact
+      - name: Create Android project
+        run: |
+          set -e
+          mkdir app-build
+          cd app-build
+
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install --save-dev @capacitor/assets sharp
+
+          mkdir -p www assets
+          cp ../index.html www/index.html
+          cp ../logo.png assets/logo.png
+
+          npx cap init "SIA Business Manager" "com.siatech.businessmanager" --web-dir=www
+          npx cap add android
+
+      - name: Generate Android app icons
+        run: |
+          cd app-build
+          npx capacitor-assets generate --android
+
+      - name: Configure permanent signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -e
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app-build/android/app/sia-business-release.jks
+
+          test -s app-build/android/app/sia-business-release.jks
+
+          cat >> app-build/android/app/build.gradle <<'EOF'
+
+          android {
+              signingConfigs {
+                  debug {
+                      storeFile file("sia-business-release.jks")
+                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {
+                  debug {
+                      signingConfig signingConfigs.debug
+                  }
+              }
+          }
+          EOF
+
+      - name: Fix Kotlin dependencies
+        run: |
+          cd app-build
+          cat >> android/build.gradle <<'EOF'
+          allprojects {
+              configurations.configureEach {
+                  resolutionStrategy.eachDependency {
+                      if (requested.group == 'org.jetbrains.kotlin') {
+                          useVersion '1.8.22'
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Build signed APK
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd app-build/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: SIA-Business-Signing-Key
-          path: signing-key.txt
-          retention-days: 1
+          name: SIA-Business-Manager-APK
+          path: app-build/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
