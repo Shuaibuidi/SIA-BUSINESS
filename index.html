@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10243a">
+<title>S I A BUSINESS | S I A TECH PRINT MEDIA</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--cyan:#20b8c7;--bg:#f3f6fa;--ink:#172536;--muted:#68788a;--line:#e2e8f0;--white:#fff;--green:#16865b;--red:#c43d4b;--amber:#b7791f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:10px 14px;background:var(--blue);color:#fff;font-weight:650}button.secondary{background:#e8eef5;color:var(--navy)}button.danger{background:#b93846}button.small{padding:6px 9px;font-size:13px}
+header{background:linear-gradient(120deg,#10243a,#174f79);color:white;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.brand{font-weight:850;letter-spacing:2px;font-size:20px}.brand small{display:block;font-size:11px;letter-spacing:1.4px;font-weight:600;color:#b8d8e9}
+.wrap{max-width:1250px;margin:auto;padding:18px}.topline{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+nav{display:flex;gap:7px;overflow:auto;padding:0 0 10px;margin-bottom:15px}nav button{white-space:nowrap;background:#e5edf5;color:#29425a}nav button.active{background:var(--navy);color:white}
+h1,h2,h3{margin:0 0 12px}h1{font-size:25px}h2{font-size:19px}h3{font-size:15px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 9px #10243a08}.metric{font-size:25px;font-weight:800;margin-top:5px}.metric-label{font-size:13px;color:var(--muted)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:15px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:145px;margin-bottom:10px}.field label{font-size:13px;color:#526579;font-weight:650}.field input,.field select,.field textarea,input,select,textarea{border:1px solid #d5dee8;border-radius:8px;padding:10px;background:white;color:var(--ink);min-width:0}.field textarea{min-height:75px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:#526579;font-size:12px;text-transform:uppercase;letter-spacing:.04em}td.num,th.num{text-align:right}.tablewrap{overflow:auto}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.hidden{display:none!important}.pill{display:inline-block;border-radius:99px;padding:3px 8px;background:#eaf2fa;color:#245579;font-size:12px}.notice{background:#fff8e8;border:1px solid #f1dfb8;padding:12px;border-radius:10px;color:#795819;margin-bottom:14px}.good{color:var(--green)}.bad{color:var(--red)}.empty{padding:24px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+#login{position:fixed;inset:0;background:#0d2034;z-index:20;display:grid;place-items:center;padding:20px}#login .card{width:min(390px,100%);padding:25px}#login input{width:100%;margin:8px 0 12px}
+@media(max-width:600px){.wrap{padding:12px}.metric{font-size:22px}header{padding:15px}.brand{font-size:17px}td,th{padding:8px 6px}}
+@media print{header,nav,.topline button,.no-print,footer{display:none!important}body{background:white}.wrap{max-width:none;padding:0}.panel,.card{box-shadow:none;border:0}}
+.signature-box{border:1px dashed #5b8dbb;border-radius:12px;padding:10px;background:#061a33}
+.signature-pad{display:block;width:100%;height:150px;background:#fff;border-radius:8px;touch-action:none;cursor:crosshair}
+.signature-actions{display:flex;gap:8px;align-items:center;margin-top:8px}
+.signature-preview{max-width:190px;max-height:70px;object-fit:contain;background:#fff;border-radius:5px;padding:3px}
+.data-warning{border:1px solid #a82e48;background:#3a1727;border-radius:12px;padding:14px}
+
+
+/* S I A BUSINESS visual refresh */
+:root{--navy:#03162d;--blue:#087cf0;--cyan:#16b9ef;--bg:#03152a;--ink:#f4f8ff;--muted:#a9bfd9;--line:#0c4380;--white:#071d38}
+body{background:radial-gradient(ellipse at 80% 12%,#062b55 0,transparent 38%),linear-gradient(160deg,#020e20,#031a34 65%,#021329);color:#f4f8ff;min-height:100vh}
+header.app-header{background:linear-gradient(120deg,#020b1b,#041b38 70%,#062b5a);padding:22px 30px 18px;border-bottom:1px solid #073a73;box-shadow:0 8px 28px #0006;min-height:112px}
+.header-brand{display:flex;align-items:center}.brand{font-size:clamp(24px,4vw,38px);font-weight:900;letter-spacing:2px;color:#f6f9ff}.brand span{color:#28a9ff}.brand small{font-size:clamp(11px,1.6vw,17px);letter-spacing:0;color:#d2e2f7;font-weight:550;margin-top:1px}
+.header-tools{display:flex;gap:12px}.icon-tool{background:transparent;color:#f4f8ff;font-size:30px;padding:4px 10px;border:0}
+.wrap{max-width:1250px;padding:22px 24px}.topline{margin:0 0 18px}.topline h1{font-size:clamp(24px,3vw,32px);color:#fff}.topline .muted{color:#a9c4e4}
+nav{gap:9px;padding:0 0 15px;margin-bottom:18px;scrollbar-width:thin}nav button{background:#061f3d;color:#c4dcf8;border:1px solid #07509a;border-radius:12px;box-shadow:inset 0 0 14px #087cf01c}nav button.active{background:linear-gradient(135deg,#087cf0,#0752bd);color:#fff;border-color:#23a7ff}
+.card,.panel{background:linear-gradient(145deg,#082448,#041a34);border:1px solid #07519c;border-radius:19px;color:#f5f8ff;box-shadow:0 8px 24px #0003,inset 0 0 18px #0b67c31a}
+.metric-label,.muted{color:#a9bfd9}.metric{color:#fff}.panel{padding:20px}.panel h2,.card h3{color:#fff}
+.field label{color:#b9d0e9}.field input,.field select,.field textarea,input,select,textarea{background:#061a33;color:#f4f8ff;border:1px solid #14518a}.field input::placeholder,input::placeholder{color:#7894b3}
+button{background:linear-gradient(135deg,#087cf0,#0756c7);color:white;border:1px solid #168fff;box-shadow:0 4px 14px #0069e833}button.secondary{background:#0a2b50;color:#d7eaff;border:1px solid #17528a}button.danger{background:#a82e48}
+th{color:#a9c8e9}td{color:#eaf3ff;border-bottom-color:#123c68}th,td{border-bottom-color:#123c68}
+.pill{background:#0b3b69;color:#bfe4ff}.notice{background:#332a12;border-color:#8d681d;color:#ffe2a1}
+.empty{color:#9eb6d1}.good{color:#38e2aa}.bad{color:#ff8292}
+footer{color:#7897b9}
+#login{background:radial-gradient(ellipse at top right,#07509b,#020d1d 65%)}#login .card{background:#071e3a;border-color:#0d5aa4}#login .brand{color:#fff!important}#login input{background:#03152a;color:white}
+.quick-section-title{font-size:27px;font-weight:850;margin:22px 0 16px;color:#f7faff}
+.quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.quick-tile{min-height:125px;border-radius:23px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;text-align:center;font-weight:800;font-size:16px;border:1px solid #168bff;background:linear-gradient(145deg,#082c56,#041a35);box-shadow:inset 0 0 22px #087cf027,0 7px 18px #0004}
+.quick-tile .tile-icon{font-size:38px;line-height:1.1}.quick-tile.green{background:linear-gradient(145deg,#007c51,#03412f);border-color:#00d58c}.quick-tile.blue{background:linear-gradient(145deg,#075fe2,#063c9b);border-color:#168bff}.quick-tile.gold{background:linear-gradient(145deg,#9a5c00,#533300);border-color:#e99b12}.quick-tile.purple{background:linear-gradient(145deg,#6513bd,#30076b);border-color:#9c42ff}
+.record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:30px}.record-tile{border-radius:20px;padding:17px;background:linear-gradient(145deg,#08264a,#041a34);border:1px solid #07509a;box-shadow:inset 0 0 16px #087cf020;min-height:130px;cursor:pointer}.record-tile .tile-icon{font-size:30px;color:#19d6ad}.record-tile strong{display:block;font-size:17px;margin:4px 0}.record-tile .amount{font-size:23px;font-weight:850}.record-tile:nth-child(2) .tile-icon{color:#4d9cff}.record-tile:nth-child(3) .tile-icon{color:#ffc34c}.record-tile:nth-child(4) .tile-icon{color:#d66aff}
+.shortcut-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:13px;margin-bottom:25px}.shortcut-tile{grid-column:span 2;min-height:145px;border-radius:22px;padding:18px;background:linear-gradient(145deg,#08264a,#041a34);border:1px solid #07509a;box-shadow:inset 0 0 18px #087cf020;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:800;cursor:pointer}.shortcut-tile .tile-icon{font-size:48px}.shortcut-tile.wide{grid-column:span 3}.floating-help{position:fixed;right:22px;bottom:22px;width:74px;height:74px;border-radius:22px;border:2px solid #078bff;background:linear-gradient(145deg,#073b71,#041a36);font-size:34px;box-shadow:0 0 20px #087cf055;z-index:5}
+@media(max-width:650px){header.app-header{padding:17px 18px;min-height:95px}.header-tools{gap:3px}.icon-tool{font-size:24px;padding:3px 7px}.wrap{padding:16px 15px}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.quick-tile{min-height:112px;font-size:15px}.record-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.record-tile{min-height:125px;padding:14px}.shortcut-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.shortcut-tile{grid-column:span 2;min-height:132px;font-size:16px}.shortcut-tile.wide{grid-column:span 3}.quick-section-title{font-size:25px;margin-top:20px}}
+
+</style>
+</head>
+<body>
+<div id="login">
+ <div class="card">
+  <div class="brand" style="color:#10243a">S I A BUSINESS<small style="color:#68788a">BUSINESS MANAGEMENT SYSTEM</small></div>
+  <h2 style="margin-top:22px">Welcome back</h2><p class="muted">Enter your app PIN to open your business workspace.</p>
+  <input id="pin" type="password" inputmode="numeric" placeholder="Enter PIN" autocomplete="current-password">
+  <button style="width:100%" onclick="login()">Unlock app</button>
+  <p class="muted" style="font-size:12px">First use? Default PIN: <b>1234</b>. Change it in Settings immediately.</p>
+  <p id="loginError" class="bad"></p>
+ </div>
+</div>
+<header class="app-header">
+ <div class="header-brand"><div class="brand">S I A <span>BUSINESS</span><small>Manage Your Business. Grow Together.</small></div></div>
+ <div class="header-tools"><button class="icon-tool" title="Help" onclick="alert('S I A BUSINESS support')">♧</button><button class="icon-tool" title="Notifications" onclick="alert('No new notifications')">♧</button><button class="icon-tool" title="Settings" onclick="go('Settings')">⚙</button></div>
+</header>
+<div class="wrap">
+ <div class="topline"><div><div class="actions no-print" style="margin-bottom:6px"><button class="secondary small" id="appBackButton" onclick="appBack()">← Back</button></div><h1 id="pageTitle">Dashboard</h1><div class="muted" id="today"></div></div><div class="actions no-print"><button class="secondary" onclick="exportBackup()">Backup</button><button class="secondary" onclick="document.getElementById('restoreFile').click()">Restore</button><input id="restoreFile" type="file" accept=".json,application/json" class="hidden" onchange="restoreBackup(event)"></div></div>
+ <nav id="nav"></nav>
+ <main id="app"></main>
+</div>
+<footer>S I A BUSINESS · S I A TECH PRINT MEDIA · Data is stored in this browser on this device. Back up regularly.</footer>
+<script>
+const KEY='sia_business_v1';
+const defaults={purchases:[],settings:{business:'S I A TECH PRINT MEDIA',tagline:'HOME OF PRINTING & COMPUTING',address:'Matindi Trading Centre, Blantyre',whatsapp:'0999 290 495',phone:'0888 290 495',currency:'MK',pin:'1234',tax:0},products:[],sales:[],jobs:[],expenses:[],invoices:[],customers:[],suppliers:[],staff:[],cashbook:[],materials:[]};
+let db=load(),page='Dashboard',role='Owner';
+function load(){try{return {...structuredClone(defaults),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return structuredClone(defaults)}}
+function save(){
+ try{
+  const data=JSON.stringify(db);
+  localStorage.setItem(KEY,data);
+  const check=localStorage.getItem(KEY);
+  if(check!==data) throw new Error('The browser did not confirm the saved data.');
+  return true;
+ }catch(err){
+  console.error('SIA BUSINESS save failed:',err);
+  alert('S I A BUSINESS could not save this record on this device.\n\nThis often happens when the HTML file is opened from Downloads (content://). Open the app from its HTTPS website (for example GitHub Pages), or enable DOM storage if it is inside an Android WebView.\n\nYour record has NOT been safely saved. Please do not close the app until you have made a backup.');
+  return false;
+ }
+}
+
+function titleCaseText(value){
+ return String(value??'').replace(/\S+/g, word => {
+   // Keep email addresses and web addresses as entered.
+   if(word.includes('@') || /^https?:\/\//i.test(word)) return word;
+   return word.charAt(0).toLocaleUpperCase() + word.slice(1);
+ });
+}
+function applyCapitalization(){
+ document.querySelectorAll('input[type="text"], textarea').forEach(el=>{
+   // OAuth client IDs are case-sensitive and must never be auto-capitalized.
+   if(el.name==='googleClientId' || el.dataset.capitalized==='1') return;
+   el.dataset.capitalized='1';
+   el.addEventListener('blur',()=>{el.value=titleCaseText(el.value)});
+ });
+}
+
+function money(n){return 'MK '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function id(prefix){return prefix+'-'+Date.now().toString().slice(-8)}
+function dateNow(){return new Date().toISOString().slice(0,10)}
+function login(){if(document.getElementById('pin').value===String(db.settings.pin||'1234')){document.getElementById('login').classList.add('hidden');render()}else document.getElementById('loginError').textContent='Incorrect PIN. Try again.'}
+document.getElementById('pin').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+const pages=['Dashboard','Stock & Inventory','Purchases','Sales / POS','Repairs','Printing Jobs','Invoices','Expenses','Customers','Suppliers','Materials','Staff','Cashbook','Reports','Settings'];
+function appBack(){if(appPageHistory.length>1){history.back()}else{go('Dashboard')}}
+function nav(){document.getElementById('nav').innerHTML=pages.map(p=>`<button class="${page===p?'active':''}" onclick="go('${p}')">${p}</button>`).join('')}
+
+// Keep Android/browser Back navigation inside S I A BUSINESS.
+let appPageHistory=['Dashboard'];
+let handlingAppPop=false;
+function installAppBackNavigation(){
+ if(!history.state || !history.state.siaApp){
+   history.replaceState({siaApp:true,page:'Dashboard'},'','#sia-dashboard');
+ }
+ history.pushState({siaApp:true,page:'Dashboard',guard:true},'','#sia-app');
+ window.addEventListener('popstate',()=>{
+   if(handlingAppPop) return;
+   handlingAppPop=true;
+   if(appPageHistory.length>1){
+     appPageHistory.pop();
+     const previous=appPageHistory[appPageHistory.length-1]||'Dashboard';
+     page=previous;
+     render();
+   }else{
+     // Re-arm the in-app history guard so Back does not close the app/browser tab.
+     history.pushState({siaApp:true,page:'Dashboard',guard:true},'','#sia-app');
+     page='Dashboard';
+     render();
+   }
+   handlingAppPop=false;
+ });
+}
+
+function go(p){
+ if(p===page){render();return}
+ page=p;
+ appPageHistory.push(p);
+ history.pushState({siaApp:true,page:p},'','#sia-'+encodeURIComponent(p.toLowerCase().replace(/[^a-z0-9]+/g,'-')));
+ render();
+}
+function render(){nav();const backBtn=document.getElementById('appBackButton');if(backBtn)backBtn.style.visibility=page==='Dashboard'?'hidden':'visible';document.getElementById('pageTitle').textContent=page;document.getElementById('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});const root=document.getElementById('app');root.innerHTML=views[page]();bindCommon();setupSignaturePad();applyCapitalization()}
+function sum(a,fn){return a.reduce((s,x)=>s+Number(fn(x)||0),0)}
+function profitSale(s){return Number(s.total||0)-Number(s.cost||0)}
+function totals(){let sales=sum(db.sales,x=>x.total),cost=sum(db.sales,x=>x.cost),repair=sum(db.jobs.filter(x=>x.type==='Repair'&&x.status==='Collected'),x=>Number(x.price||0)-Number(x.partsCost||0)),printing=sum(db.jobs.filter(x=>x.type==='Printing'&&x.status==='Collected'),x=>Number(x.price||0)-Number(x.materialCost||0)),expenses=sum(db.expenses,x=>x.amount);return {sales,productProfit:sales-cost,repair,printing,expenses,profit:sales-cost+repair+printing-expenses,stock:sum(db.products,x=>x.qty*x.cost),due:sum(db.invoices,x=>Math.max(0,Number(x.total||0)-Number(x.paid||0)))}}
+function metric(label,val){return `<div class="card"><div class="metric-label">${label}</div><div class="metric">${val}</div></div>`}
+function table(headers,rows){return `<div class="tablewrap"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.join(''):`<tr><td colspan="${headers.length}" class="empty">No records yet</td></tr>`}</tbody></table></div>`}
+function dash(){
+ let t=totals(),today=dateNow(),ts=sum(db.sales.filter(x=>x.date===today),x=>x.total);
+ const tile=(icon,label,action,cls='')=>`<button class="quick-tile ${cls}" onclick="${action}"><span class="tile-icon">${icon}</span><span>${label}</span></button>`;
+ const record=(icon,label,value,action)=>`<div class="record-tile" onclick="${action}"><div class="tile-icon">${icon}</div><strong>${label} <span style="float:right;color:#9fcfff">›</span></strong><div class="amount">${value}</div></div>`;
+ const shortcut=(icon,label,action,wide=false)=>`<div class="shortcut-tile ${wide?'wide':''}" onclick="${action}"><span class="tile-icon">${icon}</span><span>${label}</span></div>`;
+ return `<div class="quick-section-title">Quick Actions</div>
+ <div class="quick-grid">
+ ${tile('▤＋','Create Sale',"go('Sales / POS')",'green')}
+ ${tile('🛒＋','Create Purchase',"go('Purchases')",'blue')}
+ ${tile('▤＋','Create Expense',"go('Expenses')",'gold')}
+ ${tile('🛠','Create Service',"go('Repairs')",'purple')}
+ </div>
+ <div class="quick-section-title">Records <span style="display:block;width:60px;height:5px;background:#13b9f5;border-radius:5px;margin-top:9px"></span></div>
+ <div class="record-grid">
+ ${record('▤','Sales',money(t.sales),"go('Sales / POS')")}
+ ${record('🛒','Purchases',money(sum(db.purchases||[],x=>x.total)),"go('Purchases')")}
+ ${record('▣','Expenses',money(t.expenses),"go('Expenses')")}
+ ${record('🛠','Service',money(sum(db.jobs,x=>x.price)),"go('Repairs')")}
+ </div>
+ <div class="quick-section-title">Shortcuts <span style="display:block;width:60px;height:5px;background:#13b9f5;border-radius:5px;margin-top:9px"></span></div>
+ <div class="shortcut-grid">
+ ${shortcut('📦','Products',"go('Stock & Inventory')")}
+ ${shortcut('♟','Customers',"go('Customers')")}
+ ${shortcut('🛠','Services',"go('Repairs')")}
+ ${shortcut('⚙','Spare Parts',"go('Materials')",true)}
+ ${shortcut('▣','Expenses',"go('Expenses')",true)}
+ </div>
+ <div class="muted" style="padding:4px 2px 20px">Today's sales: <b>${money(ts)}</b> · Estimated net profit: <b>${money(t.profit)}</b></div>
+ <button class="floating-help" title="Help" onclick="alert('Welcome to S I A BUSINESS. Use the quick actions or menu to manage your records.')">✧</button>`;
+}
+function formField(label,name,type='text',extra=''){return `<div class="field"><label>${label}</label><input name="${name}" type="${type}" ${extra}></div>`}
+function formSelect(label,name,opts){return `<div class="field"><label>${label}</label><select name="${name}">${opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`}
+function productView(){return `<div class="panel"><h2>Add product / stock item</h2><form id="productForm" class="row">${formField('Product name','name')}${formField('SKU / code','sku')}${formField('Opening / added quantity','qty','number','min="0" step="1" required')}${formField('Cost price per unit (MK)','cost','number','min="0" step="0.01" required')}${formField('Selling price per unit (MK)','price','number','min="0" step="0.01" required')}${formField('Low-stock level','min','number','min="0" value="2"')}<button>Add stock</button></form></div>${table(['Product','Code','Qty','Cost','Selling','Stock value',''],db.products.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.sku)}</td><td>${x.qty}</td><td>${money(x.cost)}</td><td>${money(x.price)}</td><td>${money(x.qty*x.cost)}</td><td><button class="small danger" onclick="delRecord('products',${i})">Delete</button></td></tr>`))}`}
+
+function purchaseView(){return `<div class="panel"><h2>Record stock purchase</h2><form id="purchaseForm" class="row">${formSelect('Product','product',db.products.map(x=>x.name))}${formField('Quantity purchased','qty','number','min="1" required')}${formField('Unit cost (MK)','cost','number','min="0" step="0.01" required')}${formField('Supplier','supplier')}${formField('Amount paid (MK)','paid','number','min="0" value="0"')}${formField('Purchase date','date','date',`value="${dateNow()}"`)}<button ${db.products.length?'':'disabled'}>Save purchase</button></form><p class="muted">Purchases increase stock and are recorded separately from operating expenses.</p></div>${table(['Date','Product','Qty','Unit cost','Total','Supplier','Action'],(db.purchases||[]).map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${x.date}</td><td>${esc(x.product)}</td><td>${x.qty}</td><td>${money(x.cost)}</td><td>${money(x.total)}</td><td>${esc(x.supplier)}</td><td><button class="small danger" onclick="delRecord('purchases',${i})">Delete</button></td></tr>`))}`}
+
+function salesView(){return `<div class="panel"><h2>Record a sale</h2><form id="saleForm" class="row">${formSelect('Product','product',db.products.map(x=>x.name))}${formField('Quantity','qty','number','min="1" value="1" required')}${formField('Discount (MK)','discount','number','min="0" value="0"')}${formSelect('Payment method','method',['Cash','Airtel Money','TNM Mpamba','Bank','Credit / unpaid'])}${formField('Customer name','customer')}${formField('Amount paid (MK)','paid','number','min="0" value="0"')}<button ${db.products.length?'':'disabled'}>Save sale</button></form><p class="muted">Stock is reduced automatically. Sale profit uses the product's recorded cost price.</p></div>${table(['Date','Product','Qty','Total','Cost','Profit','Payment','Customer','Action'],db.sales.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${x.date}</td><td>${esc(x.product)}</td><td>${x.qty}</td><td>${money(x.total)}</td><td>${money(x.cost)}</td><td>${money(profitSale(x))}</td><td>${esc(x.method)}</td><td>${esc(x.customer)}</td><td><button class="small danger" onclick="delRecord('sales',${i})">Delete</button></td></tr>`))}`}
+function jobView(type){
+ let arr=db.jobs.filter(x=>x.type===type);
+ const signature=type==='Repair'?`<div class="field" style="flex-basis:100%"><label>Customer signature (draw below)</label><div class="signature-box"><canvas id="customerSignature" class="signature-pad" aria-label="Customer signature area"></canvas><input type="hidden" name="signature" id="signatureData"><div class="signature-actions"><button type="button" class="secondary small" onclick="clearSignature()">Clear signature</button><span class="muted" style="font-size:12px">Ask the customer to sign using a finger or stylus.</span></div></div></div>`:'';
+ return `<div class="panel"><h2>New ${type.toLowerCase()} job card</h2><form id="jobForm" class="row" data-type="${type}"><input type="hidden" name="type" value="${type}">${formField('Customer name','customer')}${formField('Customer phone','phone')}${formField(type==='Repair'?'Device / model':'Service / job description','description')}${formField(type==='Repair'?'Problem reported':'Quantity / pages','quantity')}${formField('Parts / materials cost (MK)',type==='Repair'?'partsCost':'materialCost','number','min="0" value="0"')}${formField('Labour / quoted charge (MK)','labour','number','min="0" value="0"')}${formField('Total customer price (MK)','price','number','min="0" required')}${formField('Deposit paid (MK)','paid','number','min="0" value="0"')}${formSelect('Status','status',['Received','Diagnosing','Waiting for Parts','In Progress','Completed','Collected'])}${signature}<button>Save job</button></form></div>${table(['Job ID','Date','Customer','Description','Price','Paid','Balance','Status','Action'],arr.slice().reverse().map(x=>`<tr><td>${x.id}</td><td>${x.date}</td><td>${esc(x.customer)}<br><small>${esc(x.phone)}</small></td><td>${esc(x.description)}</td><td>${money(x.price)}</td><td>${money(x.paid)}</td><td>${money(x.price-x.paid)}</td><td><select onchange="jobStatus('${x.id}',this.value)">${['Received','Diagnosing','Waiting for Parts','In Progress','Completed','Collected'].map(s=>`<option ${x.status===s?'selected':''}>${s}</option>`).join('')}</select></td><td>${type==='Repair'?`<button class="small secondary" onclick="printRepairJob('${x.id}')">Job card</button> `:''}<button class="small danger" onclick="delRecord('jobs',${db.jobs.indexOf(x)})">Delete</button></td></tr>`))}`;
+}
+function clearSignature(){const c=document.getElementById('customerSignature');const h=document.getElementById('signatureData');if(c){const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height)}if(h)h.value=''}
+function setupSignaturePad(){
+ const canvas=document.getElementById('customerSignature');if(!canvas)return;
+ const ctx=canvas.getContext('2d');const ratio=Math.max(window.devicePixelRatio||1,1);const rect=canvas.getBoundingClientRect();
+ canvas.width=Math.round(rect.width*ratio);canvas.height=Math.round(rect.height*ratio);ctx.scale(ratio,ratio);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#10243a';
+ let drawing=false,drawn=false;
+ const point=e=>{const r=canvas.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+ canvas.addEventListener('pointerdown',e=>{drawing=true;drawn=true;canvas.setPointerCapture(e.pointerId);const p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+ canvas.addEventListener('pointermove',e=>{if(!drawing)return;const p=point(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+ const stop=()=>{if(!drawing)return;drawing=false;const hidden=document.getElementById('signatureData');if(hidden)hidden.value=drawn?canvas.toDataURL('image/png'):''};
+ canvas.addEventListener('pointerup',stop);canvas.addEventListener('pointercancel',stop);
+}
+function printRepairJob(jobId){
+ const x=db.jobs.find(j=>j.id===jobId);if(!x)return;const s=db.settings,w=window.open('','_blank');if(!w)return alert('Allow pop-ups to print the repair job card.');
+ w.document.write(`<!doctype html><html><head><meta name="viewport" content="width=device-width"><title>${esc(x.id)}</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{width:72mm;margin:0 auto;font:11px Arial;color:#111}h2{text-align:center;font-size:15px;margin:3px 0}p{margin:4px 0;overflow-wrap:anywhere}.line{border-top:1px dashed #555;margin:7px 0}.sig{height:50px;max-width:65mm;object-fit:contain;display:block}small{font-size:9px}</style></head><body><h2>${esc(s.business)}</h2><p style="text-align:center">${esc(s.tagline)}<br>${esc(s.address)}<br>WhatsApp ${esc(s.whatsapp)} | ${esc(s.phone)}</p><div class="line"></div><h2>REPAIR JOB CARD</h2><p>Job: ${esc(x.id)}<br>Date: ${esc(x.date)}<br>Customer: ${esc(x.customer)}<br>Phone: ${esc(x.phone)}<br>Device: ${esc(x.description)}<br>Problem: ${esc(x.quantity)}<br>Status: ${esc(x.status)}</p><div class="line"></div><p>Quoted: ${money(x.price)}<br>Deposit: ${money(x.paid)}<br>Balance: ${money(x.price-x.paid)}</p><div class="line"></div><p>Customer signature:</p>${x.signature?`<img class="sig" src="${x.signature}">`:'<p>________________________</p>'}<p><small>Customer confirms the device condition and reported problem above.</small></p><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+function invoiceView(){return `<div class="panel"><h2>Create invoice</h2><form id="invoiceForm"><div class="row">${formField('Customer name','customer')}${formField('Customer phone','phone')}${formField('Invoice date','date','date',`value="${dateNow()}"`)}${formField('Description','description')}${formField('Quantity','qty','number','min="1" value="1"')}${formField('Unit price (MK)','price','number','min="0" step="0.01" required')}${formField('Discount (MK)','discount','number','min="0" value="0"')}${formField('Amount paid (MK)','paid','number','min="0" value="0"')}</div><button>Save invoice</button></form></div>${table(['Invoice','Date','Customer','Total','Paid','Balance',''],db.invoices.slice().reverse().map((x,i)=>`<tr><td>${x.id}</td><td>${x.date}</td><td>${esc(x.customer)}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td>${money(x.total-x.paid)}</td><td><button class="small" onclick="printInvoice('${x.id}')">Print / PDF</button> <button class="small danger" onclick="delRecord('invoices',${db.invoices.indexOf(x)})">Delete</button></td></tr>`))}`}
+function expenseView(){return `<div class="panel"><h2>Record operating expense</h2><form id="expenseForm" class="row">${formField('Expense description','description')}${formSelect('Category','category',['Electricity','Internet / Data','Transport','Rent','Salaries','Food / Refreshments','Maintenance','Stationery','Other'])}${formField('Amount (MK)','amount','number','min="0" step="0.01" required')}${formField('Date','date','date',`value="${dateNow()}"`)}<button>Save expense</button></form><p class="muted">Do not record stock purchases here. Add stock under Stock & Inventory.</p></div>${table(['Date','Description','Category','Amount','Action'],db.expenses.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${x.date}</td><td>${esc(x.description)}</td><td>${esc(x.category)}</td><td>${money(x.amount)}</td><td><button class="small danger" onclick="delRecord('expenses',${i})">Delete</button></td></tr>`))}`}
+function simpleView(key,title,fields,headers){return `<div class="panel"><h2>Add ${title.toLowerCase()}</h2><form id="simpleForm" data-key="${key}" class="row">${fields.map(f=>f.type==='select'?formSelect(f.label,f.name,f.options):formField(f.label,f.name,f.type||'text')).join('')}<button>Save ${title.toLowerCase()}</button></form></div>${table([...headers,'Action'],db[key].map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr>${headers.map(h=>`<td>${esc(x[h.toLowerCase().replaceAll(' ','_')]??'')}</td>`).join('')}<td><button class="small danger" onclick="delRecord('${key}',${i})">Delete</button></td></tr>`))}`}
+function materialsView(){return simpleView('materials','material',[{label:'Material name',name:'name'},{label:'Quantity',name:'qty',type:'number'},{label:'Unit cost (MK)',name:'cost',type:'number'},{label:'Supplier',name:'supplier'}],['Name','Qty','Cost','Supplier'])}
+function customerView(){return simpleView('customers','customer',[{label:'Customer name',name:'name'},{label:'Phone',name:'phone'},{label:'Notes',name:'notes'}],['Name','Phone','Notes'])}
+function supplierView(){return simpleView('suppliers','supplier',[{label:'Supplier name',name:'name'},{label:'Phone',name:'phone'},{label:'Items supplied',name:'items'}],['Name','Phone','Items'])}
+function staffView(){return simpleView('staff','staff member',[{label:'Staff name',name:'name'},{label:'Department',name:'department'},{label:'Monthly salary (MK)',name:'salary',type:'number'},{label:'Role',name:'role',type:'select',options:['Owner','Manager','Sales','Technician','Printing'] }],['Name','Department','Monthly salary (MK)','Role'])}
+function cashView(){return `<div class="panel"><h2>Cashbook entry</h2><form id="cashForm" class="row">${formSelect('Direction','direction',['Money in','Money out'])}${formSelect('Payment channel','channel',['Cash','Airtel Money','TNM Mpamba','Bank'])}${formField('Description','description')}${formField('Amount (MK)','amount','number','min="0" step="0.01"')}${formField('Date','date','date',`value="${dateNow()}"`)}<button>Save entry</button></form></div>${table(['Date','Direction','Channel','Description','Amount','Action'],db.cashbook.map((x,i)=>({x,i})).reverse().map(({x,i})=>`<tr><td>${x.date}</td><td>${x.direction}</td><td>${x.channel}</td><td>${esc(x.description)}</td><td>${money(x.amount)}</td><td><button class="small danger" onclick="delRecord('cashbook',${i})">Delete</button></td></tr>`))}`}
+function reportsView(){let t=totals();return `<div class="grid">${metric('Sales revenue',money(t.sales))}${metric('Accessories gross profit',money(t.productProfit))}${metric('Repair contribution',money(t.repair))}${metric('Printing contribution',money(t.printing))}${metric('Operating expenses',money(t.expenses))}${metric('Estimated net profit',money(t.profit))}</div><div class="panel"><h2>Business reports</h2><p>Stock valuation: <b>${money(t.stock)}</b></p><p>Outstanding invoice balances: <b>${money(t.due)}</b></p><p>Sales transactions: <b>${db.sales.length}</b> · Repair and printing jobs: <b>${db.jobs.length}</b> · Expenses: <b>${db.expenses.length}</b></p><div class="actions"><button onclick="downloadCSV('sales')">Export sales CSV</button><button onclick="downloadCSV('expenses')">Export expenses CSV</button><button onclick="downloadCSV('products')">Export stock CSV</button><button onclick="downloadCSV('invoices')">Export invoices CSV</button></div></div><div class="notice">For accuracy, completed jobs are included in the department contribution report. Cash balance is tracked separately in Cashbook; profit is not the same as cash received.</div>`}
+function settingsView(){let s=db.settings;return `<div class="panel"><h2>Business settings</h2><form id="settingsForm"><div class="row">${formField('Business name','business','text',`value="${esc(s.business)}"`)}${formField('Tagline','tagline','text',`value="${esc(s.tagline)}"`)}${formField('Address','address','text',`value="${esc(s.address)}"`)}${formField('WhatsApp','whatsapp','text',`value="${esc(s.whatsapp)}"`)}${formField('Calls','phone','text',`value="${esc(s.phone)}"`)}${formField('Tax percentage','tax','number',`min="0" max="100" value="${s.tax||0}"`)}${formField('New owner PIN','pin','password','minlength="4"')}${formField('Google OAuth Web Client ID','googleClientId','text',`value="${esc(s.googleClientId||'')}" placeholder="Paste your Google OAuth client ID"`)}</div><button>Save settings</button></form></div><div class="panel"><h2>Data protection & backup</h2><p>Keep a backup outside this phone. Google Drive backup requires an internet connection, a configured Google OAuth Web Client ID, and your Google permission.</p><div class="actions"><button onclick="exportBackup()">Download backup</button><button class="secondary" onclick="document.getElementById('restoreFile').click()">Restore from file</button><button onclick="driveBackup()">Backup to Google Drive</button><button class="secondary" onclick="driveRestore()">Restore from Google Drive</button><button class="secondary" onclick="downloadAllCSV()">Export all CSV files</button></div><p id="driveStatus" class="muted">Google Drive backup is started by you so the app does not access your Google account without permission.</p></div><div class="panel data-warning"><h2>Danger zone — Clear all records</h2><p>This removes sales, stock, purchases, repairs, printing jobs, invoices, expenses, customers, suppliers, materials, staff and cashbook records from this device. Your business settings and PIN will be kept.</p><p><b>Make and verify a backup before continuing.</b> This action cannot be undone from the app.</p><button class="danger" onclick="clearAllRecords()">Delete all business records</button></div>`}
+const views={'Dashboard':dash,'Stock & Inventory':productView,'Purchases':purchaseView,'Sales / POS':salesView,'Repairs':()=>jobView('Repair'),'Printing Jobs':()=>jobView('Printing'),'Invoices':invoiceView,'Expenses':expenseView,'Customers':customerView,'Suppliers':supplierView,'Materials':materialsView,'Staff':staffView,'Cashbook':cashView,'Reports':reportsView,'Settings':settingsView};
+function bindCommon(){
+ let f=document.getElementById('productForm');if(f)f.onsubmit=e=>{e.preventDefault();try{let d=Object.fromEntries(new FormData(e.currentTarget));if(!d.name.trim())return alert('Enter a product name.');let record={name:d.name,sku:d.sku,qty:+d.qty,cost:+d.cost,price:+d.price,min:+d.min};db.products.push(record);if(save()){render()}else{db.products.pop()}}catch(err){console.error(err);alert('Could not add this stock item: '+err.message)}};
+ f=document.getElementById('purchaseForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget)),p=db.products.find(x=>x.name===d.product),q=+d.qty,c=+d.cost;if(!p||q<1)return alert('Check product and quantity.');p.qty+=q;let previousCost=p.cost;p.cost=c;let rec={date:d.date||dateNow(),product:p.name,qty:q,cost:c,previousCost,total:q*c,supplier:d.supplier,paid:+d.paid||0};(db.purchases||(db.purchases=[])).push(rec);save();render()};
+ f=document.getElementById('saleForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget)),p=db.products.find(x=>x.name===d.product),q=+d.qty;if(!p||q>p.qty)return alert('Check product and available stock.');let total=Math.max(0,p.price*q-(+d.discount||0));db.sales.push({date:dateNow(),product:p.name,qty:q,total,cost:p.cost*q,method:d.method,customer:d.customer,paid:+d.paid||0});p.qty-=q;save();render()};
+ f=document.getElementById('jobForm');if(f)f.onsubmit=e=>{e.preventDefault();try{const form=e.currentTarget;const d=Object.fromEntries(new FormData(form));const type=d.type||form.dataset.type;if(!['Repair','Printing'].includes(type))return alert('Please select a valid job department.');if(!String(d.customer||'').trim())return alert('Enter the customer name.');if(!String(d.description||'').trim())return alert(type==='Repair'?'Enter the device or repair description.':'Enter the printing job description.');const record={...d,id:id(type==='Repair'?'REP':'PRN'),type,date:dateNow(),price:Number(d.price)||0,paid:Number(d.paid)||0,partsCost:Number(d.partsCost)||0,materialCost:Number(d.materialCost)||0};db.jobs.push(record);if(save()){render()}else{db.jobs.pop()}}catch(err){console.error('Job save failed:',err);alert('Could not save this job: '+err.message)}};
+ f=document.getElementById('invoiceForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget)),total=Math.max(0,(+d.qty)*(+d.price)-(+d.discount||0));let inv={id:'SIA-'+String(db.invoices.length+1).padStart(4,'0'),date:d.date||dateNow(),...d,total,paid:+d.paid||0};db.invoices.push(inv);save();render();printInvoice(inv.id)};
+ f=document.getElementById('expenseForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget));d.amount=+d.amount;db.expenses.push(d);save();render()};
+ f=document.getElementById('simpleForm');if(f)f.onsubmit=e=>{e.preventDefault();db[e.currentTarget.dataset.key].push(Object.fromEntries(new FormData(e.currentTarget)));save();render()};
+ f=document.getElementById('cashForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget));d.amount=+d.amount;db.cashbook.push(d);save();render()};
+ f=document.getElementById('settingsForm');if(f)f.onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.currentTarget));if(!d.pin)d.pin=db.settings.pin;d.tax=+d.tax;db.settings={...db.settings,...d};save();alert('Settings saved.');render()};
+}
+function clearAllRecords(){
+ const phrase=prompt('To confirm, type CLEAR ALL RECORDS. Make sure you have downloaded a backup first.');
+ if(phrase!=='CLEAR ALL RECORDS'){if(phrase!==null)alert('Confirmation did not match. No records were deleted.');return}
+ if(!confirm('FINAL WARNING: Permanently delete every business record on this device? Your settings and PIN will remain.'))return;
+ const old=db;db={...structuredClone(defaults),settings:{...old.settings}};
+ if(!save()){db=old;return}
+ alert('All business records have been cleared. Your business settings and PIN were kept.');go('Dashboard');
+}
+function delRecord(key,i){
+ const arr=db[key]; if(!Array.isArray(arr)||!arr[i])return;
+ const rec=arr[i];
+ if(key==='products'){
+  const used=db.sales.some(x=>x.product===rec.name)||db.purchases.some(x=>x.product===rec.name);
+  if(used)return alert('This product has sales or purchase history. Delete those related records first; this protects your stock and reports.');
+ }
+ if(key==='purchases'){
+  const product=db.products.find(x=>x.name===rec.product);
+  if(product && Number(product.qty)<Number(rec.qty))return alert('Cannot delete this purchase because current stock is lower than the purchased quantity. Adjust stock records first.');
+ }
+ if(!confirm('Permanently delete this '+key+' record? This cannot be undone.'))return;
+ if(key==='sales'){const product=db.products.find(x=>x.name===rec.product);if(product)product.qty=Number(product.qty||0)+Number(rec.qty||0)}
+ if(key==='purchases'){const product=db.products.find(x=>x.name===rec.product);if(product){product.qty=Number(product.qty||0)-Number(rec.qty||0);if(rec.previousCost!==undefined)product.cost=Number(rec.previousCost)}}
+ arr.splice(i,1);if(save())render();
+ }
+function del(key,i){delRecord(key,i)}
+function jobStatus(jobId,status){let j=db.jobs.find(x=>x.id===jobId);if(j){j.status=status;save();render()}}
+async function exportBackup(){try{if(!save())return;const payload={app:'SIA BUSINESS',version:1,createdAt:new Date().toISOString(),data:db};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const name='sia-business-backup-'+dateNow()+'.json';const file=new File([blob],name,{type:'application/json'});if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'S I A BUSINESS backup',text:'Business records backup',files:[file]});alert('Backup file shared. Save it to your phone or Google Drive.')}else{downloadBlob(blob,name);alert('Backup created. Check your Downloads folder.')}}catch(err){if(err.name!=='AbortError'){console.error('Backup export failed:',err);alert('Could not create the backup: '+err.message)}}}
+function restoreBackup(e){const file=e.target.files&&e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{const old=db;try{const parsed=JSON.parse(r.result);const obj=parsed.data||parsed;if(!obj||!obj.settings||!Array.isArray(obj.products))throw new Error('This file is not a valid S I A BUSINESS backup.');if(!confirm('Replace current records with this backup?'))return;db={...structuredClone(defaults),...obj,settings:{...defaults.settings,...obj.settings}};if(!save()){db=old;return}alert('Backup restored successfully.');render()}catch(err){console.error('Backup restore failed:',err);alert('Could not restore this backup: '+err.message)}finally{e.target.value=''}};r.onerror=()=>{alert('Could not read the selected backup file.');e.target.value=''};r.readAsText(file)}
+// Google Drive backup uses OAuth (Drive appDataFolder). A Web OAuth client ID is required.
+let driveAccessToken=null;
+function driveMessage(msg){const el=document.getElementById('driveStatus');if(el)el.textContent='Google Drive: '+msg;}
+function loadGoogleIdentity(){return new Promise((resolve,reject)=>{if(window.google?.accounts?.oauth2)return resolve();const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.onload=()=>resolve();script.onerror=()=>reject(new Error('Could not load Google sign-in. Check your internet connection.'));document.head.appendChild(script);});}
+async function getDriveToken(){const clientId=db.settings.googleClientId;if(!clientId)return alert('Open Settings and enter your Google OAuth Web Client ID first.'),null;if(location.protocol!=='https:' && location.hostname!=='localhost')return alert('Google Drive sign-in requires this app to be hosted on HTTPS. The offline app and file backup still work locally.'),null;await loadGoogleIdentity();return new Promise((resolve,reject)=>{const client=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:'https://www.googleapis.com/auth/drive.appdata',callback:resp=>{if(resp.error){reject(new Error(resp.error));return}driveAccessToken=resp.access_token;resolve(driveAccessToken)}});client.requestAccessToken({prompt:'consent'});});}
+async function driveBackup(){try{driveMessage('connecting…');const token=await getDriveToken();if(!token)return;const metadata={name:'sia-business-backup-'+dateNow()+'.json',mimeType:'application/json',parents:['appDataFolder']};const boundary='sia_'+Date.now();const body='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify({app:'SIA BUSINESS',version:1,createdAt:new Date().toISOString(),data:db},null,2)+'\r\n--'+boundary+'--';const res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,createdTime',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'multipart/related; boundary='+boundary},body});if(!res.ok)throw new Error(await res.text());const file=await res.json();driveMessage('backup saved successfully as '+file.name+'.');alert('Google Drive backup completed successfully.');}catch(e){console.error(e);driveMessage('backup failed: '+e.message);alert('Google Drive backup failed: '+e.message)}}
+async function driveRestore(){try{driveMessage('connecting…');const token=await getDriveToken();if(!token)return;const list=await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&orderBy=createdTime%20desc&pageSize=30&fields=files(id,name,createdTime,mimeType)",{headers:{Authorization:'Bearer '+token}});if(!list.ok)throw new Error(await list.text());const data=await list.json();const files=(data.files||[]).filter(f=>f.name.startsWith('sia-business-backup-'));if(!files.length){driveMessage('no S I A BUSINESS backups found in this Google account.');alert('No S I A BUSINESS backups were found in this Google account.');return}const chosen=files[0];if(!confirm('Restore the latest Google Drive backup?\n'+chosen.name+'\n\nThis will replace all current app records.'))return;const res=await fetch('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(chosen.id)+'?alt=media',{headers:{Authorization:'Bearer '+token}});if(!res.ok)throw new Error(await res.text());const payload=await res.json();const obj=payload.data||payload;if(!obj.settings||!Array.isArray(obj.products))throw new Error('Backup file format is not valid.');const old=db;db={...structuredClone(defaults),...obj};if(!save()){db=old;return}driveMessage('restored '+chosen.name+'.');alert('Google Drive backup restored successfully.');render();}catch(e){console.error(e);driveMessage('restore failed: '+e.message);alert('Google Drive restore failed: '+e.message)}}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+function csv(rows){let keys=Object.keys(rows[0]||{});return [keys.join(','),...rows.map(o=>keys.map(k=>'"'+String(o[k]??'').replaceAll('"','""')+'"').join(','))].join('\n')}
+function downloadCSV(key){downloadBlob(new Blob([csv(db[key])],{type:'text/csv'}),'sia-'+key+'-'+dateNow()+'.csv')}
+function downloadAllCSV(){['products','sales','jobs','invoices','expenses','customers','suppliers','staff','cashbook','materials'].forEach(k=>downloadCSV(k))}
+function printInvoice(invId){
+ let x=db.invoices.find(i=>i.id===invId);if(!x)return;let s=db.settings,w=window.open('','_blank');if(!w)return alert('Allow pop-ups to print the 80mm invoice.');
+ const subtotal=Number(x.qty||0)*Number(x.price||0),balance=Math.max(0,Number(x.total||0)-Number(x.paid||0));
+ w.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(x.id)}</title><style>
+ @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#111}body{width:72mm;max-width:72mm;margin:0 auto;font:11px/1.4 Arial,Helvetica,sans-serif;overflow-wrap:anywhere}
+ .center{text-align:center}.brand{font-size:17px;font-weight:900;letter-spacing:.7px;margin:0 0 2px}.tag{font-size:9px;font-weight:700}.contact{font-size:9px;margin-top:4px}.title{font-size:14px;font-weight:800;letter-spacing:1px;margin:8px 0 5px}.rule{border:0;border-top:1px dashed #333;margin:7px 0}.meta{font-size:10px;line-height:1.6}.items{width:100%;border-collapse:collapse;margin:7px 0;font-size:10px}.items th{border-bottom:1px solid #222;text-align:left;padding:4px 1px}.items td{padding:5px 1px;border-bottom:1px dotted #aaa;vertical-align:top}.right{text-align:right}.totals{font-size:10px}.total{font-size:13px;font-weight:800}.thanks{font-weight:800;margin-top:10px}.foot{font-size:9px;margin-top:4px}
+ @media print{body{width:72mm}}
+ </style></head><body>
+ <div class="center"><div class="brand">${esc(s.business)}</div><div class="tag">${esc(s.tagline)}</div><div class="contact">${esc(s.address)}<br>WhatsApp: ${esc(s.whatsapp)}<br>Calls: ${esc(s.phone)}</div><div class="title">INVOICE / RECEIPT</div></div>
+ <hr class="rule"><div class="meta"><b>Invoice:</b> ${esc(x.id)}<br><b>Date:</b> ${esc(x.date)}<br><b>Customer:</b> ${esc(x.customer||'Walk-in customer')}<br><b>Phone:</b> ${esc(x.phone||'—')}</div>
+ <table class="items"><thead><tr><th>Description</th><th class="right">Qty</th><th class="right">Amount</th></tr></thead><tbody><tr><td>${esc(x.description)}</td><td class="right">${esc(x.qty)}</td><td class="right">${money(subtotal)}</td></tr></tbody></table>
+ <hr class="rule"><div class="totals"><div>Subtotal: <span style="float:right">${money(subtotal)}</span></div><div>Discount: <span style="float:right">${money(x.discount||0)}</span></div><div class="total">TOTAL: <span style="float:right">${money(x.total)}</span></div><div>Amount paid: <span style="float:right">${money(x.paid)}</span></div><div><b>Balance due:</b> <span style="float:right"><b>${money(balance)}</b></span></div></div>
+ <hr class="rule"><div class="center thanks">THANK YOU FOR YOUR SUPPORT!</div><div class="center foot">We appreciate your business.<br>Keep this receipt for your records.</div>
+ <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+installAppBackNavigation();
+render();
+</script>
+</body>
+</html>
