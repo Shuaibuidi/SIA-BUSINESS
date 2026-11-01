@@ -1,82 +1,38 @@
-name: Build SIA Business Manager APK
+name: Generate SIA Business Signing Key
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'index.html'
-      - 'logo.png'
-      - '.github/workflows/build-apk.yml'
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Generate Android Debug Keystore
+      - name: Generate permanent signing key
         run: |
-          mkdir -p ~/.android
           keytool -genkeypair -v \
-            -keystore ~/.android/debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
+            -keystore sia-business-release.jks \
+            -storepass "${{ secrets.KEYSTORE_PASSWORD || 'SiaBusiness2026!' }}" \
+            -alias siabusiness \
+            -keypass "${{ secrets.KEYSTORE_PASSWORD || 'SiaBusiness2026!' }}" \
             -keyalg RSA \
             -keysize 2048 \
             -validity 10000 \
-            -dname "CN=Android Debug,O=Android,C=US"
+            -dname "CN=SIA BUSINESS,O=SIA TECH PRINT MEDIA,C=MW"
 
-      - name: Show Android Debug SHA1
+      - name: Show SHA1 fingerprint
         run: |
           keytool -list -v \
-            -keystore ~/.android/debug.keystore \
-            -storepass android \
-            -alias androiddebugkey
+            -keystore sia-business-release.jks \
+            -storepass "SiaBusiness2026!" \
+            -alias siabusiness
 
-      - name: Install dependencies
+      - name: Encode signing key
         run: |
-          npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npm install --save-dev @capacitor/assets
+          base64 -w 0 sia-business-release.jks > signing-key.txt
 
-      - name: Prepare app files
-        run: |
-          mkdir -p www resources
-          cp index.html www/index.html
-          if [ -f logo.png ]; then
-            cp logo.png resources/icon.png
-          fi
-
-      - name: Initialize Capacitor
-        run: |
-          npx cap init "SIA Business Manager" com.siatech.businessmanager --web-dir www
-          npx cap add android
-
-      - name: Sync Android
-        run: npx cap sync android
-
-      - name: Build APK
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
-
-      - name: Upload APK
+      - name: Upload signing key artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SIA-Business-Manager-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: SIA-Business-Signing-Key
+          path: signing-key.txt
+          retention-days: 1
