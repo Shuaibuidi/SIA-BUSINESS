@@ -1,0 +1,79 @@
+name: Build SIA Business Manager APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'logo.png'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create Android project
+        run: |
+          set -e
+          mkdir app-build
+          cd app-build
+
+          npm init -y
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install --save-dev @capacitor/assets sharp
+
+          mkdir -p www assets
+          cp ../index.html www/index.html
+          cp ../logo.png assets/logo.png
+
+          npx cap init "SIA Business Manager" "com.siatech.businessmanager" --web-dir=www
+          npx cap add android
+
+      - name: Generate Android app icons
+        run: |
+          cd app-build
+          npx capacitor-assets generate --android
+          echo "Checking generated icons:"
+          find android/app/src/main/res -type f | grep -E 'ic_launcher|launcher'
+
+      - name: Fix Kotlin dependencies
+        run: |
+          cd app-build
+          cat >> android/build.gradle <<'EOF'
+          allprojects {
+              configurations.configureEach {
+                  resolutionStrategy.eachDependency {
+                      if (requested.group == 'org.jetbrains.kotlin') {
+                          useVersion '1.8.22'
+                      }
+                  }
+              }
+          }
+          EOF
+
+      - name: Build APK
+        run: |
+          cd app-build/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SIA-Business-Manager-APK
+          path: app-build/android/app/build/outputs/apk/debug/app-debug.apk
