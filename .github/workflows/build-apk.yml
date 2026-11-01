@@ -13,6 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+          - name: Show Android Debug SHA1
+        run: |
+          mkdir -p ~/.android
+          keytool -list -v \
+            -keystore ~/.android/debug.keystore \
+            -storepass android \
+            -keypass android \
+            -alias androiddebugkey
       - name: Checkout
         uses: actions/checkout@v4
 
