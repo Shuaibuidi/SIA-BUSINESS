@@ -29,7 +29,8 @@ jobs:
 
       - name: Create Android project
         run: |
-          set -e
+          set -euo pipefail
+
           mkdir app-build
           cd app-build
 
@@ -37,15 +38,16 @@ jobs:
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npm install --save-dev @capacitor/assets sharp
 
-          mkdir -p www assets
+          mkdir -p www resources
           cp ../index.html www/index.html
-          cp ../logo.png assets/logo.png
+          cp ../logo.png resources/icon.png
 
           npx cap init "SIA Business Manager" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
 
       - name: Generate Android app icons
         run: |
+          set -euo pipefail
           cd app-build
           npx capacitor-assets generate --android
 
@@ -56,10 +58,33 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          set -e
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app-build/android/app/sia-business-release.jks
+          set -euo pipefail
 
-          test -s app-build/android/app/sia-business-release.jks
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 is missing"
+            exit 1
+          fi
+
+          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "ERROR: One or more signing secrets are missing"
+            exit 1
+          fi
+
+          mkdir -p app-build/android/app
+
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' > /tmp/keystore.b64
+
+          if ! base64 --decode /tmp/keystore.b64 > app-build/android/app/sia-business-release.jks; then
+            echo "ERROR: Invalid Base64 keystore secret. Please check the GitHub secret."
+            exit 1
+          fi
+
+          if [ ! -s app-build/android/app/sia-business-release.jks ]; then
+            echo "ERROR: Keystore file is empty"
+            exit 1
+          fi
+
+          echo "Keystore decoded successfully"
 
           cat >> app-build/android/app/build.gradle <<'EOF'
 
@@ -83,8 +108,11 @@ jobs:
 
       - name: Fix Kotlin dependencies
         run: |
+          set -euo pipefail
           cd app-build
+
           cat >> android/build.gradle <<'EOF'
+
           allprojects {
               configurations.configureEach {
                   resolutionStrategy.eachDependency {
@@ -102,6 +130,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           cd app-build/android
           chmod +x gradlew
           ./gradlew assembleDebug
