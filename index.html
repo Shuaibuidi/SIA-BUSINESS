@@ -345,6 +345,11 @@ function firebaseConfigured() {
     firebaseConfig.appId !== "PASTE_APP_ID";
 }
 function initFirebase() {
+  if (typeof firebase === 'undefined') {
+    setCloudStatus('Firebase SDK did not load');
+    document.getElementById('authMsg').textContent = 'Firebase libraries could not load. Check internet access and ensure the Firebase CDN scripts are not blocked by the app WebView.';
+    return false;
+  }
   if (!firebaseConfigured()) {
     setCloudStatus('Firebase setup required');
     document.getElementById('authMsg').textContent =
@@ -355,8 +360,15 @@ function initFirebase() {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
     cloudDb = firebase.firestore();
+    // Keep the signed-in session on this device between app launches.
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err => {
+      console.warn('Firebase auth persistence could not be set:', err);
+    });
     firebaseReady = true;
-    auth.onAuthStateChanged(handleAuthState);
+    auth.onAuthStateChanged(handleAuthState, err => {
+      setCloudStatus('Authentication error');
+      document.getElementById('authMsg').textContent = 'Firebase sign-in session error: ' + authErrorMessage(err);
+    });
     return true;
   } catch (err) {
     setCloudStatus('Firebase setup error');
@@ -374,7 +386,12 @@ function authErrorMessage(err) {
     'auth/weak-password':'Choose a stronger password with at least 6 characters.',
     'auth/network-request-failed':'Internet connection problem. Please try again.',
     'auth/too-many-requests':'Too many attempts. Wait a little and try again.',
-    'permission-denied':'Cloud database access was denied. Check the Firestore security rules.'
+    'auth/unauthorized-domain':'This app domain is not authorized in Firebase Authentication. Add the domain shown in Firebase Console > Authentication > Settings > Authorized domains.',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'The Firebase API key is invalid. Copy the Web App config from Firebase Project Settings.',
+    'auth/operation-not-allowed':'Email/password sign-in is disabled. Enable it in Firebase Console > Authentication > Sign-in method.',
+    'permission-denied':'Firestore access was denied. Check the Firestore database rules for signed-in users.',
+    'unavailable':'Firebase is temporarily unavailable. Check your internet connection and try again.',
+    'failed-precondition':'Firestore may not be created yet. Create the database in Firebase Console > Firestore Database.'
   };
   return map[err.code] || err.message || 'Something went wrong. Please try again.';
 }
