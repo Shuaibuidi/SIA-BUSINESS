@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'index.html'
-      - 'logo.png'
-      - '.github/workflows/build-apk.yml'
+  - 'index.html'
+  - 'logo.png'
+  - 'icon.png'
+  - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
@@ -40,8 +41,7 @@ jobs:
 
           mkdir -p www resources
           cp ../index.html www/index.html
-          cp ../logo.png resources/icon.png
-
+          cp ../icon.png resources/icon.png
           npx cap init "SMART BUSINESS MANAGER" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
 
