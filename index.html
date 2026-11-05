@@ -368,7 +368,29 @@ let db={
   pin:'1234'
  }
 };
-function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db={...db,...x,services:x.services||[],settings:{...db.settings,...x.settings}}}catch(e){}}
+function load(){
+ try{
+  let x=JSON.parse(localStorage.getItem(KEY));
+  if(x){
+   db={
+    ...db,
+    ...x,
+    products:x.products||[],
+    sales:x.sales||[],
+    expenses:x.expenses||[],
+    customers:x.customers||[],
+    invoices:x.invoices||[],
+    services:x.services||[],
+    spareParts:x.spareParts||[],
+    sparePartPurchases:x.sparePartPurchases||[],
+    sparePartSales:x.sparePartSales||[],
+    settings:{...db.settings,...x.settings}
+   };
+  }
+ }catch(e){
+  console.error('Data loading error:',e);
+ }
+}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!applyingCloudData)localStorage.setItem(DIRTY_KEY,'1');scheduleCloudSave();return true}catch(e){alert('Storage error. Export a backup or check browser storage permissions.');return false}}
 function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
