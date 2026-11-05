@@ -58,6 +58,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <button data-view="services" onclick="show('services')">Services</button>
 <button data-view="serviceprofit" onclick="show('serviceprofit')">Service Profit</button>
 <button data-view="expenses" onclick="show('expenses')">Expenses</button>
+<button data-view="workers" onclick="show('workers')">Workers</button>
 <button data-view="customers" onclick="show('customers')">Customers</button>
 <button data-view="invoices" onclick="show('invoices')">Invoices</button>
 <button data-view="reports" onclick="show('reports')">Reports</button>
@@ -265,13 +266,34 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <div class="panel"><h3>Record expense</h3><form id="expenseForm"><div class="formgrid"><div class="field"><label>Description</label><input id="eName" required placeholder="Rent, transport, electricity"></div><div class="field"><label>Amount (MK)</label><input id="eAmount" type="number" min="0" required></div><div class="field"><label>Category</label><select id="eCat"><option>Rent</option><option>Transport</option><option>Utilities</option><option>Supplies</option><option>Salary</option><option>Other</option></select></div></div><button class="btn primary" style="margin-top:12px">Save expense</button></form></div>
 <div class="panel"><h3>Expenses</h3><div class="tablewrap" id="expensesTable"></div></div>
 </section>
+<section id="workers" class="view">
+ <div class="panel"><h3>Add Worker</h3>
+  <form id="workerForm"><div class="formgrid">
+   <div class="field"><label>Worker Name</label><input id="wName" required></div>
+   <div class="field"><label>Job Title / Role</label><input id="wRole" required placeholder="Technician, Designer, Salesperson"></div>
+   <div class="field"><label>Phone</label><input id="wPhone" inputmode="tel"></div>
+   <div class="field"><label>Monthly Salary (MK)</label><input id="wSalary" type="number" min="0" required></div>
+  </div><button class="btn primary" style="margin-top:12px">Save Worker</button></form>
+ </div>
+ <div class="panel"><h3>Record Worker Payment</h3>
+  <form id="workerPaymentForm"><div class="formgrid">
+   <div class="field"><label>Worker</label><select id="wpWorker" required></select></div>
+   <div class="field"><label>Payment Amount (MK)</label><input id="wpAmount" type="number" min="0" required></div>
+   <div class="field"><label>Payment Date</label><input id="wpDate" type="date" required></div>
+   <div class="field"><label>Note</label><input id="wpNote" placeholder="Monthly salary, advance, etc."></div>
+  </div><button class="btn primary" style="margin-top:12px">Record Payment</button></form>
+ </div>
+ <div class="panel"><h3>Workers</h3><div id="workersTable"></div></div>
+ <div class="panel"><h3>Worker Payment History</h3><div id="workerPaymentsTable"></div></div>
+</section>
+
 <section id="customers" class="view">
 <div class="panel"><h3>Add customer</h3><form id="customerForm"><div class="formgrid"><div class="field"><label>Name</label><input id="cName" required></div><div class="field"><label>Phone</label><input id="cPhone" inputmode="tel" placeholder="09xx / 08xx"></div><div class="field full"><label>Notes</label><input id="cNotes"></div></div><button class="btn primary" style="margin-top:12px">Save customer</button></form></div><div class="panel"><h3>Customer list</h3><div class="tablewrap" id="customersTable"></div></div>
 </section>
 <section id="invoices" class="view">
 <div class="panel"><div class="row"><h3>Invoice generator</h3><button class="btn soft" onclick="newInvoice()">New invoice</button></div><form id="invoiceForm"><div class="formgrid"><div class="field"><label>Customer</label><input id="iCustomer" required></div><div class="field"><label>Phone</label><input id="iPhone"></div><div class="field"><label>Item / service</label><input id="iItem" required></div><div class="field"><label>Quantity</label><input id="iQty" type="number" min="1" value="1"></div><div class="field"><label>Unit price (MK)</label><input id="iPrice" type="number" min="0" required></div><div class="field"><label>Invoice date</label><input id="iDate" type="date"></div></div><button class="btn primary" style="margin-top:12px">Generate invoice</button></form><div id="invoicePreview"></div></div>
 </section>
-<section id="reports" class="view"><div class="panel"><h3>Business reports</h3><div class="cards"><div class="stat"><small>Total sales</small><strong id="rSales">MK 0</strong></div><div class="stat"><small>Gross profit</small><strong id="rProfit">MK 0</strong></div><div class="stat"><small>Expenses</small><strong id="rExpenses">MK 0</strong></div><div class="stat"><small>Net profit estimate</small><strong id="rNet">MK 0</strong></div></div><p class="notice">Net profit estimate = recorded gross profit minus recorded expenses. This is not tax/accounting advice.</p><button class="btn soft" onclick="exportCSV()">Export sales CSV</button></div></section>
+<section id="reports" class="view"><div class="panel"><h3>Combined Business Reports</h3><div class="cards"><div class="stat"><small>Total Revenue (Sales + Services + Spare Parts)</small><strong id="rSales">MK 0</strong></div><div class="stat"><small>Total Cost Price</small><strong id="rCost">MK 0</strong></div><div class="stat"><small>Total Gross Profit</small><strong id="rProfit">MK 0</strong></div><div class="stat"><small>Total Expenses</small><strong id="rExpenses">MK 0</strong></div><div class="stat"><small>Net Profit Estimate</small><strong id="rNet">MK 0</strong></div></div><p class="notice">Combined totals include recorded sales, non-cancelled service jobs, and spare-parts sales. Total cost price is the cost of items/services sold. Net profit estimate = combined gross profit minus recorded expenses. Spare-parts purchases are inventory purchases, not added again as expenses. This is not tax/accounting advice.</p><button class="btn soft" onclick="exportCSV()">Export Sales CSV</button></div></section>
 <section id="settings" class="view">
 <div class="panel"><h3>Business profile</h3><form id="settingsForm"><div class="formgrid"><div class="field"><label>Business name</label><input id="sBusiness"></div><div class="field"><label>Tagline</label><input id="sTag"></div><div class="field"><label>Address / location</label><input id="sAddress" placeholder="Blantyre, Malawi"></div><div class="field"><label>Phone / WhatsApp</label><input id="sPhone"></div><div class="field"><label>Currency</label><select id="sCurrency"><option>MK</option><option>USD</option></select></div><div class="field"><label>App PIN (4–8 digits)</label><input id="sPin" inputmode="numeric" maxlength="8"></div></div><button class="btn primary" style="margin-top:12px">Save settings</button></form></div>
 <div class="panel"><h3>Data backup & restore</h3><p class="notice">Your records are kept on this device and synchronised to your signed-in cloud account when internet is available. You can sign in again after reinstalling to restore cloud data. Keep occasional downloaded backups as an extra safety copy.</p><div class="actions"><button class="btn success" onclick="backup()">Download backup</button><label class="btn soft" style="display:inline-block;cursor:pointer">Restore backup<input type="file" accept="application/json" id="restoreFile" class="hidden"></label><button class="btn soft" onclick="window.print()">Print / Save PDF</button></div></div>
@@ -574,7 +596,19 @@ function table(headers,rows){if(!rows.length)return '<div class="empty">No recor
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
 function render(){
  document.getElementById('businessTag').textContent=(db.settings.business||'Business')+' · '+(db.settings.address||'Malawi');
- let today=dateNow(),salesToday=db.sales.filter(s=>s.date===today),gross=db.sales.reduce((a,s)=>a+s.profit,0),totalSales=db.sales.reduce((a,s)=>a+s.total,0),expenses=db.expenses.reduce((a,e)=>a+e.amount,0),low=db.products.filter(p=>p.qty<=p.min);
+ let today=dateNow(),salesToday=db.sales.filter(s=>s.date===today),low=db.products.filter(p=>p.qty<=p.min);
+  // Combined report totals: retail sales + service jobs + spare-parts sales.
+  const reportServices=db.services.filter(j=>j.status!=='Cancelled');
+  const reportRevenue=
+    db.sales.reduce((sum,s)=>sum+Number(s.total||0),0)+
+    reportServices.reduce((sum,j)=>sum+Number(j.total||0),0)+
+    db.sparePartSales.reduce((sum,s)=>sum+Number(s.total||0),0);
+  const reportProfit=
+    db.sales.reduce((sum,s)=>sum+Number(s.profit||0),0)+
+    reportServices.reduce((sum,j)=>sum+Number(j.profit||0),0)+
+    db.sparePartSales.reduce((sum,s)=>sum+Number(s.profit||0),0);
+  const reportCost=reportRevenue-reportProfit;
+  const expenses=db.expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
  document.getElementById('todaySales').textContent=money(salesToday.reduce((a,s)=>a+s.total,0));document.getElementById('profit').textContent=money(salesToday.reduce((a,s)=>a+s.profit,0));document.getElementById('stockCount').textContent=db.products.length;document.getElementById('lowCount').textContent=low.length;
  document.getElementById('recentSales').innerHTML=table(['Date','Item','Total'],db.sales.slice(-5).reverse().map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${money(s.total)}</td></tr>`));
  document.getElementById('lowStockList').innerHTML=low.length?low.map(p=>`<p>⚠ ${esc(p.name)} — ${p.qty} left</p>`).join(''):'<p class="notice">All stock levels look good.</p>';
@@ -630,6 +664,12 @@ document.getElementById('spareSalesTable').innerHTML=table(
 let selected=db.spareParts.find(p=>p.id===document.getElementById('spSaleItem').value);
 if(selected)document.getElementById('spSalePrice').value=selected.price;
   document.getElementById('expensesTable').innerHTML=table(['Date','Description','Category','Amount',''],db.expenses.slice().reverse().map(e=>`<tr><td>${e.date}</td><td>${esc(e.name)}</td><td>${esc(e.cat)}</td><td>${money(e.amount)}</td><td><button class="btn danger" onclick="del('expenses','${e.id}')">Delete</button></td></tr>`));
+  document.getElementById('workersTable').innerHTML=table(['Worker','Role','Phone','Monthly Salary',''],db.workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.role)}</td><td>${esc(w.phone||'')}</td><td>${money(w.salary)}</td><td><button class="btn danger" onclick="del('workers','${w.id}')">Delete</button></td></tr>`));
+  const workerSelect=document.getElementById('wpWorker'),previousWorker=workerSelect.value;
+  workerSelect.innerHTML='<option value="">Choose Worker</option>'+db.workers.map(w=>`<option value="${w.id}">${esc(w.name)} — ${esc(w.role)}</option>`).join('');
+  if(db.workers.some(w=>w.id===previousWorker))workerSelect.value=previousWorker;
+  document.getElementById('workerPaymentsTable').innerHTML=table(['Date','Worker','Amount','Note',''],db.workerPayments.slice().reverse().map(pay=>{const worker=db.workers.find(w=>w.id===pay.workerId);return `<tr><td>${esc(pay.date)}</td><td>${esc(worker?worker.name:pay.workerName||'Worker')}</td><td>${money(pay.amount)}</td><td>${esc(pay.note||'')}</td><td><button class="btn danger" onclick="del('workerPayments','${pay.id}')">Delete</button></td></tr>`}));
+
  document.getElementById('customersTable').innerHTML=table(['Name','Phone','Notes',''],db.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td><td><button class="btn danger" onclick="del('customers','${c.id}')">Delete</button></td></tr>`));
  document.getElementById('servicesTable').innerHTML=table(['Date','Service / details','Customer','Qty','Total','Profit','Status','Payment',''],db.services.slice().reverse().map(j=>`<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${money(j.profit)}</td><td><select onchange="updateJob('${j.id}','status',this.value)">${['Received','In progress','Waiting for parts','Ready for collection','Completed','Cancelled'].map(x=>`<option ${j.status===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select onchange="updateJob('${j.id}','payment',this.value)">${['Unpaid','Deposit paid','Paid'].map(x=>`<option ${j.payment===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="btn danger" onclick="del('services','${j.id}')">Delete</button></td></tr>`));
 // SERVICE PROFIT DASHBOARD
@@ -684,7 +724,7 @@ document.getElementById('serviceProfitHistory').innerHTML=table(
  <td>${money(j.profit)}</td>
  </tr>`)
 );
-document.getElementById('rSales').textContent=money(totalSales);document.getElementById('rProfit').textContent=money(gross);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(gross-expenses);
+document.getElementById('rSales').textContent=money(reportRevenue);document.getElementById('rCost').textContent=money(reportCost);document.getElementById('rProfit').textContent=money(reportProfit);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(reportProfit-expenses);
 }
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   document.getElementById('serviceProfitPeriod').addEventListener('change',()=>{
@@ -785,6 +825,9 @@ document.getElementById('spSaleForm').addEventListener('submit',e=>{
 document.getElementById('saleForm').addEventListener('submit',e=>{e.preventDefault();let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value,cost=+saleCost.value;if(qty<1||price<0||cost<0)return alert('Check sale values');let p=db.products.find(x=>x.name.toLowerCase()===name.toLowerCase());if(p&&p.qty<qty&&!confirm('Stock is lower than this sale. Continue?'))return;if(p)p.qty-=qty;db.sales.push({id:id(),date:dateNow(),name,qty,price,cost,total:qty*price,profit:qty*(price-cost),customer:saleCustomer.value,payment:salePayment.value});save();e.target.reset();saleQty.value=1;saleCost.value=0;render();alert('Sale saved')});
 document.getElementById('productForm').addEventListener('submit',e=>{e.preventDefault();let name=pName.value.trim(),existing=db.products.find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing){existing.qty+=+pQty.value;existing.cost=+pCost.value;existing.price=+pPrice.value;existing.min=+pMin.value;existing.sku=pSku.value}else db.products.push({id:id(),name,sku:pSku.value,qty:+pQty.value,cost:+pCost.value,price:+pPrice.value,min:+pMin.value});save();e.target.reset();pQty.value=1;pMin.value=3;render();alert('Stock saved')});
 document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:id(),date:dateNow(),name:eName.value,amount:+eAmount.value,cat:eCat.value});save();e.target.reset();render();alert('Expense saved')});
+document.getElementById('workerForm').addEventListener('submit',e=>{e.preventDefault();db.workers.push({id:id(),name:wName.value.trim(),role:wRole.value.trim(),phone:wPhone.value.trim(),salary:+wSalary.value});save();e.target.reset();render();alert('Worker saved')});
+document.getElementById('workerPaymentForm').addEventListener('submit',e=>{e.preventDefault();const worker=db.workers.find(w=>w.id===wpWorker.value),amount=+wpAmount.value;if(!worker)return alert('Please choose a worker');if(!(amount>0))return alert('Payment amount must be greater than zero');const payment={id:id(),workerId:worker.id,workerName:worker.name,date:wpDate.value||dateNow(),amount,note:wpNote.value.trim()};db.workerPayments.push(payment);db.expenses.push({id:id(),date:payment.date,name:'Worker salary — '+worker.name+(payment.note?' ('+payment.note+')':''),amount,cat:'Salary',workerPaymentId:payment.id});save();e.target.reset();wpDate.value=dateNow();render();alert('Worker payment recorded and included in combined expenses')});
+
 document.getElementById('customerForm').addEventListener('submit',e=>{e.preventDefault();db.customers.push({id:id(),name:cName.value,phone:cPhone.value,notes:cNotes.value});save();e.target.reset();render();alert('Customer saved')});
 function newInvoice(){show('invoices');iDate.value=dateNow();iCustomer.value='';iPhone.value='';iItem.value='';iQty.value=1;iPrice.value='';document.getElementById('invoicePreview').innerHTML=''}
 document.getElementById('invoiceForm').addEventListener('submit',e=>{e.preventDefault();let inv={id:'INV-'+Date.now().toString().slice(-6),customer:iCustomer.value,phone:iPhone.value,item:iItem.value,qty:+iQty.value,price:+iPrice.value,date:iDate.value||dateNow(),total:+iQty.value*+iPrice.value};db.invoices.push(inv);save();document.getElementById('invoicePreview').innerHTML=`<div class="panel" id="printInvoice"><div class="row"><h2>${esc(db.settings.business)}</h2><span>INVOICE ${inv.id}</span></div><p>${esc(db.settings.address)} · ${esc(db.settings.phone)}</p><hr><p><b>Bill to:</b> ${esc(inv.customer)} ${esc(inv.phone)}<br><b>Date:</b> ${inv.date}</p><table><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr><tr><td>${esc(inv.item)}</td><td>${inv.qty}</td><td>${money(inv.price)}</td><td>${money(inv.total)}</td></tr></table><h2 style="text-align:right">TOTAL: ${money(inv.total)}</h2><p>Thank you for your business.</p><button class="btn primary" onclick="window.print()">Print / Save PDF</button></div>`});
@@ -803,7 +846,7 @@ document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.tar
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
 function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin}
-load();initSettings();loadServiceOptions();render();document.getElementById('iDate').value=dateNow();initFirebase();
+load();initSettings();loadServiceOptions();render();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();initFirebase();
 document.getElementById('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 </script>
 </body>
