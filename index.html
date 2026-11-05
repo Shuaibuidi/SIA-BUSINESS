@@ -586,6 +586,98 @@ function render(){
  document.getElementById('rSales').textContent=money(totalSales);document.getElementById('rProfit').textContent=money(gross);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(gross-expenses);
 }
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+// SPARE PARTS MANAGEMENT
+
+document.getElementById('sparePartForm').addEventListener('submit',e=>{
+ e.preventDefault();
+
+ let name=spName.value.trim();
+ let existing=db.spareParts.find(p=>p.name.toLowerCase()===name.toLowerCase());
+
+ if(existing){
+  existing.qty+=+spQty.value;
+  existing.cost=+spCost.value;
+  existing.price=+spPrice.value;
+  existing.min=+spMin.value;
+ }else{
+  db.spareParts.push({
+   id:id(),
+   name,
+   code:spCode.value,
+   qty:+spQty.value,
+   cost:+spCost.value,
+   price:+spPrice.value,
+   min:+spMin.value
+  });
+ }
+
+ save();
+ e.target.reset();
+ spQty.value=1;
+ spMin.value=2;
+ render();
+ alert('Spare part saved');
+});
+
+document.getElementById('spPurchaseForm').addEventListener('submit',e=>{
+ e.preventDefault();
+
+ let part=db.spareParts.find(p=>p.id===spPurchaseItem.value);
+ let qty=+spPurchaseQty.value;
+ let cost=+spPurchaseCost.value;
+
+ if(!part||qty<1||cost<0)return alert('Check purchase details');
+
+ part.qty+=qty;
+ part.cost=cost;
+
+ db.sparePartPurchases.push({
+  id:id(),
+  date:dateNow(),
+  part:part.name,
+  qty,
+  cost,
+  total:qty*cost
+ });
+
+ save();
+ e.target.reset();
+ spPurchaseQty.value=1;
+ render();
+ alert('Purchase recorded');
+});
+
+document.getElementById('spSaleForm').addEventListener('submit',e=>{
+ e.preventDefault();
+
+ let part=db.spareParts.find(p=>p.id===spSaleItem.value);
+ let qty=+spSaleQty.value;
+ let price=+spSalePrice.value;
+
+ if(!part||qty<1||price<0)return alert('Check sale details');
+ if(part.qty<qty)return alert('Not enough spare parts in stock');
+
+ let cost=part.cost;
+ part.qty-=qty;
+
+ db.sparePartSales.push({
+  id:id(),
+  date:dateNow(),
+  part:part.name,
+  qty,
+  price,
+  cost,
+  customer:spSaleCustomer.value,
+  total:qty*price,
+  profit:qty*(price-cost)
+ });
+
+ save();
+ e.target.reset();
+ spSaleQty.value=1;
+ render();
+ alert('Spare part sale recorded');
+});
 document.getElementById('saleForm').addEventListener('submit',e=>{e.preventDefault();let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value,cost=+saleCost.value;if(qty<1||price<0||cost<0)return alert('Check sale values');let p=db.products.find(x=>x.name.toLowerCase()===name.toLowerCase());if(p&&p.qty<qty&&!confirm('Stock is lower than this sale. Continue?'))return;if(p)p.qty-=qty;db.sales.push({id:id(),date:dateNow(),name,qty,price,cost,total:qty*price,profit:qty*(price-cost),customer:saleCustomer.value,payment:salePayment.value});save();e.target.reset();saleQty.value=1;saleCost.value=0;render();alert('Sale saved')});
 document.getElementById('productForm').addEventListener('submit',e=>{e.preventDefault();let name=pName.value.trim(),existing=db.products.find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing){existing.qty+=+pQty.value;existing.cost=+pCost.value;existing.price=+pPrice.value;existing.min=+pMin.value;existing.sku=pSku.value}else db.products.push({id:id(),name,sku:pSku.value,qty:+pQty.value,cost:+pCost.value,price:+pPrice.value,min:+pMin.value});save();e.target.reset();pQty.value=1;pMin.value=3;render();alert('Stock saved')});
 document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:id(),date:dateNow(),name:eName.value,amount:+eAmount.value,cat:eCat.value});save();e.target.reset();render();alert('Expense saved')});
