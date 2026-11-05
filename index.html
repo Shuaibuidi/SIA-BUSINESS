@@ -687,6 +687,9 @@ document.getElementById('serviceProfitHistory').innerHTML=table(
 document.getElementById('rSales').textContent=money(totalSales);document.getElementById('rProfit').textContent=money(gross);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(gross-expenses);
 }
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  document.getElementById('serviceProfitPeriod').addEventListener('change',()=>{
+ render();
+});
 // SPARE PARTS MANAGEMENT
 
 document.getElementById('sparePartForm').addEventListener('submit',e=>{
