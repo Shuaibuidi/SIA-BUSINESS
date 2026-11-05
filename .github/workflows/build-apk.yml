@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   push:
     paths:
-  - 'index.html'
-  - 'logo.png'
-  - 'icon.png'
-  - '.github/workflows/build-apk.yml'
+      - 'index.html'
+      - 'logo.png'
+      - 'icon.png'
+      - '.github/workflows/build-apk.yml'
 
 jobs:
   build:
