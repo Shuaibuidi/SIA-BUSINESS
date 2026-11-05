@@ -632,7 +632,59 @@ if(selected)document.getElementById('spSalePrice').value=selected.price;
   document.getElementById('expensesTable').innerHTML=table(['Date','Description','Category','Amount',''],db.expenses.slice().reverse().map(e=>`<tr><td>${e.date}</td><td>${esc(e.name)}</td><td>${esc(e.cat)}</td><td>${money(e.amount)}</td><td><button class="btn danger" onclick="del('expenses','${e.id}')">Delete</button></td></tr>`));
  document.getElementById('customersTable').innerHTML=table(['Name','Phone','Notes',''],db.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td><td><button class="btn danger" onclick="del('customers','${c.id}')">Delete</button></td></tr>`));
  document.getElementById('servicesTable').innerHTML=table(['Date','Service / details','Customer','Qty','Total','Profit','Status','Payment',''],db.services.slice().reverse().map(j=>`<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${money(j.profit)}</td><td><select onchange="updateJob('${j.id}','status',this.value)">${['Received','In progress','Waiting for parts','Ready for collection','Completed','Cancelled'].map(x=>`<option ${j.status===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select onchange="updateJob('${j.id}','payment',this.value)">${['Unpaid','Deposit paid','Paid'].map(x=>`<option ${j.payment===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="btn danger" onclick="del('services','${j.id}')">Delete</button></td></tr>`));
- document.getElementById('rSales').textContent=money(totalSales);document.getElementById('rProfit').textContent=money(gross);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(gross-expenses);
+// SERVICE PROFIT DASHBOARD
+let jobs=db.services.filter(j=>j.status!=='Cancelled');
+
+let revenue=jobs.reduce((a,j)=>a+Number(j.total||0),0);
+let costs=jobs.reduce((a,j)=>a+(Number(j.total||0)-Number(j.profit||0)),0);
+let profit=jobs.reduce((a,j)=>a+Number(j.profit||0),0);
+
+document.getElementById('spRevenue').textContent=money(revenue);
+document.getElementById('spCosts').textContent=money(costs);
+document.getElementById('spProfit').textContent=money(profit);
+
+function servicePeriod(date,period){
+ let d=new Date(date+'T00:00:00');
+ let now=new Date();
+ let today=dateNow();
+
+ if(period==='daily')return date===today;
+ if(period==='monthly')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
+
+ if(period==='weekly'){
+  let start=new Date(now);
+  start.setHours(0,0,0,0);
+  start.setDate(start.getDate()-((start.getDay()+6)%7));
+  return d>=start&&d<=now;
+ }
+
+ return true;
+}
+
+let period=document.getElementById('serviceProfitPeriod').value;
+let filtered=jobs.filter(j=>servicePeriod(j.date,period));
+
+let periodRevenue=filtered.reduce((a,j)=>a+Number(j.total||0),0);
+let periodCosts=filtered.reduce((a,j)=>a+Number(j.total||0)-Number(j.profit||0),0);
+let periodProfit=filtered.reduce((a,j)=>a+Number(j.profit||0),0);
+
+document.getElementById('serviceProfitSummary').innerHTML=
+'<p>Revenue: <b>'+money(periodRevenue)+'</b></p>'+
+'<p>Materials / Parts cost: <b>'+money(periodCosts)+'</b></p>'+
+'<p>Service profit: <b>'+money(periodProfit)+'</b></p>';
+
+document.getElementById('serviceProfitHistory').innerHTML=table(
+ ['Date','Service','Customer','Revenue','Cost','Profit'],
+ filtered.slice().reverse().map(j=>`<tr>
+ <td>${j.date}</td>
+ <td>${esc(j.service)}</td>
+ <td>${esc(j.customer||'Walk-in')}</td>
+ <td>${money(j.total)}</td>
+ <td>${money(Number(j.total||0)-Number(j.profit||0))}</td>
+ <td>${money(j.profit)}</td>
+ </tr>`)
+);
+document.getElementById('rSales').textContent=money(totalSales);document.getElementById('rProfit').textContent=money(gross);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(gross-expenses);
 }
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 // SPARE PARTS MANAGEMENT
