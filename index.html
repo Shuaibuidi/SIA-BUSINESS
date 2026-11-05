@@ -30,7 +30,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 </head>
 <body>
 
-<div id="authGate" style="position:fixed;inset:0;background:#061522;z-index:30;display:flex;align-items:center;justify-content:center;padding:20px">
+<div id="authGate" style="position:fixed;inset:0;background:#061522;z-index:30;display:none;align-items:center;justify-content:center;padding:20px">
   <div class="lockbox" style="max-width:390px;width:100%;text-align:center;background:#102b43;border:1px solid #284b65;border-radius:20px;padding:25px">
     <div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div>
     <h2>SMART BUSINESS MANAGER</h2>
@@ -40,6 +40,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
     <button class="btn primary" style="width:100%;margin-top:14px" onclick="signInAccount()">Sign in</button>
     <button class="btn soft" style="width:100%;margin-top:8px" onclick="registerAccount()">Create new account</button>
     <button class="btn soft" style="width:100%;margin-top:8px" onclick="resetAccountPassword()">Forgot password?</button>
+    <button class="btn success" style="width:100%;margin-top:8px" onclick="continueOffline()">Continue Offline</button>
     <p id="authMsg" class="notice" aria-live="polite"></p>
     <p class="notice">Your records are private to the account you use to sign in. Keep your password safe.</p>
   </div>
@@ -302,7 +303,11 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <div class="panel"><h3>Cloud account</h3>
   <p class="notice">Signed-in account: <b id="accountEmail">Not signed in</b></p>
   <p class="notice">Cloud status: <b id="cloudStatusSettings">Waiting</b></p>
-  <div class="actions"><button class="btn soft" onclick="syncNow()">Sync now</button><button class="btn danger" onclick="signOutAccount()">Sign out</button></div>
+  <div class="actions">
+    <button class="btn primary" onclick="showCloudLogin()">Sign in / Create account</button>
+    <button class="btn soft" onclick="syncNow()">Sync now</button>
+    <button class="btn danger" onclick="signOutAccount()">Sign out</button>
+  </div>
 </div>
 
 <div class="panel"><h3>Danger zone</h3><button class="btn danger" onclick="clearAll()">Delete all app data</button></div>
@@ -340,39 +345,51 @@ function setCloudStatus(message, good=false) {
   if (b) b.textContent = message;
 }
 function firebaseConfigured() {
-  return firebaseConfig.apiKey !== "PASTE_API_KEY_HERE" &&
-    firebaseConfig.projectId !== "PASTE_PROJECT_ID" &&
-    firebaseConfig.appId !== "PASTE_APP_ID";
+  const values=[firebaseConfig.apiKey,firebaseConfig.authDomain,firebaseConfig.projectId,firebaseConfig.appId];
+  return values.every(v=>typeof v==='string' && v.trim() && !/PASTE_|YOUR_|CHANGE_ME/i.test(v));
 }
 function initFirebase() {
+  const gate=document.getElementById('authGate');
   if (typeof firebase === 'undefined') {
-    setCloudStatus('Firebase SDK did not load');
-    document.getElementById('authMsg').textContent = 'Firebase libraries could not load. Check internet access and ensure the Firebase CDN scripts are not blocked by the app WebView.';
+    firebaseReady=false;
+    setCloudStatus('Offline mode — Firebase SDK unavailable');
+    const msg=document.getElementById('authMsg');
+    if (msg) msg.textContent='Firebase libraries could not load. The app will continue in offline mode. Check internet access or the Android WebView network settings to enable cloud backup.';
+    if (gate) gate.style.display='none';
     return false;
   }
   if (!firebaseConfigured()) {
-    setCloudStatus('Firebase setup required');
-    document.getElementById('authMsg').textContent =
-      'Firebase is not connected yet. Add your Firebase web configuration to index.html, then rebuild the APK.';
+    firebaseReady=false;
+    setCloudStatus('Offline mode — Firebase config missing');
+    const msg=document.getElementById('authMsg');
+    if (msg) msg.textContent='Firebase configuration is incomplete. The app will continue offline; local records are not affected.';
+    if (gate) gate.style.display='none';
     return false;
   }
   try {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    cloudDb = firebase.firestore();
-    // Keep the signed-in session on this device between app launches.
+    auth=firebase.auth();
+    cloudDb=firebase.firestore();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err => {
-      console.warn('Firebase auth persistence could not be set:', err);
+      console.warn('Firebase auth persistence could not be set:',err);
     });
-    firebaseReady = true;
-    auth.onAuthStateChanged(handleAuthState, err => {
-      setCloudStatus('Authentication error');
-      document.getElementById('authMsg').textContent = 'Firebase sign-in session error: ' + authErrorMessage(err);
+    firebaseReady=true;
+    auth.onAuthStateChanged(handleAuthState,err=>{
+      setCloudStatus('Authentication unavailable — local mode');
+      const msg=document.getElementById('authMsg');
+      if (msg) msg.textContent='Firebase authentication error: '+authErrorMessage(err);
+      if (gate) gate.style.display='none';
     });
     return true;
-  } catch (err) {
-    setCloudStatus('Firebase setup error');
-    document.getElementById('authMsg').textContent = 'Firebase could not start: ' + err.message;
+  } catch(err) {
+    firebaseReady=false;
+    auth=null;
+    cloudDb=null;
+    setCloudStatus('Offline mode — Firebase initialization failed');
+    const msg=document.getElementById('authMsg');
+    if (msg) msg.textContent='Firebase could not start: '+authErrorMessage(err)+'. You can continue using the app offline.';
+    if (gate) gate.style.display='none';
+    console.error('Firebase initialization failed:',err);
     return false;
   }
 }
@@ -402,7 +419,7 @@ function getAuthInputs() {
   };
 }
 async function signInAccount() {
-  if (!firebaseReady) return alert('Firebase setup is required before account login can work.');
+  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable. Continue using the app offline; cloud sign-in can be retried when Firebase is configured and reachable.'; return; }
   const {email,password}=getAuthInputs();
   if (!email || !password) return document.getElementById('authMsg').textContent='Enter your email and password.';
   document.getElementById('authMsg').textContent='Signing in...';
@@ -410,7 +427,7 @@ async function signInAccount() {
   catch(err) { document.getElementById('authMsg').textContent=authErrorMessage(err); }
 }
 async function registerAccount() {
-  if (!firebaseReady) return alert('Firebase setup is required before account registration can work.');
+  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable. Your local business records will continue working offline.'; return; }
   const {email,password}=getAuthInputs();
   if (!email || !password) return document.getElementById('authMsg').textContent='Enter your email and choose a password.';
   if (password.length < 6) return document.getElementById('authMsg').textContent='Password must contain at least 6 characters.';
@@ -421,7 +438,7 @@ async function registerAccount() {
   } catch(err) { document.getElementById('authMsg').textContent=authErrorMessage(err); }
 }
 async function resetAccountPassword() {
-  if (!firebaseReady) return alert('Firebase setup is required first.');
+  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable, so password reset cannot be sent. Your offline records are still safe on this device.'; return; }
   const email=document.getElementById('authEmail').value.trim();
   if (!email) return document.getElementById('authMsg').textContent='Enter your email address first.';
   try {
@@ -433,19 +450,47 @@ async function handleAuthState(user) {
   currentUser=user||null;
   cloudReady=false;
   if (cloudUnsubscribe) { cloudUnsubscribe(); cloudUnsubscribe=null; }
+
+  const gate=document.getElementById('authGate');
+  const lock=document.getElementById('lock');
+  const email=document.getElementById('accountEmail');
+
   if (!user) {
-    document.getElementById('authGate').style.display='flex';
-    document.getElementById('lock').style.display='none';
-    document.getElementById('accountEmail').textContent='Not signed in';
-    setCloudStatus('Signed out');
+    // Authentication is optional. The app remains usable with local storage.
+    if (gate) gate.style.display='none';
+    if (lock) lock.style.display='none';
+    if (email) email.textContent='Not signed in — using this device';
+    setCloudStatus(firebaseReady ? 'Local mode — sign in for cloud backup' : 'Offline mode — cloud unavailable');
     return;
   }
-  document.getElementById('authGate').style.display='none';
-  document.getElementById('lock').style.display='flex';
-  document.getElementById('accountEmail').textContent=user.email||'Signed in';
+
+  if (gate) gate.style.display='none';
+  if (lock) lock.style.display='flex';
+  if (email) email.textContent=user.email||'Signed in';
   setCloudStatus('Connecting to cloud...');
   await connectUserCloud(user);
 }
+
+function continueOffline() {
+  const gate=document.getElementById('authGate');
+  if (gate) gate.style.display='none';
+  const lock=document.getElementById('lock');
+  if (lock) lock.style.display='none';
+  setCloudStatus('Offline mode — records saved on this device');
+  render();
+}
+
+function showCloudLogin() {
+  const gate=document.getElementById('authGate');
+  const msg=document.getElementById('authMsg');
+  if (!firebaseReady) {
+    if (msg) msg.textContent='Cloud sign-in is unavailable because Firebase did not initialize. You can continue using the app offline; local records will still be saved on this device.';
+  } else if (msg) {
+    msg.textContent='Sign in to enable cloud backup and restore. Offline business records remain available.';
+  }
+  if (gate) gate.style.display='flex';
+}
+
 async function connectUserCloud(user) {
   const ref=cloudDb.collection('users').doc(user.uid).collection('appData').doc('main');
   try {
@@ -462,6 +507,8 @@ db={
  spareParts:[],
  sparePartPurchases:[],
  sparePartSales:[],
+ workers:[],
+ workerPayments:[],
  settings:{
   business:'My Business',
   tag:'Manage your business. Grow with confidence.',
@@ -486,7 +533,19 @@ db={
         setCloudStatus('Offline changes backed up',true);
       } else {
         applyingCloudData=true;
-        db={...db,...snap.data().payload,settings:{...db.settings,...(snap.data().payload.settings||{})}};
+        db={...db,...snap.data().payload,
+          products:snap.data().payload.products||[],
+          sales:snap.data().payload.sales||[],
+          expenses:snap.data().payload.expenses||[],
+          customers:snap.data().payload.customers||[],
+          invoices:snap.data().payload.invoices||[],
+          services:snap.data().payload.services||[],
+          spareParts:snap.data().payload.spareParts||[],
+          sparePartPurchases:snap.data().payload.sparePartPurchases||[],
+          sparePartSales:snap.data().payload.sparePartSales||[],
+          workers:snap.data().payload.workers||[],
+          workerPayments:snap.data().payload.workerPayments||[],
+          settings:{...db.settings,...(snap.data().payload.settings||{})}};
         localStorage.setItem(KEY,JSON.stringify(db));
         initSettings();
         render();
@@ -543,6 +602,7 @@ function scheduleCloudSave() {
   },700);
 }
 async function syncNow() {
+  if (!firebaseReady || !auth || !cloudDb) return alert('Cloud backup is not available right now. Your records are saved locally on this device.');
   if (!currentUser) return alert('Please sign in first.');
   if (!navigator.onLine) return alert('Connect to the internet to sync now. Your local records remain on this device.');
   if (!cloudReady) return alert('Cloud connection is not ready. Please wait and try again.');
@@ -555,6 +615,7 @@ async function syncNow() {
   } catch(err) { alert('Sync failed: '+authErrorMessage(err)); }
 }
 async function signOutAccount() {
+  if (!auth || !currentUser) return alert('No cloud account is currently signed in. The app is using local storage.');
   if (!confirm('Sign out of this account on this device? Your cloud records will remain online.')) return;
   try { await auth.signOut(); }
   catch(err) { alert(authErrorMessage(err)); }
@@ -571,6 +632,8 @@ let db={
  spareParts:[],
  sparePartPurchases:[],
  sparePartSales:[],
+ workers:[],
+ workerPayments:[],
  settings:{
   business:'My Business',
   tag:'Manage your business. Grow with confidence.',
@@ -596,7 +659,9 @@ function load(){
     spareParts:x.spareParts||[],
     sparePartPurchases:x.sparePartPurchases||[],
     sparePartSales:x.sparePartSales||[],
-    settings:{...db.settings,...x.settings}
+    workers:x.workers||[],
+    workerPayments:x.workerPayments||[],
+    settings:{...db.settings,...(x.settings||{})}
    };
   }
  }catch(e){
