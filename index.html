@@ -349,8 +349,25 @@ async function signOutAccount() {
 }
 window.addEventListener('online',()=>{ if(currentUser) syncNow(); else setCloudStatus('Online'); });
 window.addEventListener('offline',()=>setCloudStatus('Offline — saved on device'));
-
-let db={products:[],sales:[],expenses:[],customers:[],invoices:[],services:[],settings:{business:'My Business',tag:'Manage your business. Grow with confidence.',address:'Malawi',phone:'0999 290 495',currency:'MK',pin:'1234'}};
+let db={
+ products:[],
+ sales:[],
+ expenses:[],
+ customers:[],
+ invoices:[],
+ services:[],
+ spareParts:[],
+ sparePartPurchases:[],
+ sparePartSales:[],
+ settings:{
+  business:'My Business',
+  tag:'Manage your business. Grow with confidence.',
+  address:'Malawi',
+  phone:'0999 290 495',
+  currency:'MK',
+  pin:'1234'
+ }
+};
 function load(){try{let x=JSON.parse(localStorage.getItem(KEY));if(x)db={...db,...x,services:x.services||[],settings:{...db.settings,...x.settings}}}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!applyingCloudData)localStorage.setItem(DIRTY_KEY,'1');scheduleCloudSave();return true}catch(e){alert('Storage error. Export a backup or check browser storage permissions.');return false}}
 function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
