@@ -1,0 +1,21 @@
+{
+  "name": "SIA BUSINESS",
+  "short_name": "SIA BUSINESS",
+  "description": "SIA BUSINESS Management System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#071a2c",
+  "theme_color": "#071a2c",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
