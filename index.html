@@ -51,7 +51,17 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <main>
 <section class="welcome"><div class="eyebrow">BUSINESS CONTROL CENTRE</div><h2 id="greet">Good business starts here.</h2><p id="businessTag">Your Business · Malawi</p></section>
 <div class="nav" id="nav">
-<button class="active" data-view="dashboard" onclick="show('dashboard')">Dashboard</button><button data-view="sales" onclick="show('sales')">Sales</button><button data-view="products" onclick="show('products')">Stock</button><button data-view="services" onclick="show('services')">Services</button><button data-view="expenses" onclick="show('expenses')">Expenses</button><button data-view="customers" onclick="show('customers')">Customers</button><button data-view="invoices" onclick="show('invoices')">Invoices</button><button data-view="reports" onclick="show('reports')">Reports</button><button data-view="settings" onclick="show('settings')">Settings</button>
+<button class="active" data-view="dashboard" onclick="show('dashboard')">Dashboard</button>
+<button data-view="sales" onclick="show('sales')">Sales</button>
+<button data-view="products" onclick="show('products')">Stock</button>
+<button data-view="spareparts" onclick="show('spareparts')">Spare Parts</button>
+<button data-view="services" onclick="show('services')">Services</button>
+<button data-view="serviceprofit" onclick="show('serviceprofit')">Service Profit</button>
+<button data-view="expenses" onclick="show('expenses')">Expenses</button>
+<button data-view="customers" onclick="show('customers')">Customers</button>
+<button data-view="invoices" onclick="show('invoices')">Invoices</button>
+<button data-view="reports" onclick="show('reports')">Reports</button>
+<button data-view="settings" onclick="show('settings')">Settings</button>
 </div>
 <section id="dashboard" class="view active">
 <div class="cards">
@@ -82,6 +92,110 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 </div><button class="btn primary" type="submit" style="margin-top:12px">Save product</button></form></div>
 <div class="panel"><h3>Inventory</h3><div class="tablewrap" id="productsTable"></div></div>
 </section>
+  <section id="spareparts" class="view">
+
+<div class="panel">
+<h3>Add Spare Part</h3>
+<form id="sparePartForm">
+<div class="formgrid">
+
+<div class="field">
+<label>Part name</label>
+<input id="spName" required placeholder="e.g. Itel A16 charging port">
+</div>
+
+<div class="field">
+<label>Part code</label>
+<input id="spCode" placeholder="Optional">
+</div>
+
+<div class="field">
+<label>Quantity</label>
+<input id="spQty" type="number" min="0" required value="1">
+</div>
+
+<div class="field">
+<label>Buying price per part (MK)</label>
+<input id="spCost" type="number" min="0" required value="0">
+</div>
+
+<div class="field">
+<label>Selling price per part (MK)</label>
+<input id="spPrice" type="number" min="0" required value="0">
+</div>
+
+<div class="field">
+<label>Low stock warning</label>
+<input id="spMin" type="number" min="0" value="2">
+</div>
+
+</div>
+<button class="btn primary" type="submit" style="margin-top:12px">Save Spare Part</button>
+</form>
+</div>
+
+<div class="panel">
+<h3>Record Spare Parts Purchase</h3>
+<form id="spPurchaseForm">
+<div class="formgrid">
+<div class="field">
+<label>Select spare part</label>
+<select id="spPurchaseItem" required></select>
+</div>
+<div class="field">
+<label>Quantity purchased</label>
+<input id="spPurchaseQty" type="number" min="1" required value="1">
+</div>
+<div class="field">
+<label>Buying price per part (MK)</label>
+<input id="spPurchaseCost" type="number" min="0" required value="0">
+</div>
+</div>
+<button class="btn primary" type="submit">Record Purchase</button>
+</form>
+</div>
+
+<div class="panel">
+<h3>Sell Spare Part</h3>
+<form id="spSaleForm">
+<div class="formgrid">
+<div class="field">
+<label>Select spare part</label>
+<select id="spSaleItem" required></select>
+</div>
+<div class="field">
+<label>Quantity sold</label>
+<input id="spSaleQty" type="number" min="1" required value="1">
+</div>
+<div class="field">
+<label>Selling price per part (MK)</label>
+<input id="spSalePrice" type="number" min="0" required value="0">
+</div>
+<div class="field">
+<label>Customer name (optional)</label>
+<input id="spSaleCustomer">
+</div>
+</div>
+<button class="btn primary" type="submit">Record Sale</button>
+</form>
+</div>
+
+<div class="panel">
+<h3>Spare Parts Inventory</h3>
+<div id="sparePartsTable"></div>
+</div>
+
+<div class="panel">
+<h3>Purchase History</h3>
+<div id="sparePurchaseTable"></div>
+</div>
+
+<div class="panel">
+<h3>Sales History</h3>
+<div id="spareSalesTable"></div>
+</div>
+
+  </section>
 <section id="services" class="view">
 <div class="panel"><div class="row"><h3>Printing & repair services</h3><span class="badge">Service catalogue</span></div>
 <p class="notice">Record service jobs, prices, costs and profits. Customize job descriptions and prices to suit your shop.</p>
