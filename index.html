@@ -257,8 +257,25 @@ async function connectUserCloud(user) {
     // Never carry one account's local records into another account on a shared phone.
     const previousOwner=localStorage.getItem(OWNER_KEY);
     if (previousOwner && previousOwner!==user.uid) {
-      db={products:[],sales:[],expenses:[],customers:[],invoices:[],services:[],
-        settings:{business:'My Business',tag:'Manage your business. Grow with confidence.',address:'Malawi',phone:'',currency:'MK',pin:'1234'}};
+db={
+ products:[],
+ sales:[],
+ expenses:[],
+ customers:[],
+ invoices:[],
+ services:[],
+ spareParts:[],
+ sparePartPurchases:[],
+ sparePartSales:[],
+ settings:{
+  business:'My Business',
+  tag:'Manage your business. Grow with confidence.',
+  address:'Malawi',
+  phone:'',
+  currency:'MK',
+  pin:'1234'
+ }
+};
       localStorage.setItem(KEY,JSON.stringify(db));
       localStorage.removeItem(DIRTY_KEY);
       initSettings();
