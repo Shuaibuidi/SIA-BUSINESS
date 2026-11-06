@@ -1301,44 +1301,61 @@ document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDe
 function updateJob(id,key,value){let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}}
 document.getElementById('settingsForm').addEventListener('submit',async e=>{
  e.preventDefault();
- // Read settings inputs by ID explicitly; do not depend on browser named-element globals.
- const businessInput=document.getElementById('sBusiness');
- const tagInput=document.getElementById('sTag');
- const addressInput=document.getElementById('sAddress');
- const phoneInput=document.getElementById('sPhone');
- const currencyInput=document.getElementById('sCurrency');
- const pinInput=document.getElementById('sPin');
- const biometricInput=document.getElementById('sBiometric');
- const pin=String(pinInput.value||'').trim();
- if(!/^\d{4,8}$/.test(pin))return alert('PIN must be 4–8 digits');
- const enableBiometric=biometricInput.checked;
- if(enableBiometric){
-  if(pin==='1234')return alert('Please change the default PIN 1234 before enabling fingerprint lock.');
-  if(!window.SIABiometric)return alert('Fingerprint authentication is not available in this app build.');
-  try{
-   const info=await window.SIABiometric.checkBiometry();
-   if(!info || !info.strongBiometryIsAvailable)return alert('No usable fingerprint is enrolled for apps on this device. Enrol a fingerprint in Android Settings first.');
-  }catch(err){console.error('Biometric availability check failed:',err);return alert('Could not check fingerprint availability. Please try again.');}
- }
- db.settings={
-  ...db.settings,
-  business:businessInput.value,
-  tag:tagInput.value,
-  address:addressInput.value,
-  phone:phoneInput.value,
-  currency:currencyInput.value,
-  pin:pin,
-  biometricEnabled:enableBiometric
- };
- if(!save())return;
- // Confirm that the new PIN was written to this device before reporting success.
- const savedSettings=JSON.parse(localStorage.getItem(KEY)||'{}').settings||{};
- if(String(savedSettings.pin||'')!==pin){
-  alert('The PIN could not be confirmed in local storage. Please use Download backup and check device storage.');
+
+ // Read settings by explicit element IDs. Do not rely on browser-created
+ // global variables for form controls (which can resolve inconsistently in WebView).
+ const business=document.getElementById('sBusiness').value;
+ const tag=document.getElementById('sTag').value;
+ const address=document.getElementById('sAddress').value;
+ const phone=document.getElementById('sPhone').value;
+ const currency=document.getElementById('sCurrency').value;
+ const pin=document.getElementById('sPin').value.trim();
+ const enableBiometric=document.getElementById('sBiometric').checked;
+
+ if(!/^\d{4,8}$/.test(pin)){
+  alert('PIN must be 4–8 digits. The PIN has not been changed.');
   return;
  }
- pinInput.value=pin;
+ if(enableBiometric){
+  if(pin==='1234'){
+   alert('Please change the default PIN 1234 before enabling fingerprint lock.');
+   return;
+  }
+  if(!window.SIABiometric){
+   alert('Fingerprint authentication is not available in this app build. Your PIN setting has not been changed.');
+   return;
+  }
+  try{
+   const info=await window.SIABiometric.checkBiometry();
+   if(!info || !info.strongBiometryIsAvailable){
+    alert('No usable fingerprint is enrolled for apps on this device. Enrol a fingerprint in Android Settings first. Your PIN setting has not been changed.');
+    return;
+   }
+  }catch(err){
+   console.error('Biometric availability check failed:',err);
+   alert('Could not check fingerprint availability. Your PIN setting has not been changed.');
+   return;
+  }
+ }
+
+ // Update only the settings object; all sales, stock, services and other records stay untouched.
+ db.settings={...db.settings,business,tag,address,phone,currency,pin,biometricEnabled:enableBiometric};
+ const saved=save();
+ if(!saved){
+  alert('Settings could not be saved on this device. Your existing records have not been cleared.');
+  return;
+ }
+ // Verify the exact PIN was written to this device before reporting success.
+ let stored=null;
+ try{stored=JSON.parse(localStorage.getItem(KEY)||'null');}catch(err){}
+ if(!stored || !stored.settings || String(stored.settings.pin)!==pin){
+  alert('The new PIN could not be verified as saved. Please do not close the app; your existing records are still present.');
+  return;
+ }
+ initSettings();
  render();
+ // Saving settings must not lock the owner out of the current open session.
+ finishAppUnlock();
  alert(enableBiometric?'Settings saved. Fingerprint lock will be required the next time you open the app.':'Settings saved.');
 });
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
@@ -1346,14 +1363,13 @@ document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.tar
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
 function initSettings(){
- const settings=db.settings||{};
- document.getElementById('sBusiness').value=settings.business||'';
- document.getElementById('sTag').value=settings.tag||'';
- document.getElementById('sAddress').value=settings.address||'';
- document.getElementById('sPhone').value=settings.phone||'';
- document.getElementById('sCurrency').value=settings.currency||'MK';
- document.getElementById('sPin').value=String(settings.pin||'1234');
- document.getElementById('sBiometric').checked=!!settings.biometricEnabled;
+ document.getElementById('sBusiness').value=db.settings.business||'';
+ document.getElementById('sTag').value=db.settings.tag||'';
+ document.getElementById('sAddress').value=db.settings.address||'';
+ document.getElementById('sPhone').value=db.settings.phone||'';
+ document.getElementById('sCurrency').value=db.settings.currency||'MK';
+ document.getElementById('sPin').value=String(db.settings.pin||'1234');
+ document.getElementById('sBiometric').checked=!!db.settings.biometricEnabled;
 }
 load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();startAppSecurity();
 </script>
