@@ -1301,9 +1301,17 @@ document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDe
 function updateJob(id,key,value){let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}}
 document.getElementById('settingsForm').addEventListener('submit',async e=>{
  e.preventDefault();
- let pin=sPin.value;
+ // Read settings inputs by ID explicitly; do not depend on browser named-element globals.
+ const businessInput=document.getElementById('sBusiness');
+ const tagInput=document.getElementById('sTag');
+ const addressInput=document.getElementById('sAddress');
+ const phoneInput=document.getElementById('sPhone');
+ const currencyInput=document.getElementById('sCurrency');
+ const pinInput=document.getElementById('sPin');
+ const biometricInput=document.getElementById('sBiometric');
+ const pin=String(pinInput.value||'').trim();
  if(!/^\d{4,8}$/.test(pin))return alert('PIN must be 4–8 digits');
- const enableBiometric=sBiometric.checked;
+ const enableBiometric=biometricInput.checked;
  if(enableBiometric){
   if(pin==='1234')return alert('Please change the default PIN 1234 before enabling fingerprint lock.');
   if(!window.SIABiometric)return alert('Fingerprint authentication is not available in this app build.');
@@ -1312,15 +1320,41 @@ document.getElementById('settingsForm').addEventListener('submit',async e=>{
    if(!info || !info.strongBiometryIsAvailable)return alert('No usable fingerprint is enrolled for apps on this device. Enrol a fingerprint in Android Settings first.');
   }catch(err){console.error('Biometric availability check failed:',err);return alert('Could not check fingerprint availability. Please try again.');}
  }
- db.settings={...db.settings,business:sBusiness.value,tag:sTag.value,address:sAddress.value,phone:sPhone.value,currency:sCurrency.value,pin,biometricEnabled:enableBiometric};
- save();render();
+ db.settings={
+  ...db.settings,
+  business:businessInput.value,
+  tag:tagInput.value,
+  address:addressInput.value,
+  phone:phoneInput.value,
+  currency:currencyInput.value,
+  pin:pin,
+  biometricEnabled:enableBiometric
+ };
+ if(!save())return;
+ // Confirm that the new PIN was written to this device before reporting success.
+ const savedSettings=JSON.parse(localStorage.getItem(KEY)||'{}').settings||{};
+ if(String(savedSettings.pin||'')!==pin){
+  alert('The PIN could not be confirmed in local storage. Please use Download backup and check device storage.');
+  return;
+ }
+ pinInput.value=pin;
+ render();
  alert(enableBiometric?'Settings saved. Fingerprint lock will be required the next time you open the app.':'Settings saved.');
 });
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
 document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)});
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
-function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin;sBiometric.checked=!!db.settings.biometricEnabled}
+function initSettings(){
+ const settings=db.settings||{};
+ document.getElementById('sBusiness').value=settings.business||'';
+ document.getElementById('sTag').value=settings.tag||'';
+ document.getElementById('sAddress').value=settings.address||'';
+ document.getElementById('sPhone').value=settings.phone||'';
+ document.getElementById('sCurrency').value=settings.currency||'MK';
+ document.getElementById('sPin').value=String(settings.pin||'1234');
+ document.getElementById('sBiometric').checked=!!settings.biometricEnabled;
+}
 load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();startAppSecurity();
 </script>
 </body>
