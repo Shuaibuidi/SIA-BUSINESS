@@ -1220,8 +1220,7 @@ document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.tar
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
 function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin}
-load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();initFirebase();
-document.getElementById('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();
 </script>
 </body>
 </html>
