@@ -465,6 +465,7 @@ main{padding:22px 18px 34px}
 const KEY='sia_business_pro_v1';
 const DIRTY_KEY=KEY+'_cloud_dirty';
 const OWNER_KEY=KEY+'_cloud_owner';
+const PIN_KEY=KEY+'_local_pin';
   
 // IMPORTANT: Replace every placeholder below with the config from
 const firebaseConfig = {
@@ -672,6 +673,7 @@ db={
 };
       localStorage.setItem(KEY,JSON.stringify(db));
       localStorage.removeItem(DIRTY_KEY);
+      localStorage.removeItem(PIN_KEY);
       initSettings();
       render();
     }
@@ -699,6 +701,9 @@ db={
           workers:snap.data().payload.workers||[],
           workerPayments:snap.data().payload.workerPayments||[],
           settings:{...db.settings,...(snap.data().payload.settings||{})}};
+        const locallySavedPin=localStorage.getItem(PIN_KEY);
+        if(locallySavedPin!==null) db.settings.pin=locallySavedPin;
+        else localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
         localStorage.setItem(KEY,JSON.stringify(db));
         initSettings();
         render();
@@ -709,6 +714,7 @@ db={
       // First login: preserve and upload records already stored on this phone.
       await ref.set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
       localStorage.removeItem(DIRTY_KEY);
+      if(localStorage.getItem(PIN_KEY)===null) localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
       setCloudStatus('First backup completed',true);
     }
     localStorage.setItem(OWNER_KEY,user.uid);
@@ -724,6 +730,9 @@ db={
       if (incoming!==local) {
         applyingCloudData=true;
         db={...db,...snapshot.data().payload,settings:{...db.settings,...(snapshot.data().payload.settings||{})}};
+        const locallySavedPin=localStorage.getItem(PIN_KEY);
+        if(locallySavedPin!==null) db.settings.pin=locallySavedPin;
+        else localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
         localStorage.setItem(KEY,JSON.stringify(db));
         initSettings();
         render();
@@ -882,7 +891,7 @@ function finishAppUnlock(){
   if(msg)msg.textContent='';
 }
 function unlock(){
-  if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){
+  if(document.getElementById('pinIn').value===String(localStorage.getItem(PIN_KEY)??db.settings.pin??'1234')){
     finishAppUnlock();
     document.getElementById('pinIn').value='';
   }else document.getElementById('lockMsg').textContent='Incorrect PIN';
@@ -1352,6 +1361,10 @@ document.getElementById('settingsForm').addEventListener('submit',async e=>{
   alert('The new PIN could not be verified as saved. Please do not close the app; your existing records are still present.');
   return;
  }
+ try{localStorage.setItem(PIN_KEY,pin);}catch(err){
+  alert('The PIN was saved in app data, but its local PIN protection could not be updated. Please keep the app open and try again.');
+  return;
+ }
  initSettings();
  render();
  // Saving settings must not lock the owner out of the current open session.
@@ -1359,8 +1372,8 @@ document.getElementById('settingsForm').addEventListener('submit',async e=>{
  alert(enableBiometric?'Settings saved. Fingerprint lock will be required the next time you open the app.':'Settings saved.');
 });
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
-document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)});
-function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
+document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)});
+function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);localStorage.removeItem(PIN_KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
 function initSettings(){
  document.getElementById('sBusiness').value=db.settings.business||'';
@@ -1368,7 +1381,7 @@ function initSettings(){
  document.getElementById('sAddress').value=db.settings.address||'';
  document.getElementById('sPhone').value=db.settings.phone||'';
  document.getElementById('sCurrency').value=db.settings.currency||'MK';
- document.getElementById('sPin').value=String(db.settings.pin||'1234');
+ document.getElementById('sPin').value=String(localStorage.getItem(PIN_KEY)??db.settings.pin??'1234');
  document.getElementById('sBiometric').checked=!!db.settings.biometricEnabled;
 }
 load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();startAppSecurity();
