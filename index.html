@@ -1347,22 +1347,32 @@ document.getElementById('settingsForm').addEventListener('submit',async e=>{
   }
  }
 
- // Update only the settings object; all sales, stock, services and other records stay untouched.
- db.settings={...db.settings,business,tag,address,phone,currency,pin,biometricEnabled:enableBiometric};
- const saved=save();
- if(!saved){
-  alert('Settings could not be saved on this device. Your existing records have not been cleared.');
-  return;
- }
- // Verify the exact PIN was written to this device before reporting success.
- let stored=null;
- try{stored=JSON.parse(localStorage.getItem(KEY)||'null');}catch(err){}
- if(!stored || !stored.settings || String(stored.settings.pin)!==pin){
-  alert('The new PIN could not be verified as saved. Please do not close the app; your existing records are still present.');
-  return;
- }
- try{localStorage.setItem(PIN_KEY,pin);}catch(err){
-  alert('The PIN was saved in app data, but its local PIN protection could not be updated. Please keep the app open and try again.');
+ // Update only settings and the two PIN storage locations; business records remain untouched.
+ const previousPin=localStorage.getItem(PIN_KEY);
+ const previousSettings={...db.settings};
+ try{
+  // Write the local PIN key first because unlock() checks this key before settings.pin.
+  localStorage.setItem(PIN_KEY,pin);
+  db.settings={...db.settings,business,tag,address,phone,currency,pin,biometricEnabled:enableBiometric};
+  const saved=save();
+  if(!saved) throw new Error('The app could not save its settings.');
+
+  // Verify both stored values match the new PIN before reporting success.
+  const stored=JSON.parse(localStorage.getItem(KEY)||'null');
+  const localPin=localStorage.getItem(PIN_KEY);
+  if(!stored || !stored.settings || String(stored.settings.pin)!==pin || localPin!==pin){
+   throw new Error('The new PIN could not be verified in both storage locations.');
+  }
+ }catch(err){
+  // Roll back the PIN/settings change if storage verification fails.
+  try{
+   if(previousPin===null)localStorage.removeItem(PIN_KEY);
+   else localStorage.setItem(PIN_KEY,previousPin);
+   db.settings=previousSettings;
+   localStorage.setItem(KEY,JSON.stringify(db));
+  }catch(rollbackError){console.error('PIN rollback failed:',rollbackError);}
+  console.error('PIN settings save failed:',err);
+  alert('PIN settings were not confirmed as saved. Your previous PIN is being kept. '+(err.message||''));
   return;
  }
  initSettings();
