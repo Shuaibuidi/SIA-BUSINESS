@@ -768,8 +768,30 @@ async function signOutAccount() {
   try { await auth.signOut(); }
   catch(err) { alert(authErrorMessage(err)); }
 }
-window.addEventListener('online',()=>{ if(currentUser) syncNow(); else setCloudStatus('Online'); });
-window.addEventListener('offline',()=>setCloudStatus('Offline — saved on device'));
+// Offline-first behavior: all app changes are stored locally by save().
+// When connectivity returns, retry Firebase initialization (if the SDK did
+// not load at app startup), reconnect the signed-in account, and sync pending data.
+window.addEventListener('online', async()=>{
+  setCloudStatus('Internet connected — checking cloud...');
+  if (!firebaseReady) {
+    const initialized = initFirebase();
+    if (!initialized) {
+      setCloudStatus('Online, but cloud is unavailable — records remain saved on this device');
+      return;
+    }
+    // onAuthStateChanged will reconnect an existing signed-in session.
+    return;
+  }
+  if (currentUser) {
+    if (!cloudReady) await connectUserCloud(currentUser);
+    else await syncNow();
+  } else {
+    setCloudStatus('Online — local records saved; sign in for cloud backup');
+  }
+});
+window.addEventListener('offline',()=>{
+  setCloudStatus('Offline — changes are saved on this device');
+});
 let db={
  products:[],
  purchases:[],
@@ -818,7 +840,20 @@ function load(){
   console.error('Data loading error:',e);
  }
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&&!applyingCloudData)localStorage.setItem(DIRTY_KEY,'1');scheduleCloudSave();return true}catch(e){alert('Storage error. Export a backup or check browser storage permissions.');return false}}
+function save(){
+  try {
+    // Primary offline copy: save immediately on this device.
+    localStorage.setItem(KEY, JSON.stringify(db));
+    // Keep a pending-sync marker until a successful cloud upload confirms it.
+    if (currentUser && !applyingCloudData) localStorage.setItem(DIRTY_KEY, '1');
+    scheduleCloudSave();
+    return true;
+  } catch(e) {
+    alert('Local storage error. Please use Download Backup immediately and check app storage permissions.');
+    console.error('Local save failed:', e);
+    return false;
+  }
+}
 function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateNow(){return new Date().toISOString().slice(0,10)}
