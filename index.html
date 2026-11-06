@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#071a2c">
-<meta name="description" content="SMART BUSINESS MANAGER - offline-first business manager for Malawi.">
-<title>SMART BUSINESS MANAGER</title>
+<meta name="description" content="Smart Business Manager - offline-first business manager for Malawi.">
+<title>Smart Business Manager</title>
   
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png"> 
@@ -187,7 +187,7 @@ main{padding:22px 18px 34px}
 <div id="authGate" style="position:fixed;inset:0;background:#061522;z-index:30;display:none;align-items:center;justify-content:center;padding:20px">
   <div class="lockbox" style="max-width:390px;width:100%;text-align:center;background:#102b43;border:1px solid #284b65;border-radius:20px;padding:25px">
     <div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div>
-    <h2>SMART BUSINESS MANAGER</h2>
+    <h2>Smart Business Manager</h2>
     <p class="notice">Sign in to securely back up and restore your business data.</p>
     <div class="field" style="text-align:left;margin-top:15px"><label>Email address</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;padding:13px;border-radius:10px;background:#061827;color:white;border:1px solid #31536b"></div>
     <div class="field" style="text-align:left;margin-top:10px"><label>Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" style="width:100%;padding:13px;border-radius:10px;background:#061827;color:white;border:1px solid #31536b"></div>
@@ -200,12 +200,12 @@ main{padding:22px 18px 34px}
   </div>
 </div>
 
-<div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>SMART BUSINESS MANAGER</h2><p class="notice">Enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice"></p><p class="notice">Default PIN: 1234 · Change it in Settings</p></div></div>
+<div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>Smart Business Manager</h2><p class="notice">Enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice"></p><p class="notice">Default PIN: 1234 · Change it in Settings</p></div></div>
 <div class="app">
-<header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>SMART BUSINESS MANAGER</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
+<header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>Smart Business Manager</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
 <main>
 
-<section class="dashboard-heading"><div class="app-name">SMART BUSINESS MANAGER</div><div class="dashboard-title-row"><button class="btn soft dashboard-back" onclick="goBackFromDashboard()">← Back</button></div><p id="dashboardDate">Loading date...</p><div class="dashboard-tools"><button class="backup-action" onclick="backup()">Backup</button><button class="restore-action" onclick="document.getElementById('restoreFile').click()">Restore</button></div></section>
+<section class="dashboard-heading"><div class="app-name">Smart Business Manager</div><div class="dashboard-title-row"><button class="btn soft dashboard-back" onclick="goBackFromDashboard()">← Back</button></div><p id="dashboardDate">Loading date...</p><div class="dashboard-tools"><button class="backup-action" onclick="backup()">Backup</button><button class="restore-action" onclick="document.getElementById('restoreFile').click()">Restore</button></div></section>
 <div class="nav" id="nav">
 <button class="active" data-view="dashboard" onclick="show('dashboard')">Dashboard</button>
 <button data-view="products" onclick="show('products')">Stock &amp; Inventory</button>
@@ -458,7 +458,7 @@ main{padding:22px 18px 34px}
 
 <div class="panel"><h3>Danger zone</h3><button class="btn danger" onclick="clearAll()">Delete all app data</button></div>
 </section>
-<div class="bottom">SMART BUSINESS MANAGER · Created by S I A TECH PRINT MEDIA<br>Offline-first prototype. Back up your data regularly.</div>
+<div class="bottom">Smart Business Manager · Created by S I A TECH PRINT MEDIA<br>Offline-first prototype. Back up your data regularly.</div>
 </main></div>
 <script>
 const KEY='sia_business_pro_v1';
@@ -659,12 +659,12 @@ db={
  workers:[],
  workerPayments:[],
  settings:{
-  business:'My Business',
+  business:'My Business,
   tag:'Manage your business. Grow with confidence.',
   address:'Malawi',
   phone:'',
   currency:'MK',
-  pin:'1234'
+  pin:'1340'
  }
 };
       localStorage.setItem(KEY,JSON.stringify(db));
