@@ -874,6 +874,34 @@ function goBackFromDashboard(){show(previousView&&previousView!=='dashboard'?pre
 function unlock(){if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){document.getElementById('lock').classList.add('hidden');document.getElementById('lockMsg').textContent=''}else document.getElementById('lockMsg').textContent='Incorrect PIN'}
 function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
+
+// Remove a purchase record and reverse the quantity added to spare-parts stock.
+function delSparePartPurchase(recordId){
+ const record=db.sparePartPurchases.find(x=>x.id===recordId);
+ if(!record)return;
+ const part=db.spareParts.find(x=>x.name===record.part);
+ if(part && Number(part.qty||0)<Number(record.qty||0)){
+  alert('This purchase cannot be deleted because some of its stock has already been sold or used. Delete the related sales first, or adjust the stock before trying again.');
+  return;
+ }
+ if(!confirm('Delete this purchase history record? Its quantity will also be removed from spare-parts stock.'))return;
+ if(part)part.qty=Number(part.qty||0)-Number(record.qty||0);
+ db.sparePartPurchases=db.sparePartPurchases.filter(x=>x.id!==recordId);
+ save();
+ render();
+}
+
+// Remove a sale record and return the sold quantity to spare-parts stock.
+function delSparePartSale(recordId){
+ const record=db.sparePartSales.find(x=>x.id===recordId);
+ if(!record)return;
+ if(!confirm('Delete this sales history record? Its quantity will be returned to spare-parts stock.'))return;
+ const part=db.spareParts.find(x=>x.name===record.part);
+ if(part)part.qty=Number(part.qty||0)+Number(record.qty||0);
+ db.sparePartSales=db.sparePartSales.filter(x=>x.id!==recordId);
+ save();
+ render();
+}
 function render(){
  // Keep every customer selector in sync with the saved Customer List.
  const customerSelectIds=['saleCustomer','spSaleCustomer','jobCustomer','iCustomer'];
@@ -945,18 +973,19 @@ document.getElementById('sparePartsTable').innerHTML=table(
 );
 
 document.getElementById('sparePurchaseTable').innerHTML=table(
- ['Date','Part','Quantity','Unit cost','Total'],
+ ['Date','Part','Quantity','Unit cost','Total','Action'],
  db.sparePartPurchases.slice().reverse().map(p=>`<tr>
  <td>${p.date}</td>
  <td>${esc(p.part)}</td>
  <td>${p.qty}</td>
  <td>${money(p.cost)}</td>
  <td>${money(p.total)}</td>
+ <td><button class="btn danger" onclick="delSparePartPurchase('${p.id}')">Delete</button></td>
  </tr>`)
 );
 
 document.getElementById('spareSalesTable').innerHTML=table(
- ['Date','Part','Quantity','Selling price','Total','Profit','Customer'],
+ ['Date','Part','Quantity','Selling price','Total','Profit','Customer','Action'],
  db.sparePartSales.slice().reverse().map(s=>`<tr>
  <td>${s.date}</td>
  <td>${esc(s.part)}</td>
@@ -965,6 +994,7 @@ document.getElementById('spareSalesTable').innerHTML=table(
  <td>${money(s.total)}</td>
  <td>${money(s.profit)}</td>
  <td>${esc(s.customer||'Walk-in')}</td>
+ <td><button class="btn danger" onclick="delSparePartSale('${s.id}')">Delete</button></td>
  </tr>`)
 );
 
