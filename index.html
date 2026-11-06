@@ -26,6 +26,155 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 #lock{position:fixed;inset:0;background:#061522;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px}#lock .lockbox{max-width:360px;width:100%;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:25px}#lock input{width:100%;padding:13px;border-radius:10px;background:#061827;color:white;border:1px solid var(--line);margin:10px 0}
 @media(max-width:700px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.welcome h2{font-size:21px}.stat strong{font-size:19px}}
 @media(max-width:400px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.topright .chip{display:none}}
+
+/* Dashboard visual refresh: presentation only; existing forms and business logic remain intact. */
+:root{--bg:#03172e;--panel:#082544;--panel2:#0b3156;--line:#12477a;--text:#f4f8ff;--muted:#a8c1df;--cyan:#21c7f3;--blue:#087cf0}
+body{background:radial-gradient(ellipse at 82% 25%,#07335f 0%,#031b38 42%,#021329 100%);background-attachment:fixed;text-transform:none}
+.app{max-width:1000px}
+main{padding:22px 18px 34px}
+#appHeader{display:none}
+.welcome{display:none}
+.dashboard-heading{padding:8px 0 22px}
+.dashboard-title-row{display:flex;align-items:center;gap:12px;margin-bottom:8px}.dashboard-title-row h1{margin:0}.dashboard-back{padding:8px 14px!important;min-width:0!important;font-size:14px!important}.dashboard-heading h1{font-size:clamp(29px,5vw,42px);font-weight:850;letter-spacing:-1px;margin:0 0 8px}
+.dashboard-heading p{color:#a9c4e4;font-size:18px;margin:0 0 26px}
+.dashboard-tools{display:flex;gap:14px;flex-wrap:wrap}
+.dashboard-tools button{min-width:145px;padding:15px 24px;border-radius:17px;font-size:17px;font-weight:800;color:#dcecff;background:#0b2d50;border:1px solid #1c5a91;box-shadow:0 7px 20px #00101f70}
+.dashboard-tools .restore-action{background:#0a2b4b}
+.nav{gap:12px;padding:8px 0 18px;margin:0 0 24px;scrollbar-width:thin;scrollbar-color:#28618d transparent}
+.nav button{padding:15px 22px;border-radius:22px;background:#062341;border:1px solid #15518a;color:#c4d9f3;font-size:16px;font-weight:750}
+.nav button.active{background:linear-gradient(135deg,#0789ff,#0754c5);border-color:#168fff;color:#fff;box-shadow:0 7px 18px #006ee755}
+.section-heading{margin:24px 0 18px}
+.section-heading h2{font-size:clamp(27px,4.5vw,38px);font-weight:850;letter-spacing:-.8px;margin:0}
+.dashboard-quick{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.quick-card{min-height:108px;border-radius:24px!important;padding:18px 14px!important;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;font-size:18px!important;color:white!important;border:1px solid transparent!important;box-shadow:inset 0 1px 0 #ffffff22,0 10px 25px #0004;transition:transform .15s ease,filter .15s ease}
+.quick-card:active{transform:scale(.98)}
+.quick-card strong{font-size:clamp(15px,2.4vw,19px);font-weight:850;white-space:nowrap}
+.quick-icon{font-size:25px;line-height:1;font-weight:700;flex:0 0 auto}
+.sale-card{background:linear-gradient(145deg,#008c68,#005447)!important;border-color:#00d5a0!important}
+.purchase-card{background:linear-gradient(145deg,#0876ef,#0645ad)!important;border-color:#178dff!important}
+.expense-card{background:linear-gradient(145deg,#a96b00,#684000)!important;border-color:#e8a51d!important}
+.service-card{background:linear-gradient(145deg,#7017c9,#390078)!important;border-color:#a23cff!important}
+.invoice-card{background:linear-gradient(145deg,#0876ef,#063b83)!important;border-color:#42a5ff!important}
+.records-heading{margin-top:58px;display:flex;align-items:center;justify-content:space-between}
+.records-heading:after{content:"";height:7px;width:105px;border-radius:99px;background:#18bce9;display:block;margin-right:auto;margin-left:0;position:absolute;transform:translateY(42px)}
+.record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:52px}
+.record-card{min-height:145px;text-align:left;padding:22px;border-radius:27px;background:linear-gradient(145deg,#092b4d,#061e39);border:1px solid #15518a;color:#f2f7ff;display:flex;flex-direction:column;align-items:flex-start;gap:10px;box-shadow:inset 0 1px 0 #ffffff0d}
+.record-icon{font-size:31px;color:#28c8ba;line-height:1.1}
+.record-card small{font-size:14px;color:#b6cbe5}
+.record-card strong{font-size:23px;color:#fff}
+.dashboard-summary{margin-top:30px}
+.total-cost-stat{grid-column:1/-1;min-height:110px;padding:20px 24px;border-color:#1688d9;background:linear-gradient(135deg,#0b3156,#06213e)}
+.total-cost-stat strong{font-size:clamp(24px,4vw,32px);color:#21c7f3}
+.total-cost-stat .sub{font-size:13px}
+
+.stat{background:linear-gradient(145deg,#0a2b4c,#071f3a);border:1px solid #145087;border-radius:20px;padding:17px}
+.panel{background:#082544;border:1px solid #164a78;border-radius:20px}
+.btn.primary{background:linear-gradient(110deg,#078bff,#0754c5);color:white}
+.quick:not(.dashboard-quick){grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:760px){.dashboard-quick{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-card{min-height:100px}.record-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:480px){main{padding:22px 15px 30px}.dashboard-heading p{font-size:16px}.dashboard-tools button{min-width:0;flex:1;padding:14px 12px}.nav button{font-size:15px;padding:14px 19px}.quick-card{min-height:88px;border-radius:22px!important;padding:14px 10px!important;gap:8px}.quick-icon{font-size:22px}.quick-card strong{font-size:15px}.record-card{min-height:130px;padding:17px;border-radius:23px}.records-heading{margin-top:48px}}
+
+
+
+.app-name{font-size:clamp(22px,4vw,31px);font-weight:900;letter-spacing:1.2px;color:#f5f9ff;margin-bottom:7px;text-shadow:0 3px 14px #007bff55}
+/* A4 invoice design inspired by the supplied voucher reference. */
+.invoice-paper{background:#fff;color:#172536;border-radius:4px;padding:34px 38px;max-width:850px;width:100%;margin:22px auto;border:1px solid #d8e0e8;box-shadow:0 12px 35px #0003;text-transform:none;font-family:Arial,Helvetica,sans-serif}
+.invoice-paper *{box-sizing:border-box}
+.invoice-paper .invoice-top{display:grid;grid-template-columns:1fr auto;align-items:end;gap:18px;padding-bottom:14px;border-bottom:4px solid #c8ddec;margin-bottom:20px}
+.invoice-paper .invoice-brand{text-align:center;grid-column:1/-1;grid-row:1}
+.invoice-paper .invoice-brand h2{margin:0;color:#1673b9;-webkit-text-fill-color:#1673b9;font-size:29px;font-weight:900;letter-spacing:1px}
+.invoice-paper .invoice-brand p{margin:5px 0;color:#26384a;font-size:13px;font-weight:600}
+.invoice-paper .invoice-label{grid-column:2;grid-row:2;color:#3979aa;font-size:28px;font-weight:900;letter-spacing:2px;text-align:right}
+.invoice-paper .invoice-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 25px;margin:20px 0 24px;font-size:14px}
+.invoice-paper .invoice-meta p{margin:7px 0;color:#202b35;overflow-wrap:anywhere}
+.invoice-paper .invoice-meta b{display:inline-block;min-width:105px}
+.invoice-paper table{width:100%;border-collapse:collapse;table-layout:fixed;margin:18px 0 0;font-size:13px}
+.invoice-paper th{background:#dcebf6;color:#172d40;text-align:center;padding:11px 8px;border:1px solid #55748a;font-weight:800}
+.invoice-paper td{padding:11px 8px;border:1px solid #9aabb8;color:#172536;vertical-align:top;overflow-wrap:anywhere}
+.invoice-paper tbody tr:nth-child(even){background:#f1f2f3}
+.invoice-paper .col-number{width:11%}.invoice-paper .col-description{width:41%}.invoice-paper .col-qty{width:12%}.invoice-paper .col-unit{width:17%}.invoice-paper .col-amount{width:19%}
+.invoice-paper .invoice-bottom{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;margin-top:0;align-items:start}
+.invoice-paper .invoice-notes{padding-top:18px;font-size:13px;color:#202b35;min-height:135px}
+.invoice-paper .invoice-notes .notes-box{border:1px dotted #64798a;min-height:105px;padding:10px;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere}
+.invoice-paper .invoice-summary{width:100%;border-collapse:collapse;margin:0;font-size:13px}
+.invoice-paper .invoice-summary td{border:0;border-bottom:1px solid #9aabb8;padding:9px 7px;background:#fff;color:#172536}
+.invoice-paper .invoice-summary td:first-child{text-align:right;font-weight:800;width:55%}
+.invoice-paper .invoice-summary td:last-child{text-align:right;font-weight:700}
+.invoice-paper .invoice-summary tr:last-child td{border-bottom:2px solid #55748a}
+.invoice-paper .invoice-summary .grand-total td{font-size:16px;color:#092b4d;font-weight:900;border-top:2px solid #3979aa}
+.invoice-paper .cashier-row{display:flex;justify-content:flex-end;margin:28px 5% 35px 0;color:#202b35;font-size:14px}
+.invoice-paper .cashier-row span{min-width:170px;text-align:center;border-top:1px solid #667987;padding-top:7px}
+.invoice-paper .invoice-footer{margin-top:20px;padding:13px 8px;background:#ececec;text-align:center;color:#26313b;font-size:13px;font-weight:800;font-style:italic;letter-spacing:.3px}
+
+.expense-voucher-paper{background:#fff;color:#1b2935;max-width:850px;width:100%;margin:22px auto;padding:36px 40px;border:1px solid #d6dde3;box-shadow:0 12px 35px #0003;font-family:Arial,Helvetica,sans-serif;text-transform:none}
+.expense-voucher-paper *{box-sizing:border-box}
+.expense-voucher-paper .ev-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:3px solid #167b75;padding-bottom:18px}
+.expense-voucher-paper .ev-brand h2{margin:0;color:#146c67;font-size:25px;font-weight:900;letter-spacing:.5px}
+.expense-voucher-paper .ev-brand p{margin:5px 0;font-size:12px;color:#52616b}
+.expense-voucher-paper .ev-title{text-align:right}
+.expense-voucher-paper .ev-title h1{margin:0;color:#146c67;font-size:26px;letter-spacing:2px}
+.expense-voucher-paper .ev-title p{margin:7px 0 0;color:#66747d;font-size:12px}
+.expense-voucher-paper .ev-ribbon{margin:20px 0;padding:10px 14px;background:#e8f4f2;border-left:5px solid #167b75;color:#145a56;font-size:12px;font-weight:800;letter-spacing:1px}
+.expense-voucher-paper .ev-details{display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;margin:22px 0}
+.expense-voucher-paper .ev-detail{padding:10px 12px;border:1px solid #dce3e7;border-radius:4px;min-height:62px}
+.expense-voucher-paper .ev-detail label{display:block;margin-bottom:6px;color:#6b7881;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+.expense-voucher-paper .ev-detail strong{font-size:14px;overflow-wrap:anywhere}
+.expense-voucher-paper .ev-amount{margin:24px 0;padding:20px;background:#f5f8f8;border:1px solid #d8e5e3;text-align:center}
+.expense-voucher-paper .ev-amount label{display:block;color:#63716f;font-size:11px;font-weight:800;letter-spacing:1px}
+.expense-voucher-paper .ev-amount strong{display:block;margin-top:8px;color:#146c67;font-size:30px;font-weight:900}
+.expense-voucher-paper .ev-purpose{margin:22px 0;padding:14px;border:1px solid #dce3e7;min-height:85px}
+.expense-voucher-paper .ev-purpose label{display:block;color:#6b7881;font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.expense-voucher-paper .ev-signatures{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin:55px 0 20px}
+.expense-voucher-paper .ev-signatures div{border-top:1px solid #7d8990;padding-top:8px;text-align:center;color:#59666e;font-size:11px}
+.expense-voucher-paper .ev-footer{margin-top:20px;padding-top:12px;border-top:1px solid #dce3e7;text-align:center;color:#738087;font-size:11px}
+@media(max-width:600px){.expense-voucher-paper{padding:20px 13px}.expense-voucher-paper .ev-header{display:block}.expense-voucher-paper .ev-title{text-align:left;margin-top:15px}.expense-voucher-paper .ev-details{grid-template-columns:1fr}.expense-voucher-paper .ev-signatures{gap:10px;font-size:10px}}
+\n@media(max-width:600px){.invoice-paper{padding:18px 12px}.invoice-paper .invoice-brand h2{font-size:21px}.invoice-paper .invoice-label{font-size:21px}.invoice-paper .invoice-meta{font-size:12px;gap:7px 12px}.invoice-paper .invoice-meta b{min-width:0;display:block}.invoice-paper table{font-size:11px}.invoice-paper th,.invoice-paper td{padding:8px 5px}.invoice-paper .invoice-bottom{grid-template-columns:1fr;gap:12px}.invoice-paper .invoice-notes{min-height:0}}
+
+.expense-voucher-paper{font-family:Arial,Helvetica,sans-serif;color:#263449;padding:34px 38px;border:0;box-shadow:none;max-width:1000px}
+.expense-voucher-paper .ev-header{border:0;padding-bottom:26px;align-items:flex-start}
+.expense-voucher-paper .ev-brand h2{font-size:24px;color:#152b4b;letter-spacing:0}
+.expense-voucher-paper .ev-brand p{font-size:13px;color:#7a8590;margin:4px 0}
+.expense-voucher-paper .ev-title h1{font-size:24px;color:#23458a;letter-spacing:1px}
+.expense-voucher-paper .ev-details{display:grid;grid-template-columns:1fr 1fr;gap:10px 38px;margin:10px 0 24px}
+.expense-voucher-paper .ev-line{display:grid;grid-template-columns:135px 1fr;align-items:end;gap:8px;font-size:14px;min-height:34px}
+.expense-voucher-paper .ev-line b{white-space:nowrap}
+.expense-voucher-paper .ev-line span{border-bottom:2px dotted #a8b0b8;min-height:23px;padding:0 4px}
+.expense-voucher-paper .ev-table{width:100%;border-collapse:collapse;margin:20px 0}
+.expense-voucher-paper .ev-table th{background:#23458a;color:#fff;text-align:left;padding:12px 14px;font-size:13px}
+.expense-voucher-paper .ev-table th:first-child,.expense-voucher-paper .ev-table td:first-child{width:7%;text-align:center}
+.expense-voucher-paper .ev-table th:last-child,.expense-voucher-paper .ev-table td:last-child{width:20%;text-align:right}
+.expense-voucher-paper .ev-table td{border:1px solid #cbd3d9;padding:16px 14px;height:48px;font-size:14px}
+.expense-voucher-paper .ev-table .ev-total td{background:#f4f6f9;font-weight:800}
+.expense-voucher-paper .ev-table .ev-total td:first-child{text-align:right}
+.expense-voucher-paper .ev-words{display:flex;gap:10px;border:1px solid #cbd3d9;padding:14px;margin-top:22px;min-height:54px;font-size:13px}
+.expense-voucher-paper .ev-words b{white-space:nowrap}
+.expense-voucher-paper .ev-words span{flex:1;border-bottom:2px dotted #a8b0b8}
+.expense-voucher-paper .ev-signatures{margin-top:55px}
+@media(max-width:600px){.expense-voucher-paper{padding:18px 8px}.expense-voucher-paper .ev-header{display:flex}.expense-voucher-paper .ev-title{text-align:right;margin-top:0}.expense-voucher-paper .ev-details{grid-template-columns:1fr;gap:8px}.expense-voucher-paper .ev-line{grid-template-columns:125px 1fr}.expense-voucher-paper .ev-table th,.expense-voucher-paper .ev-table td{padding:8px 5px;font-size:11px}.expense-voucher-paper .ev-words{font-size:11px;flex-wrap:wrap}}
+
+@media print{
+  @page{size:A4 portrait;margin:12mm}
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
+  body *{visibility:hidden!important}
+  #printInvoice,#printInvoice *,#printExpenseVoucher,#printExpenseVoucher *{visibility:visible!important}
+  #printInvoice,#printExpenseVoucher{position:absolute!important;left:0!important;top:0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;background:#fff!important;color:#172536!important;font-size:10pt!important}
+  #printInvoice .no-print,#printExpenseVoucher .no-print{display:none!important}
+  #printExpenseVoucher{position:absolute!important;left:0!important;top:0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;box-shadow:none!important;border:0!important;border-radius:0!important;background:#fff!important;color:#172536!important;font-size:10pt!important}
+  #printExpenseVoucher .ev-header{display:flex!important}
+  #printExpenseVoucher .ev-details{grid-template-columns:1fr 1fr!important}
+  #printExpenseVoucher .ev-table{width:100%!important;break-inside:avoid}
+  #printExpenseVoucher .ev-table th{background:#23458a!important;color:#fff!important}
+  #printExpenseVoucher .ev-table th,#printExpenseVoucher .ev-table td{padding:8px 6px!important}
+  #printExpenseVoucher .ev-signatures{margin-top:45px!important}
+  #printInvoice .invoice-brand h2{font-size:23pt!important}
+  #printInvoice .invoice-label{font-size:22pt!important}
+  #printInvoice table{font-size:9pt!important;break-inside:avoid}
+  #printInvoice th,#printInvoice td{padding:8px 6px!important}
+  #printInvoice .invoice-bottom{grid-template-columns:1.2fr .8fr!important;gap:18px!important}
+  #printInvoice .invoice-notes{min-height:120px!important}
+  #printInvoice .invoice-footer{margin-top:18px!important}
+} 
+
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-app-compat.js"></script>
@@ -53,40 +202,65 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 
 <div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>SMART BUSINESS MANAGER</h2><p class="notice">Enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice"></p><p class="notice">Default PIN: 1234 · Change it in Settings</p></div></div>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">SB</div><div><h1>SMART BUSINESS MANAGER</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
+<header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>SMART BUSINESS MANAGER</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
 <main>
-<section class="welcome"><div class="eyebrow">BUSINESS CONTROL CENTRE</div><h2 id="greet">Good business starts here.</h2><p id="businessTag">Your Business · Malawi</p></section>
+
+<section class="dashboard-heading"><div class="app-name">SMART BUSINESS MANAGER</div><div class="dashboard-title-row"><button class="btn soft dashboard-back" onclick="goBackFromDashboard()">← Back</button></div><p id="dashboardDate">Loading date...</p><div class="dashboard-tools"><button class="backup-action" onclick="backup()">Backup</button><button class="restore-action" onclick="document.getElementById('restoreFile').click()">Restore</button></div></section>
 <div class="nav" id="nav">
 <button class="active" data-view="dashboard" onclick="show('dashboard')">Dashboard</button>
+<button data-view="products" onclick="show('products')">Stock &amp; Inventory</button>
 <button data-view="sales" onclick="show('sales')">Sales</button>
-<button data-view="products" onclick="show('products')">Stock</button>
 <button data-view="spareparts" onclick="show('spareparts')">Spare Parts</button>
 <button data-view="services" onclick="show('services')">Services</button>
-<button data-view="serviceprofit" onclick="show('serviceprofit')">Service Profit</button>
 <button data-view="expenses" onclick="show('expenses')">Expenses</button>
 <button data-view="workers" onclick="show('workers')">Workers</button>
 <button data-view="customers" onclick="show('customers')">Customers</button>
 <button data-view="invoices" onclick="show('invoices')">Invoices</button>
-<button data-view="reports" onclick="show('reports')">Reports</button>
+
 <button data-view="settings" onclick="show('settings')">Settings</button>
 </div>
 <section id="dashboard" class="view active">
-<div class="cards">
+<div class="section-heading"><h2>Quick Actions</h2></div>
+<div class="quick dashboard-quick">
+<button class="quick-card sale-card" onclick="show('sales')"><span class="quick-icon">▤＋</span><strong>Create Sale</strong></button>
+<button class="quick-card expense-card" onclick="show('expenses')"><span class="quick-icon">▤＋</span><strong>Create Expense</strong></button>
+<button class="quick-card service-card" onclick="show('services')"><span class="quick-icon">🛠️</span><strong>Create Service</strong></button>
+<button class="quick-card invoice-card" onclick="show('invoices')"><span class="quick-icon">🧾</span><strong>Invoices</strong></button>
+
+</div>
+<div class="section-heading records-heading"><h2>Records</h2><span></span></div>
+<div class="record-grid">
+<button class="record-card" onclick="show('sales')"><span class="record-icon">▤</span><small>Sales</small><strong id="recordSales">0</strong></button>
+<button class="record-card" onclick="show('products')"><span class="record-icon">🛒</span><small>Stock &amp; Inventory</small><strong id="recordStock">0</strong></button>
+<button class="record-card" onclick="show('spareparts')"><span class="record-icon">🔩</span><small>Spare Parts</small><strong id="recordParts">0</strong></button>
+<button class="record-card" onclick="show('services')"><span class="record-icon">🛠️</span><small>Services</small><strong id="recordServices">0</strong></button>
+<button class="record-card" onclick="show('expenses')"><span class="record-icon">💳</span><small>Expenses</small><strong id="recordExpenses">0</strong></button>
+<button class="record-card" onclick="show('workers')"><span class="record-icon">👥</span><small>Workers</small><strong id="recordWorkers">0</strong></button>
+<button class="record-card" onclick="show('customers')"><span class="record-icon">👤</span><small>Customers</small><strong id="recordCustomers">0</strong></button>
+<button class="record-card" onclick="show('invoices')"><span class="record-icon">🧾</span><small>Invoices</small><strong id="recordInvoices">0</strong></button>
+
+</div>
+<div class="cards dashboard-summary">
 <div class="stat"><small>Today's sales</small><strong id="todaySales">MK 0</strong><div class="sub">Recorded sales</div></div>
-<div class="stat"><small>Estimated profit</small><strong id="profit">MK 0</strong><div class="sub">Sales minus cost</div></div>
+<div class="stat"><small>Sales Profits</small><strong id="profit">MK 0</strong><div class="sub">Sales minus cost</div></div>
+<div class="stat"><small>Today's Services</small><strong id="todayServices">MK 0</strong><div class="sub">Recorded Service</div></div>
+<div class="stat"><small>Services Profits</small><strong id="todayServiceProfit">MK 0</strong><div class="sub">Labour minus Cost</div></div>
 <div class="stat"><small>Stock items</small><strong id="stockCount">0</strong><div class="sub">Products tracked</div></div>
 <div class="stat"><small>Low stock</small><strong id="lowCount">0</strong><div class="sub">Needs attention</div></div>
+<div class="stat total-cost-stat"><small>📦 Total Cost Price</small><strong id="totalStockCost">MK 0</strong><div class="sub">Current value of all stock at buying cost</div></div>
 </div>
-<div class="panel"><div class="row"><h3>Quick actions</h3><span class="badge">Malawi · MK</span></div><div class="quick"><button onclick="show('sales')">＋ New sale</button><button onclick="show('products')">＋ Add stock</button><button onclick="show('expenses')">＋ Expense</button><button onclick="show('services')">＋ Service job</button></div></div>
 <div class="grid2"><div class="panel"><h3>Recent sales</h3><div id="recentSales"></div></div><div class="panel"><h3>Low stock alert</h3><div id="lowStockList"></div></div></div>
 </section>
 <section id="sales" class="view">
 <div class="panel"><h3>Record a sale</h3><form id="saleForm"><div class="formgrid">
-<div class="field"><label>Product / service</label><input id="saleName" required placeholder="e.g. A4 printing / phone charger"></div>
+<div class="field"><label>Select product from current stock</label><select id="saleProductSelect"><option value="">Choose stocked product (optional)</option></select><small class="muted">Only products currently available in stock are listed.</small></div>
+<div class="field"><label>Product / service name</label><input id="saleName" required placeholder="Choose a stock product above or enter a service"></div>
 <div class="field"><label>Quantity</label><input id="saleQty" type="number" min="1" value="1" required></div>
 <div class="field"><label>Selling price (per item, MK)</label><input id="salePrice" type="number" min="0" required placeholder="0"></div>
 <div class="field"><label>Cost per item (MK)</label><input id="saleCost" type="number" min="0" value="0" required></div>
-<div class="field"><label>Customer (optional)</label><input id="saleCustomer" placeholder="Customer name"></div>
+<div class="field"><label>Customer (optional)</label><select id="saleCustomer"><option value="">Walk-in / Select customer</option></select></div>
+<div class="field"><label>Customer phone / WhatsApp</label><input id="salePhone" type="tel" placeholder="Customer phone number"></div>
+<div class="field full"><label>Customer address</label><input id="saleAddress" placeholder="Customer address"></div>
 <div class="field"><label>Payment method</label><select id="salePayment"><option>Cash</option><option>Mpamba</option><option>Airtel Money</option><option>Bank</option><option>Credit</option></select></div>
 </div><button class="btn primary" type="submit" style="margin-top:12px">Save sale</button></form></div>
 <div class="panel"><h3>Sales history</h3><div class="tablewrap" id="salesTable"></div></div>
@@ -141,7 +315,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 </form>
 </div>
 
-<div class="panel">
+<div class="panel" id="spPurchasePanel">
 <h3>Record Spare Parts Purchase</h3>
 <form id="spPurchaseForm">
 <div class="formgrid">
@@ -180,7 +354,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 </div>
 <div class="field">
 <label>Customer name (optional)</label>
-<input id="spSaleCustomer">
+<select id="spSaleCustomer"><option value="">Walk-in / Select customer</option></select>
 </div>
 </div>
 <button class="btn primary" type="submit">Record Sale</button>
@@ -211,8 +385,9 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <div class="field"><label>Service</label><select id="serviceType" onchange="servicePreset()"></select></div>
 </div>
 <form id="serviceForm"><div class="formgrid" style="margin-top:10px">
-<div class="field"><label>Customer name</label><input id="jobCustomer" placeholder="Customer / walk-in"></div>
-<div class="field"><label>Phone / WhatsApp</label><input id="jobPhone" placeholder="Customer contact"></div>
+<div class="field"><label>Customer name</label><select id="jobCustomer"><option value="">Walk-in / Select customer</option></select></div>
+<div class="field"><label>Phone / WhatsApp</label><input id="jobPhone" type="tel" placeholder="Customer contact"></div>
+<div class="field full"><label>Customer address</label><input id="jobAddress" placeholder="Customer address"></div>
 <div class="field"><label>Job details</label><input id="jobDesc" placeholder="Model, size, paper type, fault etc."></div>
 <div class="field"><label>Quantity / hours</label><input id="jobQty" type="number" min="1" value="1"></div>
 <div class="field"><label>Price per unit (MK)</label><input id="jobPrice" type="number" min="0" required value="0"></div>
@@ -226,49 +401,7 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 <div><b>Repairing services</b><p class="notice">Phone diagnostics, screen/LCD, battery, charging port, speaker, microphone, camera, power button, software troubleshooting, OS installation, data transfer, tablet repair, laptop/desktop diagnostics, keyboard/hinge, printer repair, Wi-Fi/network setup, RAM/SSD upgrades, virus cleanup and general IT support.</p></div>
 </div><p class="notice">Use the custom job details field for any service not listed.</p></div>
 </section>
-  <section id="serviceprofit" class="view">
-
-<div class="panel">
-<h3>Service Profit Dashboard</h3>
-<div class="grid2">
-<div class="stat">
-<div class="muted">Total Service Revenue</div>
-<div class="value" id="spRevenue">MK 0</div>
-</div>
-<div class="stat">
-<div class="muted">Total Materials / Parts Cost</div>
-<div class="value" id="spCosts">MK 0</div>
-</div>
-<div class="stat">
-<div class="muted">Total Service Profit</div>
-<div class="value" id="spProfit">MK 0</div>
-</div>
-</div>
-</div>
-
-<div class="panel">
-<h3>Service Profit Summary</h3>
-<div class="formgrid">
-<div class="field">
-<label>Period</label>
-<select id="serviceProfitPeriod">
-<option value="daily">Today</option>
-<option value="weekly">This week</option>
-<option value="monthly">This month</option>
-<option value="all">All time</option>
-</select>
-</div>
-</div>
-<div id="serviceProfitSummary"></div>
-</div>
-
-<div class="panel">
-<h3>Service History</h3>
-<div id="serviceProfitHistory"></div>
-</div>
-
-  </section>
-<section id="expenses" class="view">
+  <section id="expenses" class="view">
 <div class="panel"><h3>Record expense</h3><form id="expenseForm"><div class="formgrid"><div class="field"><label>Description</label><input id="eName" required placeholder="Rent, transport, electricity"></div><div class="field"><label>Amount (MK)</label><input id="eAmount" type="number" min="0" required></div><div class="field"><label>Category</label><select id="eCat"><option>Rent</option><option>Transport</option><option>Utilities</option><option>Supplies</option><option>Salary</option><option>Other</option></select></div></div><button class="btn primary" style="margin-top:12px">Save expense</button></form></div>
 <div class="panel"><h3>Expenses</h3><div class="tablewrap" id="expensesTable"></div></div>
 </section>
@@ -294,12 +427,20 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 </section>
 
 <section id="customers" class="view">
-<div class="panel"><h3>Add customer</h3><form id="customerForm"><div class="formgrid"><div class="field"><label>Name</label><input id="cName" required></div><div class="field"><label>Phone</label><input id="cPhone" inputmode="tel" placeholder="09xx / 08xx"></div><div class="field full"><label>Notes</label><input id="cNotes"></div></div><button class="btn primary" style="margin-top:12px">Save customer</button></form></div><div class="panel"><h3>Customer list</h3><div class="tablewrap" id="customersTable"></div></div>
+<div class="panel"><h3>Add customer</h3><form id="customerForm"><div class="formgrid"><div class="field"><label>Name</label><input id="cName" required></div><div class="field"><label>Phone</label><input id="cPhone" inputmode="tel" placeholder="09xx / 08xx"></div><div class="field full"><label>Address</label><input id="cAddress" placeholder="Customer address"></div><div class="field full"><label>Notes</label><input id="cNotes"></div></div><button class="btn primary" style="margin-top:12px">Save customer</button></form></div><div class="panel"><h3>Customer list</h3><div class="tablewrap" id="customersTable"></div></div>
 </section>
 <section id="invoices" class="view">
-<div class="panel"><div class="row"><h3>Invoice generator</h3><button class="btn soft" onclick="newInvoice()">New invoice</button></div><form id="invoiceForm"><div class="formgrid"><div class="field"><label>Customer</label><input id="iCustomer" required></div><div class="field"><label>Phone</label><input id="iPhone"></div><div class="field"><label>Item / service</label><input id="iItem" required></div><div class="field"><label>Quantity</label><input id="iQty" type="number" min="1" value="1"></div><div class="field"><label>Unit price (MK)</label><input id="iPrice" type="number" min="0" required></div><div class="field"><label>Invoice date</label><input id="iDate" type="date"></div></div><button class="btn primary" style="margin-top:12px">Generate invoice</button></form><div id="invoicePreview"></div></div>
+<div class="panel">
+ <div class="section-heading"><h3>Generated Invoices &amp; Expense Vouchers</h3></div>
+ <p class="notice">Documents are generated automatically when you record a Sale, Service, or Expense. There is no manual invoice creation here.</p>
+ <div class="tablewrap" id="invoicesTable"></div>
+</div>
+<div class="panel" id="generatedDocumentPreviewPanel" style="display:none">
+ <div class="row"><h3>Document Preview</h3><button class="btn soft" onclick="document.getElementById('generatedDocumentPreviewPanel').style.display='none';document.getElementById('invoicePreview').innerHTML=''">Close</button></div>
+ <div id="invoicePreview"></div>
+</div>
 </section>
-<section id="reports" class="view"><div class="panel"><h3>Combined Business Reports</h3><div class="cards"><div class="stat"><small>Total Revenue (Sales + Services + Spare Parts)</small><strong id="rSales">MK 0</strong></div><div class="stat"><small>Total Cost Price</small><strong id="rCost">MK 0</strong></div><div class="stat"><small>Total Gross Profit</small><strong id="rProfit">MK 0</strong></div><div class="stat"><small>Total Expenses</small><strong id="rExpenses">MK 0</strong></div><div class="stat"><small>Net Profit Estimate</small><strong id="rNet">MK 0</strong></div></div><p class="notice">Combined totals include recorded sales, non-cancelled service jobs, and spare-parts sales. Total cost price is the cost of items/services sold. Net profit estimate = combined gross profit minus recorded expenses. Spare-parts purchases are inventory purchases, not added again as expenses. This is not tax/accounting advice.</p><button class="btn soft" onclick="exportCSV()">Export Sales CSV</button></div></section>
+
 <section id="settings" class="view">
 <div class="panel"><h3>Business profile</h3><form id="settingsForm"><div class="formgrid"><div class="field"><label>Business name</label><input id="sBusiness"></div><div class="field"><label>Tagline</label><input id="sTag"></div><div class="field"><label>Address / location</label><input id="sAddress" placeholder="Blantyre, Malawi"></div><div class="field"><label>Phone / WhatsApp</label><input id="sPhone"></div><div class="field"><label>Currency</label><select id="sCurrency"><option>MK</option><option>USD</option></select></div><div class="field"><label>App PIN (4–8 digits)</label><input id="sPin" inputmode="numeric" maxlength="8"></div></div><button class="btn primary" style="margin-top:12px">Save settings</button></form></div>
 <div class="panel"><h3>Data backup & restore</h3><p class="notice">Your records are kept on this device and synchronised to your signed-in cloud account when internet is available. You can sign in again after reinstalling to restore cloud data. Keep occasional downloaded backups as an extra safety copy.</p><div class="actions"><button class="btn success" onclick="backup()">Download backup</button><label class="btn soft" style="display:inline-block;cursor:pointer">Restore backup<input type="file" accept="application/json" id="restoreFile" class="hidden"></label><button class="btn soft" onclick="window.print()">Print / Save PDF</button></div></div>
@@ -504,6 +645,7 @@ async function connectUserCloud(user) {
     if (previousOwner && previousOwner!==user.uid) {
 db={
  products:[],
+ purchases:[],
  sales:[],
  expenses:[],
  customers:[],
@@ -540,6 +682,7 @@ db={
         applyingCloudData=true;
         db={...db,...snap.data().payload,
           products:snap.data().payload.products||[],
+          purchases:snap.data().payload.purchases||[],
           sales:snap.data().payload.sales||[],
           expenses:snap.data().payload.expenses||[],
           customers:snap.data().payload.customers||[],
@@ -629,6 +772,7 @@ window.addEventListener('online',()=>{ if(currentUser) syncNow(); else setCloudS
 window.addEventListener('offline',()=>setCloudStatus('Offline — saved on device'));
 let db={
  products:[],
+ purchases:[],
  sales:[],
  expenses:[],
  customers:[],
@@ -656,6 +800,7 @@ function load(){
     ...db,
     ...x,
     products:x.products||[],
+    purchases:x.purchases||[],
     sales:x.sales||[],
     expenses:x.expenses||[],
     customers:x.customers||[],
@@ -677,12 +822,37 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(db));if(currentUser&
 function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateNow(){return new Date().toISOString().slice(0,10)}
-function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));render()}
+let previousView='dashboard';
+function show(id){const active=document.querySelector('.view.active');if(active&&active.id!==id)previousView=active.id;document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));render()}
+function goBackFromDashboard(){show(previousView&&previousView!=='dashboard'?previousView:'dashboard')}
 function unlock(){if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){document.getElementById('lock').classList.add('hidden');document.getElementById('lockMsg').textContent=''}else document.getElementById('lockMsg').textContent='Incorrect PIN'}
 function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
 function render(){
- document.getElementById('businessTag').textContent=(db.settings.business||'Business')+' · '+(db.settings.address||'Malawi');
+ // Keep every customer selector in sync with the saved Customer List.
+ const customerSelectIds=['saleCustomer','spSaleCustomer','jobCustomer','iCustomer'];
+ customerSelectIds.forEach(fieldId=>{
+   const field=document.getElementById(fieldId);
+   if(!field)return;
+   const previousValue=field.value;
+   const firstLabel=fieldId==='iCustomer'?'Choose customer':'Walk-in / Select customer';
+   field.innerHTML=`<option value="">${firstLabel}</option>`+
+     db.customers.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+   if(db.customers.some(c=>c.name===previousValue))field.value=previousValue;
+ });
+ const dateLabel=document.getElementById('dashboardDate');
+ if(dateLabel)dateLabel.textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ const setCount=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
+ setCount('recordSales',db.sales.length);
+ setCount('recordStock',db.products.length);
+ setCount('recordParts',db.spareParts.length);
+ setCount('recordServices',db.services.length);
+ setCount('recordExpenses',db.expenses.length);
+ setCount('recordWorkers',db.workers.length);
+ setCount('recordCustomers',db.customers.length);
+ setCount('recordInvoices',db.invoices.filter(inv=>['sale','service','expense'].includes(inv.docType)).length);
+ const businessTag=document.getElementById('businessTag');
+ if(businessTag)businessTag.textContent=(db.settings.business||'Business')+' · '+(db.settings.address||'Malawi');
  let today=dateNow(),salesToday=db.sales.filter(s=>s.date===today),low=db.products.filter(p=>p.qty<=p.min);
   // Combined report totals: retail sales + service jobs + spare-parts sales.
   const reportServices=db.services.filter(j=>j.status!=='Cancelled');
@@ -696,7 +866,20 @@ function render(){
     db.sparePartSales.reduce((sum,s)=>sum+Number(s.profit||0),0);
   const reportCost=reportRevenue-reportProfit;
   const expenses=db.expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
- document.getElementById('todaySales').textContent=money(salesToday.reduce((a,s)=>a+s.total,0));document.getElementById('profit').textContent=money(salesToday.reduce((a,s)=>a+s.profit,0));document.getElementById('stockCount').textContent=db.products.length;document.getElementById('lowCount').textContent=low.length;
+ const servicesToday=reportServices.filter(j=>j.date===today);
+ const servicesTodayRevenue=servicesToday.reduce((sum,j)=>sum+Number(j.total||0),0);
+ const servicesTodayProfit=servicesToday.reduce((sum,j)=>sum+Number(j.profit||0),0);
+ document.getElementById('todaySales').textContent=money(salesToday.reduce((a,s)=>a+s.total,0));
+ document.getElementById('profit').textContent=money(salesToday.reduce((a,s)=>a+s.profit,0));
+ document.getElementById('todayServices').textContent=money(servicesTodayRevenue);
+ document.getElementById('todayServiceProfit').textContent=money(servicesTodayProfit);
+ document.getElementById('stockCount').textContent=db.products.length;
+ document.getElementById('lowCount').textContent=low.length;
+ const totalStockCost =
+   db.products.reduce((sum,p)=>sum+(Number(p.qty)||0)*(Number(p.cost)||0),0) +
+   db.spareParts.reduce((sum,p)=>sum+(Number(p.qty)||0)*(Number(p.cost)||0),0);
+ const totalStockCostEl=document.getElementById('totalStockCost');
+ if(totalStockCostEl)totalStockCostEl.textContent=money(totalStockCost);
  document.getElementById('recentSales').innerHTML=table(['Date','Item','Total'],db.sales.slice(-5).reverse().map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${money(s.total)}</td></tr>`));
  document.getElementById('lowStockList').innerHTML=low.length?low.map(p=>`<p>⚠ ${esc(p.name)} — ${p.qty} left</p>`).join(''):'<p class="notice">All stock levels look good.</p>';
  document.getElementById('salesTable').innerHTML=table(['Date','Item','Qty','Total','Profit','Payment',''],db.sales.slice().reverse().map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td><td>${esc(s.payment)}</td><td><button class="btn danger" onclick="del('sales','${s.id}')">Delete</button></td></tr>`));
@@ -738,6 +921,17 @@ document.getElementById('spareSalesTable').innerHTML=table(
  </tr>`)
 );
 
+// UPDATE PRODUCT SELECTOR FOR SALES: show only products with available stock
+const saleProductSelect=document.getElementById('saleProductSelect');
+if(saleProductSelect){
+ const previouslySelected=saleProductSelect.value;
+ saleProductSelect.innerHTML='<option value="">Choose stocked product (optional)</option>'+
+   db.products.filter(p=>Number(p.qty)>0).map(p=>
+    `<option value="${p.id}">${esc(p.name)} — ${p.qty} available</option>`
+   ).join('');
+ if(db.products.some(p=>p.id===previouslySelected&&Number(p.qty)>0))saleProductSelect.value=previouslySelected;
+}
+
 // UPDATE SPARE PART SELECTORS
 ['spPurchaseItem','spSaleItem'].forEach(id=>{
  let select=document.getElementById(id);
@@ -758,66 +952,13 @@ if(selected)document.getElementById('spSalePrice').value=selected.price;
   document.getElementById('workerPaymentsTable').innerHTML=table(['Date','Worker','Amount','Note',''],db.workerPayments.slice().reverse().map(pay=>{const worker=db.workers.find(w=>w.id===pay.workerId);return `<tr><td>${esc(pay.date)}</td><td>${esc(worker?worker.name:pay.workerName||'Worker')}</td><td>${money(pay.amount)}</td><td>${esc(pay.note||'')}</td><td><button class="btn danger" onclick="del('workerPayments','${pay.id}')">Delete</button></td></tr>`}));
 
  document.getElementById('customersTable').innerHTML=table(['Name','Phone','Notes',''],db.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td><td><button class="btn danger" onclick="del('customers','${c.id}')">Delete</button></td></tr>`));
+ const generatedDocs=db.invoices.filter(inv=>['sale','service','expense'].includes(inv.docType)).slice().reverse();
+ document.getElementById('invoicesTable').innerHTML=table(['Document','Type','Date','Customer / Payee','Description','Total',''],generatedDocs.map(inv=>`<tr><td>${esc(inv.id)}</td><td>${inv.docType==='expense'?'Expense Voucher':inv.docType==='service'?'Service Invoice':'Sales Invoice'}</td><td>${esc(inv.date||'')}</td><td>${esc(inv.docType==='expense'?(inv.paidTo||'—'):(inv.customer||'Walk-in'))}</td><td>${esc(inv.docType==='expense'?(inv.expenseDescription||inv.item):(inv.item||''))}</td><td>${money(inv.total)}</td><td><button class="btn soft" onclick="viewInvoice('${inv.id}')">View / PDF</button></td></tr>`));
  document.getElementById('servicesTable').innerHTML=table(['Date','Service / details','Customer','Qty','Total','Profit','Status','Payment',''],db.services.slice().reverse().map(j=>`<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${money(j.profit)}</td><td><select onchange="updateJob('${j.id}','status',this.value)">${['Received','In progress','Waiting for parts','Ready for collection','Completed','Cancelled'].map(x=>`<option ${j.status===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select onchange="updateJob('${j.id}','payment',this.value)">${['Unpaid','Deposit paid','Paid'].map(x=>`<option ${j.payment===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="btn danger" onclick="del('services','${j.id}')">Delete</button></td></tr>`));
-// SERVICE PROFIT DASHBOARD
-let jobs=db.services.filter(j=>j.status!=='Cancelled');
-
-let revenue=jobs.reduce((a,j)=>a+Number(j.total||0),0);
-let costs=jobs.reduce((a,j)=>a+(Number(j.total||0)-Number(j.profit||0)),0);
-let profit=jobs.reduce((a,j)=>a+Number(j.profit||0),0);
-
-document.getElementById('spRevenue').textContent=money(revenue);
-document.getElementById('spCosts').textContent=money(costs);
-document.getElementById('spProfit').textContent=money(profit);
-
-function servicePeriod(date,period){
- let d=new Date(date+'T00:00:00');
- let now=new Date();
- let today=dateNow();
-
- if(period==='daily')return date===today;
- if(period==='monthly')return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth();
-
- if(period==='weekly'){
-  let start=new Date(now);
-  start.setHours(0,0,0,0);
-  start.setDate(start.getDate()-((start.getDay()+6)%7));
-  return d>=start&&d<=now;
- }
-
- return true;
-}
-
-let period=document.getElementById('serviceProfitPeriod').value;
-let filtered=jobs.filter(j=>servicePeriod(j.date,period));
-
-let periodRevenue=filtered.reduce((a,j)=>a+Number(j.total||0),0);
-let periodCosts=filtered.reduce((a,j)=>a+Number(j.total||0)-Number(j.profit||0),0);
-let periodProfit=filtered.reduce((a,j)=>a+Number(j.profit||0),0);
-
-document.getElementById('serviceProfitSummary').innerHTML=
-'<p>Revenue: <b>'+money(periodRevenue)+'</b></p>'+
-'<p>Materials / Parts cost: <b>'+money(periodCosts)+'</b></p>'+
-'<p>Service profit: <b>'+money(periodProfit)+'</b></p>';
-
-document.getElementById('serviceProfitHistory').innerHTML=table(
- ['Date','Service','Customer','Revenue','Cost','Profit'],
- filtered.slice().reverse().map(j=>`<tr>
- <td>${j.date}</td>
- <td>${esc(j.service)}</td>
- <td>${esc(j.customer||'Walk-in')}</td>
- <td>${money(j.total)}</td>
- <td>${money(Number(j.total||0)-Number(j.profit||0))}</td>
- <td>${money(j.profit)}</td>
- </tr>`)
-);
-document.getElementById('rSales').textContent=money(reportRevenue);document.getElementById('rCost').textContent=money(reportCost);document.getElementById('rProfit').textContent=money(reportProfit);document.getElementById('rExpenses').textContent=money(expenses);document.getElementById('rNet').textContent=money(reportProfit-expenses);
+// Combined report totals remain calculated internally; the Reports screen has been removed.
 }
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  document.getElementById('serviceProfitPeriod').addEventListener('change',()=>{
- render();
-});
-// SPARE PARTS MANAGEMENT
+  // SPARE PARTS MANAGEMENT
 
 document.getElementById('sparePartForm').addEventListener('submit',e=>{
  e.preventDefault();
@@ -909,15 +1050,124 @@ document.getElementById('spSaleForm').addEventListener('submit',e=>{
  render();
  alert('Spare part sale recorded');
 });
-document.getElementById('saleForm').addEventListener('submit',e=>{e.preventDefault();let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value,cost=+saleCost.value;if(qty<1||price<0||cost<0)return alert('Check sale values');let p=db.products.find(x=>x.name.toLowerCase()===name.toLowerCase());if(p&&p.qty<qty&&!confirm('Stock is lower than this sale. Continue?'))return;if(p)p.qty-=qty;db.sales.push({id:id(),date:dateNow(),name,qty,price,cost,total:qty*price,profit:qty*(price-cost),customer:saleCustomer.value,payment:salePayment.value});save();e.target.reset();saleQty.value=1;saleCost.value=0;render();alert('Sale saved')});
+function fillSaleCustomerDetails(){
+ const customer=db.customers.find(c=>c.name===saleCustomer.value);
+ salePhone.value=customer?.phone||'';
+ saleAddress.value=customer?.address||'';
+}
+document.getElementById('saleCustomer').addEventListener('change',fillSaleCustomerDetails);
+document.getElementById('saleProductSelect').addEventListener('change',()=>{
+ const product=db.products.find(p=>p.id===saleProductSelect.value);
+ if(!product)return;
+ saleName.value=product.name;
+ salePrice.value=Number(product.price)||0;
+ saleCost.value=Number(product.cost)||0;
+ saleQty.max=Number(product.qty)||1;
+ saleQty.value=1;
+});
+function createAutoDocument(kind,record){
+ const prefix=kind==='sale'?'SAL':kind==='service'?'SRV':'EXP';
+ const inv={id:prefix+'-'+Date.now().toString().slice(-8),docType:kind,type:'product',
+ customer:kind==='expense'?'Expense record':(record.customer||'Walk-in customer'),
+ phone:record.phone||'',address:record.address||'',
+ item:kind==='sale'?record.name:kind==='service'?`${record.service}${record.description?' — '+record.description:''}`:`${record.cat}: ${record.name}`,
+ expenseCategory:kind==='expense'?record.cat:'',expenseDescription:kind==='expense'?record.name:'',
+ qty:kind==='expense'?1:record.qty,pages:1,price:kind==='expense'?record.amount:record.price,
+ date:record.date,subtotal:record.total,discount:0,total:record.total,advance:0,
+ balance:kind==='sale'&&record.payment==='Credit'?record.total:0,
+ paymentStatus:kind==='expense'?'Recorded':kind==='sale'?(record.payment==='Credit'?'Unpaid':'Paid'):record.payment,
+ paymentMethod:kind==='sale'?record.payment:'—',
+ notes:kind==='expense'?'Expense voucher generated from the recorded expense.':kind==='service'?'Service document generated from the recorded service job.':'Sales invoice generated from the recorded sale.'};
+ db.invoices.push(inv);save();render();show('invoices');
+ document.getElementById('invoicePreview').innerHTML=invoiceMarkup(inv);
+}
+document.getElementById('saleForm').addEventListener('submit',e=>{
+ e.preventDefault();let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value,cost=+saleCost.value;
+ if(!name||qty<1||price<0||cost<0)return alert('Check sale values');
+ let p=db.products.find(x=>x.name.toLowerCase()===name.toLowerCase());
+ if(p&&p.qty<qty)return alert(`Not enough stock. Only ${p.qty} available.`);
+ if(p)p.qty-=qty;
+ const record={id:id(),date:dateNow(),name,qty,price,cost,total:qty*price,profit:qty*(price-cost),customer:saleCustomer.value,phone:salePhone.value.trim(),address:saleAddress.value.trim(),payment:salePayment.value};
+ db.sales.push(record);save();e.target.reset();saleQty.value=1;saleCost.value=0;saleProductSelect.value='';saleQty.removeAttribute('max');render();createAutoDocument('sale',record);alert('Sale saved and invoice generated');
+});
 document.getElementById('productForm').addEventListener('submit',e=>{e.preventDefault();let name=pName.value.trim(),existing=db.products.find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing){existing.qty+=+pQty.value;existing.cost=+pCost.value;existing.price=+pPrice.value;existing.min=+pMin.value;existing.sku=pSku.value}else db.products.push({id:id(),name,sku:pSku.value,qty:+pQty.value,cost:+pCost.value,price:+pPrice.value,min:+pMin.value});save();e.target.reset();pQty.value=1;pMin.value=3;render();alert('Stock saved')});
-document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();db.expenses.push({id:id(),date:dateNow(),name:eName.value,amount:+eAmount.value,cat:eCat.value});save();e.target.reset();render();alert('Expense saved')});
+document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();const record={id:id(),date:dateNow(),name:eName.value.trim(),amount:+eAmount.value,cat:eCat.value,total:+eAmount.value};db.expenses.push(record);save();e.target.reset();render();createAutoDocument('expense',record);alert('Expense saved and expense voucher generated')});
 document.getElementById('workerForm').addEventListener('submit',e=>{e.preventDefault();db.workers.push({id:id(),name:wName.value.trim(),role:wRole.value.trim(),phone:wPhone.value.trim(),salary:+wSalary.value});save();e.target.reset();render();alert('Worker saved')});
 document.getElementById('workerPaymentForm').addEventListener('submit',e=>{e.preventDefault();const worker=db.workers.find(w=>w.id===wpWorker.value),amount=+wpAmount.value;if(!worker)return alert('Please choose a worker');if(!(amount>0))return alert('Payment amount must be greater than zero');const payment={id:id(),workerId:worker.id,workerName:worker.name,date:wpDate.value||dateNow(),amount,note:wpNote.value.trim()};db.workerPayments.push(payment);db.expenses.push({id:id(),date:payment.date,name:'Worker salary — '+worker.name+(payment.note?' ('+payment.note+')':''),amount,cat:'Salary',workerPaymentId:payment.id});save();e.target.reset();wpDate.value=dateNow();render();alert('Worker payment recorded and included in combined expenses')});
 
-document.getElementById('customerForm').addEventListener('submit',e=>{e.preventDefault();db.customers.push({id:id(),name:cName.value,phone:cPhone.value,notes:cNotes.value});save();e.target.reset();render();alert('Customer saved')});
-function newInvoice(){show('invoices');iDate.value=dateNow();iCustomer.value='';iPhone.value='';iItem.value='';iQty.value=1;iPrice.value='';document.getElementById('invoicePreview').innerHTML=''}
-document.getElementById('invoiceForm').addEventListener('submit',e=>{e.preventDefault();let inv={id:'INV-'+Date.now().toString().slice(-6),customer:iCustomer.value,phone:iPhone.value,item:iItem.value,qty:+iQty.value,price:+iPrice.value,date:iDate.value||dateNow(),total:+iQty.value*+iPrice.value};db.invoices.push(inv);save();document.getElementById('invoicePreview').innerHTML=`<div class="panel" id="printInvoice"><div class="row"><h2>${esc(db.settings.business)}</h2><span>INVOICE ${inv.id}</span></div><p>${esc(db.settings.address)} · ${esc(db.settings.phone)}</p><hr><p><b>Bill to:</b> ${esc(inv.customer)} ${esc(inv.phone)}<br><b>Date:</b> ${inv.date}</p><table><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr><tr><td>${esc(inv.item)}</td><td>${inv.qty}</td><td>${money(inv.price)}</td><td>${money(inv.total)}</td></tr></table><h2 style="text-align:right">TOTAL: ${money(inv.total)}</h2><p>Thank you for your business.</p><button class="btn primary" onclick="window.print()">Print / Save PDF</button></div>`});
+document.getElementById('jobCustomer').addEventListener('change',()=>{
+ const customer=db.customers.find(c=>c.name===jobCustomer.value);
+ if(customer){jobPhone.value=customer.phone||'';jobAddress.value=customer.address||'';}
+ else{jobPhone.value='';jobAddress.value='';}
+});
+document.getElementById('customerForm').addEventListener('submit',e=>{e.preventDefault();db.customers.push({id:id(),name:cName.value,phone:cPhone.value,address:cAddress.value,notes:cNotes.value});save();e.target.reset();render();alert('Customer saved')});
+function toggleInvoiceType(){
+ const printing=iInvoiceType.value==='printing';
+ invoicePagesField.style.display=printing?'block':'none';
+ invoiceQtyLabel.textContent=printing?'Copies / Quantity':'Quantity';
+ invoicePriceLabel.textContent=printing?'Price per page (MK)':'Unit price (MK)';
+}
+function fillInvoiceCustomerDetails(){const customer=db.customers.find(c=>c.name===iCustomer.value);if(customer){iPhone.value=customer.phone||'';iAddress.value=customer.address||'';}else{iPhone.value='';iAddress.value='';}}
+document.getElementById('iCustomer').addEventListener('change',fillInvoiceCustomerDetails);
+function updateInvoicePaymentFields(){const status=iPaymentStatus.value;iAdvance.disabled=status!=='Advance paid';if(status==='Unpaid')iAdvance.value=0;else if(status==='Paid')iAdvance.value='';else if(status==='Advance paid'&&(!iAdvance.value||+iAdvance.value===0))iAdvance.value='';}
+function newInvoice(){show('invoices');iDate.value=dateNow();iCustomer.value='';iPhone.value='';iAddress.value='';iItem.value='';iQty.value=1;iPages.value=1;iPrice.value='';iDiscount.value=0;iAdvance.value=0;iPaymentStatus.value='Unpaid';iPaymentMethod.value='';iNotes.value='';iInvoiceType.value='product';toggleInvoiceType();updateInvoicePaymentFields();document.getElementById('invoicePreview').innerHTML=''}
+function expenseAmountWords(value){
+ const n=Math.round(Number(value)||0);
+ if(n===0)return 'Zero Malawi Kwacha Only';
+ const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+ const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+ function words(x){
+  if(x<20)return ones[x];
+  if(x<100)return tens[Math.floor(x/10)]+(x%10?' '+ones[x%10]:'');
+  if(x<1000)return ones[Math.floor(x/100)]+' Hundred'+(x%100?' '+words(x%100):'');
+  if(x<1000000)return words(Math.floor(x/1000))+' Thousand'+(x%1000?' '+words(x%1000):'');
+  if(x<1000000000)return words(Math.floor(x/1000000))+' Million'+(x%1000000?' '+words(x%1000000):'');
+  return words(Math.floor(x/1000000000))+' Billion'+(x%1000000000?' '+words(x%1000000000):'');
+ }
+ return words(n)+' Malawi Kwacha Only';
+}
+function expenseVoucherMarkup(inv){
+ const category=inv.expenseCategory||((inv.item||'').split(':')[0]||'Other');
+ const description=inv.expenseDescription||((inv.item||'').split(':').slice(1).join(':').trim()||'Business expense');
+ const amount=Number(inv.total??inv.price??0);
+ const blankRows=Array.from({length:5},(_,i)=>`<tr><td>${i+1}</td><td>${i===0?esc(description):'&nbsp;'}</td><td>${i===0?money(amount):'&nbsp;'}</td></tr>`).join('');
+ return `<div class="expense-voucher-paper" id="printExpenseVoucher">
+ <div class="ev-header">
+  <div class="ev-brand"><h2>${esc(db.settings.business||'YOUR SHOP / STORE NAME')}</h2><p>${esc(db.settings.address||'Shop Address / Contact Information')}</p><p>${esc(db.settings.phone||'Phone Number')}</p></div>
+  <div class="ev-title"><h1>EXPENSE VOUCHER</h1></div>
+ </div>
+ <div class="ev-details">
+  <div class="ev-line"><b>Voucher No:</b><span>${esc(inv.id||'')}</span></div>
+  <div class="ev-line"><b>Date:</b><span>${esc(inv.date||'')}</span></div>
+  <div class="ev-line"><b>Paid To:</b><span>${esc(inv.paidTo||'')}</span></div>
+  <div class="ev-line"><b>Category / Account:</b><span>${esc(category)}</span></div>
+ </div>
+ <table class="ev-table"><thead><tr><th>S.N.</th><th>DESCRIPTION / PARTICULARS OF EXPENSE</th><th>AMOUNT</th></tr></thead>
+ <tbody>${blankRows}<tr class="ev-total"><td colspan="2">TOTAL AMOUNT:</td><td>${money(amount)}</td></tr></tbody></table>
+ <div class="ev-words"><b>Amount In Words:</b><span>${esc(inv.amountInWords||expenseAmountWords(amount))}</span></div>
+ <div class="no-print" style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button class="btn primary" onclick="window.print()">Print / Save as PDF</button></div>
+ </div>`;
+}
+function invoiceMarkup(inv){
+ if(inv.docType==='expense')return expenseVoucherMarkup(inv);
+ const qty=Number(inv.qty||1),pages=Number(inv.pages||1),price=Number(inv.price||0);
+ const detail=inv.type==='printing'?`${pages} page(s) × ${qty} copy/copies`:`${qty} item(s)`;
+ const amount=Number(inv.subtotal??(qty*pages*price));
+ const discount=Number(inv.discount||0),total=Number(inv.total??(amount-discount));
+ const advance=Number(inv.advance||0),balance=Number(inv.balance??(total-advance));
+ const paymentStatus=inv.paymentStatus==='Paid in full'?'Paid':(inv.paymentStatus||(balance<=0?'Paid':advance>0?'Advance paid':'Unpaid'));
+ const paymentMethod=inv.paymentMethod||(advance>0?'Not recorded':'—');
+ const unitLabel=inv.type==='printing'?'Price per page':'Unit Price';
+ const blankRows=Array.from({length:6},(_,i)=>`<tr><td>${i+2}</td><td>&nbsp;</td><td></td><td></td><td></td></tr>`).join('');
+ return `<div class="invoice-paper" id="printInvoice">
+ <div class="invoice-top"><div class="invoice-brand"><h2>${esc(db.settings.business||'SMART BUSINESS MANAGER')}</h2><p>${esc(db.settings.address||'Malawi')}</p><p>${esc(db.settings.phone||'')}</p><p>${esc(db.settings.tag||'')}</p></div><div class="invoice-label">${inv.docType==="expense"?"EXPENSE VOUCHER":inv.docType==="service"?"SERVICE INVOICE":"INVOICE"}</div></div>
+ <div class="invoice-meta"><div><p><b>Name:</b> ${esc(inv.customer||'')}</p><p><b>Address:</b> ${esc(inv.address||'')}</p></div><div><p><b>Date:</b> ${esc(inv.date||'')}</p><p><b>Invoice No:</b> ${esc(inv.id)}</p><p><b>Phone:</b> ${esc(inv.phone||'')}</p></div></div>
+ <table><colgroup><col class="col-number"><col class="col-description"><col class="col-qty"><col class="col-unit"><col class="col-amount"></colgroup><thead><tr><th>Item #</th><th>Description</th><th>Quantity</th><th>${unitLabel}</th><th>Amount</th></tr></thead><tbody><tr><td>1</td><td>${esc(inv.item)}${inv.type==='printing'?`<br><small>${pages} page(s) per copy</small>`:''}</td><td>${qty}</td><td>${money(price)}</td><td>${money(amount)}</td></tr>${blankRows}</tbody></table>
+ <div class="invoice-bottom"><div class="invoice-notes"><b>NOTES:</b><div class="notes-box">${esc(inv.notes||'')}</div></div><table class="invoice-summary"><tbody><tr><td>SUBTOTAL</td><td>${money(amount)}</td></tr><tr><td>DISCOUNT</td><td>${money(discount)}</td></tr><tr class="grand-total"><td>TOTAL</td><td>${money(total)}</td></tr><tr><td>PAYMENT STATUS</td><td>${esc(paymentStatus)}</td></tr>${paymentMethod && paymentMethod!=='—'?`<tr><td>PAYMENT METHOD</td><td>${esc(paymentMethod)}</td></tr>`:''}${paymentStatus==='Advance paid' && advance>0?`<tr><td>ADVANCE PAID</td><td>${money(advance)}</td></tr>`:''}${balance>0?`<tr><td>BALANCE</td><td>${money(balance)}</td></tr>`:''}</tbody></table></div>
+ <div class="invoice-footer">Thank You for Your Support</div>
+ <div class="no-print" style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button class="btn primary" onclick="window.print()">Print / Save as PDF</button></div></div>`;
+}
+function viewInvoice(invoiceId){const inv=db.invoices.find(x=>x.id===invoiceId);if(!inv)return;show('invoices');const panel=document.getElementById('generatedDocumentPreviewPanel');panel.style.display='block';document.getElementById('invoicePreview').innerHTML=invoiceMarkup(inv);panel.scrollIntoView({behavior:'smooth',block:'start'});}
 const serviceCatalog={
  'Printing & design':['Photocopying','Black & white document printing','Colour document printing','Scanning','Typing / formatting','CV / résumé preparation','Lamination','Binding / spiral binding','ID / passport photos','Business cards','Flyers / brochures','Posters','Banners / large format printing','Invitations','Certificates','Receipt books','Letterheads','Stickers / labels','T-shirt printing','Mug printing','Graphic design','Logo design','Bulk printing','Custom printing'],
  'Phone & electronics repair':['Phone diagnostics','Screen / LCD replacement','Battery replacement','Charging port repair','Speaker repair','Microphone repair','Camera repair','Power button repair','Software troubleshooting','Firmware / OS service','Data transfer','Phone backup','Water damage inspection','Accessory fitting','Tablet repair','General electronics repair'],
@@ -925,7 +1175,7 @@ const serviceCatalog={
 };
 function loadServiceOptions(){const cat=serviceCategory.value;serviceType.innerHTML=serviceCatalog[cat].map(s=>`<option>${esc(s)}</option>`).join('');servicePreset()}
 function servicePreset(){jobDesc.value=serviceType.value}
-document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDefault();let qty=Math.max(1,+jobQty.value||1),price=Math.max(0,+jobPrice.value||0),cost=Math.max(0,+jobCost.value||0);db.services.push({id:id(),date:dateNow(),category:serviceCategory.value,service:serviceType.value,description:jobDesc.value,customer:jobCustomer.value,phone:jobPhone.value,qty,price,cost,total:qty*price,profit:qty*(price-cost),status:jobStatus.value,payment:jobPayment.value});save();e.target.reset();jobQty.value=1;jobPrice.value=0;jobCost.value=0;loadServiceOptions();render();alert('Service job saved')});
+document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDefault();let qty=Math.max(1,+jobQty.value||1),price=Math.max(0,+jobPrice.value||0),cost=Math.max(0,+jobCost.value||0);const record={id:id(),date:dateNow(),category:serviceCategory.value,service:serviceType.value,description:jobDesc.value,customer:jobCustomer.value,phone:jobPhone.value.trim(),address:jobAddress.value.trim(),qty,price,cost,total:qty*price,profit:qty*(price-cost),status:jobStatus.value,payment:jobPayment.value};db.services.push(record);save();e.target.reset();jobQty.value=1;jobPrice.value=0;jobCost.value=0;loadServiceOptions();render();createAutoDocument('service',record);alert('Service job saved and document generated')});
 function updateJob(id,key,value){let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}}
 document.getElementById('settingsForm').addEventListener('submit',e=>{e.preventDefault();let pin=sPin.value;if(!/^\d{4,8}$/.test(pin))return alert('PIN must be 4–8 digits');db.settings={business:sBusiness.value,tag:sTag.value,address:sAddress.value,phone:sPhone.value,currency:sCurrency.value,pin};save();render();alert('Settings saved')});
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
@@ -933,7 +1183,7 @@ document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.tar
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
 function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin}
-load();initSettings();loadServiceOptions();render();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();initFirebase();
+load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();initFirebase();
 document.getElementById('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
 </script>
 </body>
