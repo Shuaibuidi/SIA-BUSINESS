@@ -659,7 +659,7 @@ db={
  workers:[],
  workerPayments:[],
  settings:{
-  business:'My Business,
+  business:'My Business',
   tag:'Manage your business. Grow with confidence.',
   address:'Malawi',
   phone:'',
@@ -860,7 +860,16 @@ function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleS
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateNow(){return new Date().toISOString().slice(0,10)}
 let previousView='dashboard';
-function show(id){const active=document.querySelector('.view.active');if(active&&active.id!==id)previousView=active.id;document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));render()}
+function show(id){
+  const target=document.getElementById(id);
+  if(!target || !target.classList.contains('view')){console.warn('Unknown app tab:',id);return;}
+  const active=document.querySelector('.view.active');
+  if(active&&active.id!==id)previousView=active.id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 function goBackFromDashboard(){show(previousView&&previousView!=='dashboard'?previousView:'dashboard')}
 function unlock(){if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){document.getElementById('lock').classList.add('hidden');document.getElementById('lockMsg').textContent=''}else document.getElementById('lockMsg').textContent='Incorrect PIN'}
 function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
@@ -923,7 +932,7 @@ function render(){
 document.getElementById('productsTable').innerHTML=table(['Product','SKU','Qty','Cost','Price','Profit/unit',''],db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.sku)}</td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${money(p.price-p.cost)}</td><td><button class="btn danger" onclick="del('products','${p.id}')">Delete</button></td></tr>`));
 // DISPLAY SPARE PARTS
 document.getElementById('sparePartsTable').innerHTML=table(
- ['Part','Code','Stock','Buying price','Selling price','Profit/unit'],
+ ['Part','Code','Stock','Buying price','Selling price','Profit/unit','Action'],
  db.spareParts.map(p=>`<tr>
  <td>${esc(p.name)}</td>
  <td>${esc(p.code||'')}</td>
@@ -931,6 +940,7 @@ document.getElementById('sparePartsTable').innerHTML=table(
  <td>${money(p.cost)}</td>
  <td>${money(p.price)}</td>
  <td>${money(p.price-p.cost)}</td>
+ <td><button class="btn danger" onclick="del('spareParts','${p.id}')">Delete</button></td>
  </tr>`)
 );
 
