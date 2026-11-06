@@ -1,7 +1,7 @@
 {
-  "name": "SIA BUSINESS",
-  "short_name": "SIA BUSINESS",
-  "description": "SIA BUSINESS Management System",
+  "name": "Smart Business Manager",
+  "short_name": "Smart Business Manager",
+  "description": "Smart Business Manager Management System",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#071a2c",
