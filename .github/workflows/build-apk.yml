@@ -36,14 +36,36 @@ jobs:
           cd app-build
 
           npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-          npm install --save-dev @capacitor/assets sharp
+          npm install @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
+          npm install @aparajita/capacitor-biometric-auth@^9.1.2
+          npm install --save-dev @capacitor/assets sharp esbuild
 
           mkdir -p www resources
           cp ../index.html www/index.html
           cp ../icon.png resources/icon.png
+
+          # Bundle the native biometric plugin for this app's plain HTML interface.
+          cat > biometric-auth.js <<'EOF'
+          import { BiometricAuth, AndroidBiometryStrength } from '@aparajita/capacitor-biometric-auth';
+
+          window.SIABiometric = {
+            checkBiometry: () => BiometricAuth.checkBiometry(),
+            authenticate: () => BiometricAuth.authenticate({
+              reason: 'Unlock Smart Business Manager',
+              cancelTitle: 'Use app PIN',
+              allowDeviceCredential: false,
+              androidTitle: 'Fingerprint authentication',
+              androidSubtitle: 'Verify your fingerprint to open your business records',
+              androidConfirmationRequired: false,
+              androidBiometryStrength: AndroidBiometryStrength.strong
+            })
+          };
+          EOF
+          npx esbuild biometric-auth.js --bundle --platform=browser --format=iife --outfile=www/biometric-auth.js
+
           npx cap init "Smart Business Manager" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
+          npx cap sync android
 
       - name: Set Android application name
         run: |
