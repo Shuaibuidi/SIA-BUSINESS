@@ -180,6 +180,7 @@ main{padding:22px 18px 34px}
 <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore-compat.js"></script>
+<script src="./biometric-auth.js"></script>
 
 </head>
 <body>
@@ -200,7 +201,7 @@ main{padding:22px 18px 34px}
   </div>
 </div>
 
-<div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>Smart Business Manager</h2><p class="notice">Enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice"></p><p class="notice">Default PIN: 1234 · Change it in Settings</p></div></div>
+<div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>Smart Business Manager</h2><p class="notice">Unlock to access your business records.</p><button id="biometricUnlockBtn" class="btn success" style="width:100%;display:none;margin-bottom:10px" onclick="authenticateWithBiometric()">Use fingerprint</button><p class="notice">Or enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="App PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice" aria-live="polite"></p></div></div>
 <div class="app">
 <header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>Smart Business Manager</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
 <main>
@@ -442,7 +443,7 @@ main{padding:22px 18px 34px}
 </section>
 
 <section id="settings" class="view">
-<div class="panel"><h3>Business profile</h3><form id="settingsForm"><div class="formgrid"><div class="field"><label>Business name</label><input id="sBusiness"></div><div class="field"><label>Tagline</label><input id="sTag"></div><div class="field"><label>Address / location</label><input id="sAddress" placeholder="Blantyre, Malawi"></div><div class="field"><label>Phone / WhatsApp</label><input id="sPhone"></div><div class="field"><label>Currency</label><select id="sCurrency"><option>MK</option><option>USD</option></select></div><div class="field"><label>App PIN (4–8 digits)</label><input id="sPin" inputmode="numeric" maxlength="8"></div></div><button class="btn primary" style="margin-top:12px">Save settings</button></form></div>
+<div class="panel"><h3>Business profile</h3><form id="settingsForm"><div class="formgrid"><div class="field"><label>Business name</label><input id="sBusiness"></div><div class="field"><label>Tagline</label><input id="sTag"></div><div class="field"><label>Address / location</label><input id="sAddress" placeholder="Blantyre, Malawi"></div><div class="field"><label>Phone / WhatsApp</label><input id="sPhone"></div><div class="field"><label>Currency</label><select id="sCurrency"><option>MK</option><option>USD</option></select></div><div class="field"><label>App PIN (4–8 digits)</label><input id="sPin" inputmode="numeric" maxlength="8"></div><div class="field full"><label style="display:flex;align-items:center;gap:9px;color:var(--text)"><input id="sBiometric" type="checkbox" style="width:18px;height:18px"> Enable fingerprint lock when opening the app</label><small class="notice">Requires a fingerprint enrolled on this Android device. Your app PIN remains the fallback.</small></div></div><button class="btn primary" style="margin-top:12px">Save settings</button></form></div>
 <div class="panel"><h3>Data backup & restore</h3><p class="notice">Your records are kept on this device and synchronised to your signed-in cloud account when internet is available. You can sign in again after reinstalling to restore cloud data. Keep occasional downloaded backups as an extra safety copy.</p><div class="actions"><button class="btn success" onclick="backup()">Download backup</button><label class="btn soft" style="display:inline-block;cursor:pointer">Restore backup<input type="file" accept="application/json" id="restoreFile" class="hidden"></label><button class="btn soft" onclick="window.print()">Print / Save PDF</button></div></div>
 
 
@@ -483,6 +484,8 @@ let cloudReady = false;
 let cloudUnsubscribe = null;
 let cloudSaveTimer = null;
 let applyingCloudData = false;
+let appUnlocked = false;
+let biometricAttemptStarted = false;
   
 initFirebase();
 
@@ -606,14 +609,14 @@ async function handleAuthState(user) {
   if (!user) {
     // Authentication is optional. The app remains usable with local storage.
     if (gate) gate.style.display='none';
-    if (lock) lock.style.display='none';
+    if (lock) lock.style.display=db.settings.biometricEnabled?'flex':'none';
     if (email) email.textContent='Not signed in — using this device';
     setCloudStatus(firebaseReady ? 'Local mode — sign in for cloud backup' : 'Offline mode — cloud unavailable');
     return;
   }
 
   if (gate) gate.style.display='none';
-  if (lock) lock.style.display='flex';
+  if (lock && !appUnlocked) lock.style.display='flex';
   if (email) email.textContent=user.email||'Signed in';
   setCloudStatus('Connecting to cloud...');
   await connectUserCloud(user);
@@ -623,7 +626,7 @@ function continueOffline() {
   const gate=document.getElementById('authGate');
   if (gate) gate.style.display='none';
   const lock=document.getElementById('lock');
-  if (lock) lock.style.display='none';
+  if (lock) lock.style.display=db.settings.biometricEnabled?'flex':'none';
   setCloudStatus('Offline mode — records saved on this device');
   render();
 }
@@ -871,7 +874,49 @@ function show(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function goBackFromDashboard(){show(previousView&&previousView!=='dashboard'?previousView:'dashboard')}
-function unlock(){if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){document.getElementById('lock').classList.add('hidden');document.getElementById('lockMsg').textContent=''}else document.getElementById('lockMsg').textContent='Incorrect PIN'}
+function finishAppUnlock(){
+  appUnlocked=true;
+  const lock=document.getElementById('lock');
+  if(lock)lock.classList.add('hidden');
+  const msg=document.getElementById('lockMsg');
+  if(msg)msg.textContent='';
+}
+function unlock(){
+  if(document.getElementById('pinIn').value===String(db.settings.pin||'1234')){
+    finishAppUnlock();
+    document.getElementById('pinIn').value='';
+  }else document.getElementById('lockMsg').textContent='Incorrect PIN';
+}
+async function authenticateWithBiometric(){
+  if(appUnlocked)return;
+  const msg=document.getElementById('lockMsg');
+  const bridge=window.SIABiometric;
+  if(!bridge){if(msg)msg.textContent='Fingerprint authentication is unavailable. Enter your app PIN.';return;}
+  try{
+    const info=await bridge.checkBiometry();
+    if(!info || !info.strongBiometryIsAvailable){
+      if(msg)msg.textContent='No usable fingerprint is enrolled for apps on this device. Enter your app PIN.';
+      return;
+    }
+    if(msg)msg.textContent='Waiting for fingerprint...';
+    await bridge.authenticate();
+    finishAppUnlock();
+  }catch(error){
+    console.warn('Fingerprint authentication was not completed:',error);
+    if(msg)msg.textContent='Fingerprint was not accepted or was cancelled. Enter your app PIN, or try fingerprint again.';
+  }
+}
+async function startAppSecurity(){
+  const lock=document.getElementById('lock');
+  const button=document.getElementById('biometricUnlockBtn');
+  if(!db.settings.biometricEnabled)return;
+  if(lock)lock.style.display='flex';
+  if(button)button.style.display='block';
+  if(!biometricAttemptStarted){
+    biometricAttemptStarted=true;
+    await authenticateWithBiometric();
+  }
+}
 function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
 function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
 
@@ -1254,13 +1299,29 @@ function loadServiceOptions(){const cat=serviceCategory.value;serviceType.innerH
 function servicePreset(){jobDesc.value=serviceType.value}
 document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDefault();let qty=Math.max(1,+jobQty.value||1),price=Math.max(0,+jobPrice.value||0),cost=Math.max(0,+jobCost.value||0);const record={id:id(),date:dateNow(),category:serviceCategory.value,service:serviceType.value,description:jobDesc.value,customer:jobCustomer.value,phone:jobPhone.value.trim(),address:jobAddress.value.trim(),qty,price,cost,total:qty*price,profit:qty*(price-cost),status:jobStatus.value,payment:jobPayment.value};db.services.push(record);save();e.target.reset();jobQty.value=1;jobPrice.value=0;jobCost.value=0;loadServiceOptions();render();createAutoDocument('service',record);alert('Service job saved and document generated')});
 function updateJob(id,key,value){let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}}
-document.getElementById('settingsForm').addEventListener('submit',e=>{e.preventDefault();let pin=sPin.value;if(!/^\d{4,8}$/.test(pin))return alert('PIN must be 4–8 digits');db.settings={business:sBusiness.value,tag:sTag.value,address:sAddress.value,phone:sPhone.value,currency:sCurrency.value,pin};save();render();alert('Settings saved')});
+document.getElementById('settingsForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ let pin=sPin.value;
+ if(!/^\d{4,8}$/.test(pin))return alert('PIN must be 4–8 digits');
+ const enableBiometric=sBiometric.checked;
+ if(enableBiometric){
+  if(pin==='1234')return alert('Please change the default PIN 1234 before enabling fingerprint lock.');
+  if(!window.SIABiometric)return alert('Fingerprint authentication is not available in this app build.');
+  try{
+   const info=await window.SIABiometric.checkBiometry();
+   if(!info || !info.strongBiometryIsAvailable)return alert('No usable fingerprint is enrolled for apps on this device. Enrol a fingerprint in Android Settings first.');
+  }catch(err){console.error('Biometric availability check failed:',err);return alert('Could not check fingerprint availability. Please try again.');}
+ }
+ db.settings={...db.settings,business:sBusiness.value,tag:sTag.value,address:sAddress.value,phone:sPhone.value,currency:sCurrency.value,pin,biometricEnabled:enableBiometric};
+ save();render();
+ alert(enableBiometric?'Settings saved. Fingerprint lock will be required the next time you open the app.':'Settings saved.');
+});
 function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
 document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)});
 function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);location.reload()}}
 function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
-function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin}
-load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();
+function initSettings(){sBusiness.value=db.settings.business;sTag.value=db.settings.tag;sAddress.value=db.settings.address;sPhone.value=db.settings.phone;sCurrency.value=db.settings.currency;sPin.value=db.settings.pin;sBiometric.checked=!!db.settings.biometricEnabled}
+load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();startAppSecurity();
 </script>
 </body>
 </html>
