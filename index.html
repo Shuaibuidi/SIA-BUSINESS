@@ -483,6 +483,8 @@ let cloudReady = false;
 let cloudUnsubscribe = null;
 let cloudSaveTimer = null;
 let applyingCloudData = false;
+  
+initFirebase();
 
 function setCloudStatus(message, good=false) {
   const a = document.getElementById('cloudStatus');
