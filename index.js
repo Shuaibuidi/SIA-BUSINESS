@@ -181,3 +181,50 @@ exports.recordExpense = onCall(async (req) => {
     expenseId: expenseRef.id
   };
 });
+exports.recordSalary = onCall(async (req) => {
+  const uid = requireAuth(req);
+  const {
+    businessId,
+    workerId,
+    workerName,
+    amount,
+    period,
+    date,
+    note = ''
+  } = req.data || {};
+
+  await requireAdmin(businessId, uid);
+
+  if (
+    !workerId ||
+    !workerName ||
+    !Number.isFinite(Number(amount)) ||
+    Number(amount) <= 0 ||
+    !period
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Enter a worker, salary amount, and salary period.'
+    );
+  }
+
+  const salaryRef = db.collection(
+    `businesses/${businessId}/private/salaries`
+  ).doc();
+
+  await salaryRef.set({
+    workerId,
+    workerName: String(workerName).slice(0, 100),
+    amount: Number(amount),
+    period: String(period).slice(0, 50),
+    date: date || new Date().toISOString().slice(0, 10),
+    note: String(note).slice(0, 200),
+    recordedBy: uid,
+    createdAt: FieldValue.serverTimestamp()
+  });
+
+  return {
+    ok: true,
+    salaryId: salaryRef.id
+  };
+});
