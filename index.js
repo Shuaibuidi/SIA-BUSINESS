@@ -140,3 +140,44 @@ exports.setStockCost = onCall(async (req) => {
 
   return { ok: true };
 });
+exports.recordExpense = onCall(async (req) => {
+  const uid = requireAuth(req);
+  const {
+    businessId,
+    description,
+    category = 'General',
+    amount,
+    date
+  } = req.data || {};
+
+  await requireAdmin(businessId, uid);
+
+  if (
+    !description ||
+    !Number.isFinite(Number(amount)) ||
+    Number(amount) <= 0
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Enter a description and a valid expense amount.'
+    );
+  }
+
+  const expenseRef = db.collection(
+    `businesses/${businessId}/private/expenses`
+  ).doc();
+
+  await expenseRef.set({
+    description: String(description).slice(0, 150),
+    category: String(category).slice(0, 80),
+    amount: Number(amount),
+    date: date || new Date().toISOString().slice(0, 10),
+    recordedBy: uid,
+    createdAt: FieldValue.serverTimestamp()
+  });
+
+  return {
+    ok: true,
+    expenseId: expenseRef.id
+  };
+});
