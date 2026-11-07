@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function member(businessId) {
+      return signedIn() && exists(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid));
+    }
+    function role(businessId) {
+      return get(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid)).data.role;
+    }
+    function activeMember(businessId) {
+      return member(businessId) && get(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid)).data.active == true;
+    }
+    function admin(businessId) { return activeMember(businessId) && role(businessId) == 'admin'; }
+    function worker(businessId) { return activeMember(businessId) && role(businessId) == 'worker'; }
+
+    // Existing legacy backup remains private to its signed-in account only.
+    match /users/{uid}/appData/{docId} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /businesses/{businessId} {
+      allow read: if admin(businessId);
+      allow write: if false; // Admin SDK Cloud Functions only.
+
+      match /members/{uid} {
+        allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
+        allow write: if false; // Never let a client promote itself or create accounts.
+      }
+      match /stock/{itemId} {
+        allow read: if activeMember(businessId);
+        allow create, update, delete: if admin(businessId);
+      }
+      match /customers/{customerId} {
+        allow read: if activeMember(businessId);
+        allow create: if activeMember(businessId)
+          && request.resource.data.keys().hasOnly(['name','phone','address','createdBy','createdAt'])
+          && request.resource.data.createdBy == request.auth.uid;
+        allow update, delete: if admin(businessId);
+      }
+      match /transactions/{transactionId} {
+        allow read: if admin(businessId) || (worker(businessId) && resource.data.workerUid == request.auth.uid);
+        allow create, update, delete: if false; // All transactions go through trusted callable functions.
+      }
+      match /private/{document=**} {
+        allow read, write: if admin(businessId);
+      }
+    }
+  }
+}
