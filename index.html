@@ -27,7 +27,6 @@ table{border-collapse:collapse;width:100%;font-size:12px;min-width:520px}th,td{p
 @media(max-width:700px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.welcome h2{font-size:21px}.stat strong{font-size:19px}}
 @media(max-width:400px){.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.topright .chip{display:none}}
 
-/* Dashboard visual refresh: presentation only; existing forms and business logic remain intact. */
 :root{--bg:#03172e;--panel:#082544;--panel2:#0b3156;--line:#12477a;--text:#f4f8ff;--muted:#a8c1df;--cyan:#21c7f3;--blue:#087cf0}
 body{background:radial-gradient(ellipse at 82% 25%,#07335f 0%,#031b38 42%,#021329 100%);background-attachment:fixed;text-transform:none}
 .app{max-width:1000px}
@@ -74,10 +73,8 @@ main{padding:22px 18px 34px}
 @media(min-width:760px){.dashboard-quick{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-card{min-height:100px}.record-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:480px){main{padding:22px 15px 30px}.dashboard-heading p{font-size:16px}.dashboard-tools button{min-width:0;flex:1;padding:14px 12px}.nav button{font-size:15px;padding:14px 19px}.quick-card{min-height:88px;border-radius:22px!important;padding:14px 10px!important;gap:8px}.quick-icon{font-size:22px}.quick-card strong{font-size:15px}.record-card{min-height:130px;padding:17px;border-radius:23px}.records-heading{margin-top:48px}}
 
-
-
 .app-name{font-size:clamp(22px,4vw,31px);font-weight:900;letter-spacing:1.2px;color:#f5f9ff;margin-bottom:7px;text-shadow:0 3px 14px #007bff55}
-/* A4 invoice design inspired by the supplied voucher reference. */
+
 .invoice-paper{background:#fff;color:#172536;border-radius:4px;padding:34px 38px;max-width:850px;width:100%;margin:22px auto;border:1px solid #d8e0e8;box-shadow:0 12px 35px #0003;text-transform:none;font-family:Arial,Helvetica,sans-serif}
 .invoice-paper *{box-sizing:border-box}
 .invoice-paper .invoice-top{display:grid;grid-template-columns:1fr auto;align-items:end;gap:18px;padding-bottom:14px;border-bottom:4px solid #c8ddec;margin-bottom:20px}
@@ -128,7 +125,7 @@ main{padding:22px 18px 34px}
 .expense-voucher-paper .ev-signatures div{border-top:1px solid #7d8990;padding-top:8px;text-align:center;color:#59666e;font-size:11px}
 .expense-voucher-paper .ev-footer{margin-top:20px;padding-top:12px;border-top:1px solid #dce3e7;text-align:center;color:#738087;font-size:11px}
 @media(max-width:600px){.expense-voucher-paper{padding:20px 13px}.expense-voucher-paper .ev-header{display:block}.expense-voucher-paper .ev-title{text-align:left;margin-top:15px}.expense-voucher-paper .ev-details{grid-template-columns:1fr}.expense-voucher-paper .ev-signatures{gap:10px;font-size:10px}}
-\n@media(max-width:600px){.invoice-paper{padding:18px 12px}.invoice-paper .invoice-brand h2{font-size:21px}.invoice-paper .invoice-label{font-size:21px}.invoice-paper .invoice-meta{font-size:12px;gap:7px 12px}.invoice-paper .invoice-meta b{min-width:0;display:block}.invoice-paper table{font-size:11px}.invoice-paper th,.invoice-paper td{padding:8px 5px}.invoice-paper .invoice-bottom{grid-template-columns:1fr;gap:12px}.invoice-paper .invoice-notes{min-height:0}}
+@media(max-width:600px){.invoice-paper{padding:18px 12px}.invoice-paper .invoice-brand h2{font-size:21px}.invoice-paper .invoice-label{font-size:21px}.invoice-paper .invoice-meta{font-size:12px;gap:7px 12px}.invoice-paper .invoice-meta b{min-width:0;display:block}.invoice-paper table{font-size:11px}.invoice-paper th,.invoice-paper td{padding:8px 5px}.invoice-paper .invoice-bottom{grid-template-columns:1fr;gap:12px}.invoice-paper .invoice-notes{min-height:0}}
 
 .expense-voucher-paper{font-family:Arial,Helvetica,sans-serif;color:#263449;padding:34px 38px;border:0;box-shadow:none;max-width:1000px}
 .expense-voucher-paper .ev-header{border:0;padding-bottom:26px;align-items:flex-start}
@@ -173,8 +170,9 @@ main{padding:22px 18px 34px}
   #printInvoice .invoice-bottom{grid-template-columns:1.2fr .8fr!important;gap:18px!important}
   #printInvoice .invoice-notes{min-height:120px!important}
   #printInvoice .invoice-footer{margin-top:18px!important}
-} 
+}
 
+.worker-hidden { display: none !important; }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-app-compat.js"></script>
@@ -202,31 +200,29 @@ main{padding:22px 18px 34px}
 
 <div id="lock" style="display:none"><div class="lockbox"><div class="logo" style="margin:auto;width:60px;height:60px;font-size:22px">SB</div><h2>Smart Business Manager</h2><p class="notice">Unlock to access your business records.</p><p class="notice">Or enter your app PIN</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="App PIN"><button class="btn primary" style="width:100%" onclick="unlock()">Unlock app</button><p id="lockMsg" class="notice" aria-live="polite"></p></div></div>
 <div class="app">
-<header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>Smart Business Manager</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn" onclick="show('settings')">⚙</button></div></header>
+<header class="top" id="appHeader"><div class="brand"><div class="logo">SB</div><div><h1>Smart Business Manager</h1><small>MANAGE • GROW • SUCCEED</small></div></div><div class="topright"><span class="chip" id="cloudStatus">● Checking account</span><button class="iconbtn admin-only" onclick="show('settings')">⚙</button></div></header>
 <main>
 
-<section class="dashboard-heading"><div class="app-name">Smart Business Manager</div><div class="dashboard-title-row"><button class="btn soft dashboard-back" onclick="goBackFromDashboard()">← Back</button></div><p id="dashboardDate">Loading date...</p><div class="dashboard-tools"><button class="backup-action" onclick="backup()">Backup</button><button class="restore-action" onclick="document.getElementById('restoreFile').click()">Restore</button></div></section>
+<section class="dashboard-heading"><div class="app-name">Smart Business Manager</div><div class="dashboard-title-row"><button class="btn soft dashboard-back" onclick="goBackFromDashboard()">← Back</button></div><p id="dashboardDate">Loading date...</p><div class="dashboard-tools"><button class="backup-action admin-only" onclick="backup()">Backup</button><button class="restore-action admin-only" onclick="document.getElementById('restoreFile').click()">Restore</button></div></section>
 <div class="nav" id="nav">
 <button class="active" data-view="dashboard" onclick="show('dashboard')">Dashboard</button>
 <button data-view="products" onclick="show('products')">Stock &amp; Inventory</button>
 <button data-view="sales" onclick="show('sales')">Sales</button>
 <button data-view="spareparts" onclick="show('spareparts')">Spare Parts</button>
 <button data-view="services" onclick="show('services')">Services</button>
-<button data-view="expenses" onclick="show('expenses')">Expenses</button>
-<button data-view="workers" onclick="show('workers')">Workers</button>
+<button data-view="expenses" class="admin-only" onclick="show('expenses')">Expenses</button>
+<button data-view="workers" class="admin-only" onclick="show('workers')">Workers</button>
 <button data-view="customers" onclick="show('customers')">Customers</button>
 <button data-view="invoices" onclick="show('invoices')">Invoices</button>
-
-<button data-view="settings" onclick="show('settings')">Settings</button>
+<button data-view="settings" class="admin-only" onclick="show('settings')">Settings</button>
 </div>
 <section id="dashboard" class="view active">
 <div class="section-heading"><h2>Quick Actions</h2></div>
 <div class="quick dashboard-quick">
 <button class="quick-card sale-card" onclick="show('sales')"><span class="quick-icon">▤＋</span><strong>Create Sale</strong></button>
-<button class="quick-card expense-card" onclick="show('expenses')"><span class="quick-icon">▤＋</span><strong>Create Expense</strong></button>
+<button class="quick-card expense-card admin-only" onclick="show('expenses')"><span class="quick-icon">▤＋</span><strong>Create Expense</strong></button>
 <button class="quick-card service-card" onclick="show('services')"><span class="quick-icon">🛠️</span><strong>Create Service</strong></button>
 <button class="quick-card invoice-card" onclick="show('invoices')"><span class="quick-icon">🧾</span><strong>Invoices</strong></button>
-
 </div>
 <div class="section-heading records-heading"><h2>Records</h2><span></span></div>
 <div class="record-grid">
@@ -234,20 +230,19 @@ main{padding:22px 18px 34px}
 <button class="record-card" onclick="show('products')"><span class="record-icon">🛒</span><small>Stock &amp; Inventory</small><strong id="recordStock">0</strong></button>
 <button class="record-card" onclick="show('spareparts')"><span class="record-icon">🔩</span><small>Spare Parts</small><strong id="recordParts">0</strong></button>
 <button class="record-card" onclick="show('services')"><span class="record-icon">🛠️</span><small>Services</small><strong id="recordServices">0</strong></button>
-<button class="record-card" onclick="show('expenses')"><span class="record-icon">💳</span><small>Expenses</small><strong id="recordExpenses">0</strong></button>
-<button class="record-card" onclick="show('workers')"><span class="record-icon">👥</span><small>Workers</small><strong id="recordWorkers">0</strong></button>
+<button class="record-card admin-only" onclick="show('expenses')"><span class="record-icon">💳</span><small>Expenses</small><strong id="recordExpenses">0</strong></button>
+<button class="record-card admin-only" onclick="show('workers')"><span class="record-icon">👥</span><small>Workers</small><strong id="recordWorkers">0</strong></button>
 <button class="record-card" onclick="show('customers')"><span class="record-icon">👤</span><small>Customers</small><strong id="recordCustomers">0</strong></button>
 <button class="record-card" onclick="show('invoices')"><span class="record-icon">🧾</span><small>Invoices</small><strong id="recordInvoices">0</strong></button>
-
 </div>
 <div class="cards dashboard-summary">
 <div class="stat"><small>Today's sales</small><strong id="todaySales">MK 0</strong><div class="sub">Recorded sales</div></div>
-<div class="stat"><small>Sales Profits</small><strong id="profit">MK 0</strong><div class="sub">Sales minus cost</div></div>
+<div class="stat admin-only"><small>Sales Profits</small><strong id="profit">MK 0</strong><div class="sub">Sales minus cost</div></div>
 <div class="stat"><small>Today's Services</small><strong id="todayServices">MK 0</strong><div class="sub">Recorded Service</div></div>
-<div class="stat"><small>Services Profits</small><strong id="todayServiceProfit">MK 0</strong><div class="sub">Labour minus Cost</div></div>
+<div class="stat admin-only"><small>Services Profits</small><strong id="todayServiceProfit">MK 0</strong><div class="sub">Labour minus Cost</div></div>
 <div class="stat"><small>Stock items</small><strong id="stockCount">0</strong><div class="sub">Products tracked</div></div>
 <div class="stat"><small>Low stock</small><strong id="lowCount">0</strong><div class="sub">Needs attention</div></div>
-<div class="stat total-cost-stat"><small>📦 Total Cost Price</small><strong id="totalStockCost">MK 0</strong><div class="sub">Current value of all stock at buying cost</div></div>
+<div class="stat total-cost-stat admin-only"><small>📦 Total Cost Price</small><strong id="totalStockCost">MK 0</strong><div class="sub">Current value of all stock at buying cost</div></div>
 </div>
 <div class="grid2"><div class="panel"><h3>Recent sales</h3><div id="recentSales"></div></div><div class="panel"><h3>Low stock alert</h3><div id="lowStockList"></div></div></div>
 </section>
@@ -257,7 +252,7 @@ main{padding:22px 18px 34px}
 <div class="field"><label>Product / service name</label><input id="saleName" required placeholder="Choose a stock product above or enter a service"></div>
 <div class="field"><label>Quantity</label><input id="saleQty" type="number" min="1" value="1" required></div>
 <div class="field"><label>Selling price (per item, MK)</label><input id="salePrice" type="number" min="0" required placeholder="0"></div>
-<div class="field"><label>Cost per item (MK)</label><input id="saleCost" type="number" min="0" value="0" required></div>
+<div class="field admin-only"><label>Cost per item (MK)</label><input id="saleCost" type="number" min="0" value="0" required></div>
 <div class="field"><label>Customer (optional)</label><select id="saleCustomer"><option value="">Walk-in / Select customer</option></select></div>
 <div class="field"><label>Customer phone / WhatsApp</label><input id="salePhone" type="tel" placeholder="Customer phone number"></div>
 <div class="field full"><label>Customer address</label><input id="saleAddress" placeholder="Customer address"></div>
@@ -266,7 +261,7 @@ main{padding:22px 18px 34px}
 <div class="panel"><h3>Sales history</h3><div class="tablewrap" id="salesTable"></div></div>
 </section>
 <section id="products" class="view">
-<div class="panel"><h3>Add / update stock</h3><form id="productForm"><div class="formgrid">
+<div class="panel admin-only"><h3>Add / update stock</h3><form id="productForm"><div class="formgrid">
 <div class="field"><label>Product name</label><input id="pName" required placeholder="Product / accessory"></div><div class="field"><label>SKU / code (optional)</label><input id="pSku"></div>
 <div class="field"><label>Quantity</label><input id="pQty" type="number" min="0" required value="1"></div><div class="field"><label>Buying cost per item (MK)</label><input id="pCost" type="number" min="0" required value="0"></div>
 <div class="field"><label>Selling price per item (MK)</label><input id="pPrice" type="number" min="0" required value="0"></div><div class="field"><label>Low stock threshold</label><input id="pMin" type="number" min="0" value="3"></div>
@@ -275,62 +270,28 @@ main{padding:22px 18px 34px}
 </section>
   <section id="spareparts" class="view">
 
-<div class="panel">
+<div class="panel admin-only">
 <h3>Add Spare Part</h3>
 <form id="sparePartForm">
 <div class="formgrid">
-
-<div class="field">
-<label>Part name</label>
-<input id="spName" required placeholder="e.g. Itel A16 charging port">
-</div>
-
-<div class="field">
-<label>Part code</label>
-<input id="spCode" placeholder="Optional">
-</div>
-
-<div class="field">
-<label>Quantity</label>
-<input id="spQty" type="number" min="0" required value="1">
-</div>
-
-<div class="field">
-<label>Buying price per part (MK)</label>
-<input id="spCost" type="number" min="0" required value="0">
-</div>
-
-<div class="field">
-<label>Selling price per part (MK)</label>
-<input id="spPrice" type="number" min="0" required value="0">
-</div>
-
-<div class="field">
-<label>Low stock warning</label>
-<input id="spMin" type="number" min="0" value="2">
-</div>
-
+<div class="field"><label>Part name</label><input id="spName" required placeholder="e.g. Itel A16 charging port"></div>
+<div class="field"><label>Part code</label><input id="spCode" placeholder="Optional"></div>
+<div class="field"><label>Quantity</label><input id="spQty" type="number" min="0" required value="1"></div>
+<div class="field"><label>Buying price per part (MK)</label><input id="spCost" type="number" min="0" required value="0"></div>
+<div class="field"><label>Selling price per part (MK)</label><input id="spPrice" type="number" min="0" required value="0"></div>
+<div class="field"><label>Low stock warning</label><input id="spMin" type="number" min="0" value="2"></div>
 </div>
 <button class="btn primary" type="submit" style="margin-top:12px">Save Spare Part</button>
 </form>
 </div>
 
-<div class="panel" id="spPurchasePanel">
+<div class="panel admin-only" id="spPurchasePanel">
 <h3>Record Spare Parts Purchase</h3>
 <form id="spPurchaseForm">
 <div class="formgrid">
-<div class="field">
-<label>Select spare part</label>
-<select id="spPurchaseItem" required></select>
-</div>
-<div class="field">
-<label>Quantity purchased</label>
-<input id="spPurchaseQty" type="number" min="1" required value="1">
-</div>
-<div class="field">
-<label>Buying price per part (MK)</label>
-<input id="spPurchaseCost" type="number" min="0" required value="0">
-</div>
+<div class="field"><label>Select spare part</label><select id="spPurchaseItem" required></select></div>
+<div class="field"><label>Quantity purchased</label><input id="spPurchaseQty" type="number" min="1" required value="1"></div>
+<div class="field"><label>Buying price per part (MK)</label><input id="spPurchaseCost" type="number" min="0" required value="0"></div>
 </div>
 <button class="btn primary" type="submit">Record Purchase</button>
 </form>
@@ -340,22 +301,10 @@ main{padding:22px 18px 34px}
 <h3>Sell Spare Part</h3>
 <form id="spSaleForm">
 <div class="formgrid">
-<div class="field">
-<label>Select spare part</label>
-<select id="spSaleItem" required></select>
-</div>
-<div class="field">
-<label>Quantity sold</label>
-<input id="spSaleQty" type="number" min="1" required value="1">
-</div>
-<div class="field">
-<label>Selling price per part (MK)</label>
-<input id="spSalePrice" type="number" min="0" required value="0">
-</div>
-<div class="field">
-<label>Customer name (optional)</label>
-<select id="spSaleCustomer"><option value="">Walk-in / Select customer</option></select>
-</div>
+<div class="field"><label>Select spare part</label><select id="spSaleItem" required></select></div>
+<div class="field"><label>Quantity sold</label><input id="spSaleQty" type="number" min="1" required value="1"></div>
+<div class="field"><label>Selling price per part (MK)</label><input id="spSalePrice" type="number" min="0" required value="0"></div>
+<div class="field"><label>Customer name (optional)</label><select id="spSaleCustomer"><option value="">Walk-in / Select customer</option></select></div>
 </div>
 <button class="btn primary" type="submit">Record Sale</button>
 </form>
@@ -366,7 +315,7 @@ main{padding:22px 18px 34px}
 <div id="sparePartsTable"></div>
 </div>
 
-<div class="panel">
+<div class="panel admin-only">
 <h3>Purchase History</h3>
 <div id="sparePurchaseTable"></div>
 </div>
@@ -391,7 +340,7 @@ main{padding:22px 18px 34px}
 <div class="field"><label>Job details</label><input id="jobDesc" placeholder="Model, size, paper type, fault etc."></div>
 <div class="field"><label>Quantity / hours</label><input id="jobQty" type="number" min="1" value="1"></div>
 <div class="field"><label>Price per unit (MK)</label><input id="jobPrice" type="number" min="0" required value="0"></div>
-<div class="field"><label>Parts / materials cost per unit (MK)</label><input id="jobCost" type="number" min="0" required value="0"></div>
+<div class="field admin-only"><label>Parts / materials cost per unit (MK)</label><input id="jobCost" type="number" min="0" required value="0"></div>
 <div class="field"><label>Job status</label><select id="jobStatus"><option>Received</option><option>In progress</option><option>Waiting for parts</option><option>Ready for collection</option><option>Completed</option><option>Cancelled</option></select></div>
 <div class="field"><label>Payment status</label><select id="jobPayment"><option>Unpaid</option><option>Deposit paid</option><option>Paid</option></select></div>
 </div><button class="btn primary" type="submit" style="margin-top:12px">Save service job</button></form></div>
@@ -401,15 +350,16 @@ main{padding:22px 18px 34px}
 <div><b>Repairing services</b><p class="notice">Phone diagnostics, screen/LCD, battery, charging port, speaker, microphone, camera, power button, software troubleshooting, OS installation, data transfer, tablet repair, laptop/desktop diagnostics, keyboard/hinge, printer repair, Wi-Fi/network setup, RAM/SSD upgrades, virus cleanup and general IT support.</p></div>
 </div><p class="notice">Use the custom job details field for any service not listed.</p></div>
 </section>
-  <section id="expenses" class="view">
+  <section id="expenses" class="view admin-only">
 <div class="panel"><h3>Record expense</h3><form id="expenseForm"><div class="formgrid"><div class="field"><label>Description</label><input id="eName" required placeholder="Rent, transport, electricity"></div><div class="field"><label>Amount (MK)</label><input id="eAmount" type="number" min="0" required></div><div class="field"><label>Category</label><select id="eCat"><option>Rent</option><option>Transport</option><option>Utilities</option><option>Supplies</option><option>Salary</option><option>Other</option></select></div></div><button class="btn primary" style="margin-top:12px">Save expense</button></form></div>
 <div class="panel"><h3>Expenses</h3><div class="tablewrap" id="expensesTable"></div></div>
 </section>
-<section id="workers" class="view">
- <div class="panel"><h3>Add Worker</h3>
+<section id="workers" class="view admin-only">
+ <div class="panel"><h3>Add Worker Account</h3>
   <form id="workerForm"><div class="formgrid">
    <div class="field"><label>Worker Name</label><input id="wName" required></div>
    <div class="field"><label>Job Title / Role</label><input id="wRole" required placeholder="Technician, Designer, Salesperson"></div>
+   <div class="field"><label>Worker Firebase UID (Optional for cloud sync)</label><input id="wUid" placeholder="Enter Firebase UID of worker"></div>
    <div class="field"><label>Phone</label><input id="wPhone" inputmode="tel"></div>
    <div class="field"><label>Monthly Salary (MK)</label><input id="wSalary" type="number" min="0" required></div>
   </div><button class="btn primary" style="margin-top:12px">Save Worker</button></form>
@@ -441,10 +391,9 @@ main{padding:22px 18px 34px}
 </div>
 </section>
 
-<section id="settings" class="view">
+<section id="settings" class="view admin-only">
 <div class="panel"><h3>Business profile</h3><form id="settingsForm"><div class="formgrid"><div class="field"><label>Business name</label><input id="sBusiness"></div><div class="field"><label>Tagline</label><input id="sTag"></div><div class="field"><label>Address / location</label><input id="sAddress" placeholder="Blantyre, Malawi"></div><div class="field"><label>Phone / WhatsApp</label><input id="sPhone"></div><div class="field"><label>Currency</label><select id="sCurrency"><option>MK</option><option>USD</option></select></div><div class="field"><label>App PIN (4–8 digits)</label><input id="sPin" inputmode="numeric" maxlength="8"></div></div><button class="btn primary" style="margin-top:12px">Save settings</button></form></div>
 <div class="panel"><h3>Data backup & restore</h3><p class="notice">Your records are kept on this device and synchronised to your signed-in cloud account when internet is available. You can sign in again after reinstalling to restore cloud data. Keep occasional downloaded backups as an extra safety copy.</p><div class="actions"><button class="btn success" onclick="backup()">Download backup</button><label class="btn soft" style="display:inline-block;cursor:pointer">Restore backup<input type="file" accept="application/json" id="restoreFile" class="hidden"></label><button class="btn soft" onclick="window.print()">Print / Save PDF</button></div></div>
-
 
 <div class="panel"><h3>Cloud account</h3>
   <p class="notice">Signed-in account: <b id="accountEmail">Not signed in</b></p>
@@ -465,8 +414,8 @@ const KEY='sia_business_pro_v1';
 const DIRTY_KEY=KEY+'_cloud_dirty';
 const OWNER_KEY=KEY+'_cloud_owner';
 const PIN_KEY=KEY+'_local_pin';
+const ADMIN_UID = '7RqIYO3IDSVCYex1LsDo6rDw5V33';
   
-// IMPORTANT: Replace every placeholder below with the config from
 const firebaseConfig = {
   apiKey: "AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",
   authDomain: "smart-business-manager-f319f.firebaseapp.com",
@@ -485,6 +434,7 @@ let cloudUnsubscribe = null;
 let cloudSaveTimer = null;
 let applyingCloudData = false;
 let appUnlocked = false;
+let userRole = 'worker'; // 'admin' or 'worker'
   
 initFirebase();
 
@@ -504,15 +454,13 @@ function initFirebase() {
     firebaseReady=false;
     setCloudStatus('Offline mode — Firebase SDK unavailable');
     const msg=document.getElementById('authMsg');
-    if (msg) msg.textContent='Firebase libraries could not load. The app will continue in offline mode. Check internet access or the Android WebView network settings to enable cloud backup.';
+    if (msg) msg.textContent='Firebase libraries could not load. The app will continue in offline mode.';
     if (gate) gate.style.display='none';
     return false;
   }
   if (!firebaseConfigured()) {
     firebaseReady=false;
     setCloudStatus('Offline mode — Firebase config missing');
-    const msg=document.getElementById('authMsg');
-    if (msg) msg.textContent='Firebase configuration is incomplete. The app will continue offline; local records are not affected.';
     if (gate) gate.style.display='none';
     return false;
   }
@@ -526,8 +474,6 @@ function initFirebase() {
     firebaseReady=true;
     auth.onAuthStateChanged(handleAuthState,err=>{
       setCloudStatus('Authentication unavailable — local mode');
-      const msg=document.getElementById('authMsg');
-      if (msg) msg.textContent='Firebase authentication error: '+authErrorMessage(err);
       if (gate) gate.style.display='none';
     });
     return true;
@@ -536,10 +482,7 @@ function initFirebase() {
     auth=null;
     cloudDb=null;
     setCloudStatus('Offline mode — Firebase initialization failed');
-    const msg=document.getElementById('authMsg');
-    if (msg) msg.textContent='Firebase could not start: '+authErrorMessage(err)+'. You can continue using the app offline.';
     if (gate) gate.style.display='none';
-    console.error('Firebase initialization failed:',err);
     return false;
   }
 }
@@ -552,15 +495,9 @@ function authErrorMessage(err) {
     'auth/email-already-in-use':'This email already has an account. Please sign in.',
     'auth/weak-password':'Choose a stronger password with at least 6 characters.',
     'auth/network-request-failed':'Internet connection problem. Please try again.',
-    'auth/too-many-requests':'Too many attempts. Wait a little and try again.',
-    'auth/unauthorized-domain':'This app domain is not authorized in Firebase Authentication. Add the domain shown in Firebase Console > Authentication > Settings > Authorized domains.',
-    'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'The Firebase API key is invalid. Copy the Web App config from Firebase Project Settings.',
-    'auth/operation-not-allowed':'Email/password sign-in is disabled. Enable it in Firebase Console > Authentication > Sign-in method.',
-    'permission-denied':'Firestore access was denied. Check the Firestore database rules for signed-in users.',
-    'unavailable':'Firebase is temporarily unavailable. Check your internet connection and try again.',
-    'failed-precondition':'Firestore may not be created yet. Create the database in Firebase Console > Firestore Database.'
+    'permission-denied':'Firestore access was denied.'
   };
-  return map[err.code] || err.message || 'Something went wrong. Please try again.';
+  return map[err.code] || err.message || 'Something went wrong.';
 }
 function getAuthInputs() {
   return {
@@ -569,33 +506,52 @@ function getAuthInputs() {
   };
 }
 async function signInAccount() {
-  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable. Continue using the app offline; cloud sign-in can be retried when Firebase is configured and reachable.'; return; }
+  if (!firebaseReady) return alert('Firebase is unavailable.');
   const {email,password}=getAuthInputs();
-  if (!email || !password) return document.getElementById('authMsg').textContent='Enter your email and password.';
-  document.getElementById('authMsg').textContent='Signing in...';
+  if (!email || !password) return alert('Enter email and password.');
   try { await auth.signInWithEmailAndPassword(email,password); }
   catch(err) { document.getElementById('authMsg').textContent=authErrorMessage(err); }
 }
 async function registerAccount() {
-  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable. Your local business records will continue working offline.'; return; }
+  if (!firebaseReady) return alert('Firebase is unavailable.');
   const {email,password}=getAuthInputs();
-  if (!email || !password) return document.getElementById('authMsg').textContent='Enter your email and choose a password.';
-  if (password.length < 6) return document.getElementById('authMsg').textContent='Password must contain at least 6 characters.';
-  document.getElementById('authMsg').textContent='Creating your account...';
+  if (!email || !password || password.length < 6) return alert('Valid email & 6-char password required.');
   try {
     await auth.createUserWithEmailAndPassword(email,password);
-    alert('Account created successfully. Your business data can now be backed up to the cloud.');
+    alert('Account created.');
   } catch(err) { document.getElementById('authMsg').textContent=authErrorMessage(err); }
 }
 async function resetAccountPassword() {
-  if (!firebaseReady) { document.getElementById('authMsg').textContent='Firebase is unavailable, so password reset cannot be sent. Your offline records are still safe on this device.'; return; }
+  if (!firebaseReady) return;
   const email=document.getElementById('authEmail').value.trim();
-  if (!email) return document.getElementById('authMsg').textContent='Enter your email address first.';
+  if (!email) return alert('Enter email address.');
   try {
     await auth.sendPasswordResetEmail(email);
-    document.getElementById('authMsg').textContent='Password reset email sent. Check your inbox.';
-  } catch(err) { document.getElementById('authMsg').textContent=authErrorMessage(err); }
+    alert('Reset email sent.');
+  } catch(err) { alert(authErrorMessage(err)); }
 }
+
+async function determineUserRole(user) {
+  if (!user) {
+    userRole = 'admin'; // Default local mode fallback
+    return;
+  }
+  if (user.uid === ADMIN_UID) {
+    userRole = 'admin';
+    return;
+  }
+  try {
+    const memberDoc = await cloudDb.collection('businesses').doc(ADMIN_UID).collection('members').doc(user.uid).get();
+    if (memberDoc.exists && memberDoc.data().role === 'admin') {
+      userRole = 'admin';
+    } else {
+      userRole = 'worker';
+    }
+  } catch(e) {
+    userRole = 'worker';
+  }
+}
+
 async function handleAuthState(user) {
   currentUser=user||null;
   cloudReady=false;
@@ -605,12 +561,14 @@ async function handleAuthState(user) {
   const lock=document.getElementById('lock');
   const email=document.getElementById('accountEmail');
 
+  await determineUserRole(user);
+  applyRoleUI();
+
   if (!user) {
-    // Authentication is optional. The app remains usable with local storage.
     if (gate) gate.style.display='none';
     if (lock && !appUnlocked) lock.style.display='flex';
     if (email) email.textContent='Not signed in — using this device';
-    setCloudStatus(firebaseReady ? 'Local mode — sign in for cloud backup' : 'Offline mode — cloud unavailable');
+    setCloudStatus('Local mode — sign in for cloud backup');
     return;
   }
 
@@ -619,6 +577,18 @@ async function handleAuthState(user) {
   if (email) email.textContent=user.email||'Signed in';
   setCloudStatus('Connecting to cloud...');
   await connectUserCloud(user);
+}
+
+function applyRoleUI() {
+  const adminElements = document.querySelectorAll('.admin-only');
+  adminElements.forEach(el => {
+    if (userRole === 'admin') {
+      el.classList.remove('worker-hidden');
+    } else {
+      el.classList.add('worker-hidden');
+    }
+  });
+  render();
 }
 
 function continueOffline() {
@@ -632,76 +602,22 @@ function continueOffline() {
 
 function showCloudLogin() {
   const gate=document.getElementById('authGate');
-  const msg=document.getElementById('authMsg');
-  if (!firebaseReady) {
-    if (msg) msg.textContent='Cloud sign-in is unavailable because Firebase did not initialize. You can continue using the app offline; local records will still be saved on this device.';
-  } else if (msg) {
-    msg.textContent='Sign in to enable cloud backup and restore. Offline business records remain available.';
-  }
   if (gate) gate.style.display='flex';
 }
 
 async function connectUserCloud(user) {
   const ref=cloudDb.collection('users').doc(user.uid).collection('appData').doc('main');
   try {
-    // Never carry one account's local records into another account on a shared phone.
-    const previousOwner=localStorage.getItem(OWNER_KEY);
-    if (previousOwner && previousOwner!==user.uid) {
-db={
- products:[],
- purchases:[],
- sales:[],
- expenses:[],
- customers:[],
- invoices:[],
- services:[],
- spareParts:[],
- sparePartPurchases:[],
- sparePartSales:[],
- workers:[],
- workerPayments:[],
- settings:{
-  business:'My Business',
-  tag:'Manage your business. Grow with confidence.',
-  address:'Malawi',
-  phone:'',
-  currency:'MK',
-  pin:'1340'
- }
-};
-      localStorage.setItem(KEY,JSON.stringify(db));
-      localStorage.removeItem(DIRTY_KEY);
-      localStorage.removeItem(PIN_KEY);
-      initSettings();
-      render();
-    }
     const snap=await ref.get();
     const localHasPendingChanges=localStorage.getItem(DIRTY_KEY)==='1';
     if (snap.exists && snap.data().payload) {
-      if (localHasPendingChanges) {
-        // Preserve edits made offline since the last successful cloud save.
+      if (localHasPendingChanges && userRole === 'admin') {
         await ref.set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
         localStorage.removeItem(DIRTY_KEY);
         setCloudStatus('Offline changes backed up',true);
       } else {
         applyingCloudData=true;
-        db={...db,...snap.data().payload,
-          products:snap.data().payload.products||[],
-          purchases:snap.data().payload.purchases||[],
-          sales:snap.data().payload.sales||[],
-          expenses:snap.data().payload.expenses||[],
-          customers:snap.data().payload.customers||[],
-          invoices:snap.data().payload.invoices||[],
-          services:snap.data().payload.services||[],
-          spareParts:snap.data().payload.spareParts||[],
-          sparePartPurchases:snap.data().payload.sparePartPurchases||[],
-          sparePartSales:snap.data().payload.sparePartSales||[],
-          workers:snap.data().payload.workers||[],
-          workerPayments:snap.data().payload.workerPayments||[],
-          settings:{...db.settings,...(snap.data().payload.settings||{})}};
-        const locallySavedPin=localStorage.getItem(PIN_KEY);
-        if(locallySavedPin!==null) db.settings.pin=locallySavedPin;
-        else localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
+        db={...db,...snap.data().payload};
         localStorage.setItem(KEY,JSON.stringify(db));
         initSettings();
         render();
@@ -709,42 +625,21 @@ db={
         setCloudStatus('Cloud data restored',true);
       }
     } else {
-      // First login: preserve and upload records already stored on this phone.
-      await ref.set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
-      localStorage.removeItem(DIRTY_KEY);
-      if(localStorage.getItem(PIN_KEY)===null) localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
-      setCloudStatus('First backup completed',true);
+      if (userRole === 'admin') {
+        await ref.set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        localStorage.removeItem(DIRTY_KEY);
+      }
+      setCloudStatus('Cloud setup complete',true);
     }
     localStorage.setItem(OWNER_KEY,user.uid);
     cloudReady=true;
-    cloudUnsubscribe=ref.onSnapshot(snapshot=>{
-      if (!snapshot.exists || !snapshot.data().payload) return;
-      if (localStorage.getItem(DIRTY_KEY)==='1') {
-        setCloudStatus('Local changes waiting to sync');
-        return;
-      }
-      const incoming=JSON.stringify(snapshot.data().payload);
-      const local=JSON.stringify(db);
-      if (incoming!==local) {
-        applyingCloudData=true;
-        db={...db,...snapshot.data().payload,settings:{...db.settings,...(snapshot.data().payload.settings||{})}};
-        const locallySavedPin=localStorage.getItem(PIN_KEY);
-        if(locallySavedPin!==null) db.settings.pin=locallySavedPin;
-        else localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));
-        localStorage.setItem(KEY,JSON.stringify(db));
-        initSettings();
-        render();
-        applyingCloudData=false;
-      }
-      setCloudStatus(navigator.onLine?'Cloud synced':'Offline — changes will sync when online',navigator.onLine);
-    },err=>setCloudStatus('Cloud sync error: '+authErrorMessage(err)));
   } catch(err) {
     applyingCloudData=false;
     cloudReady=false;
     setCloudStatus('Cloud connection failed');
-    document.getElementById('authMsg').textContent='Could not load cloud records: '+authErrorMessage(err);
   }
 }
+
 function scheduleCloudSave() {
   if (!currentUser || !cloudReady || applyingCloudData) return;
   clearTimeout(cloudSaveTimer);
@@ -757,15 +652,12 @@ function scheduleCloudSave() {
       setCloudStatus('Cloud backup saved',true);
     } catch(err) {
       setCloudStatus('Cloud save failed');
-      console.error('Cloud save failed',err);
     }
   },700);
 }
+
 async function syncNow() {
-  if (!firebaseReady || !auth || !cloudDb) return alert('Cloud backup is not available right now. Your records are saved locally on this device.');
-  if (!currentUser) return alert('Please sign in first.');
-  if (!navigator.onLine) return alert('Connect to the internet to sync now. Your local records remain on this device.');
-  if (!cloudReady) return alert('Cloud connection is not ready. Please wait and try again.');
+  if (!firebaseReady || !auth || !cloudDb || !currentUser) return alert('Cloud sync unavailable.');
   try {
     const ref=cloudDb.collection('users').doc(currentUser.uid).collection('appData').doc('main');
     await ref.set({payload:db,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -774,36 +666,13 @@ async function syncNow() {
     alert('Cloud backup completed.');
   } catch(err) { alert('Sync failed: '+authErrorMessage(err)); }
 }
+
 async function signOutAccount() {
-  if (!auth || !currentUser) return alert('No cloud account is currently signed in. The app is using local storage.');
-  if (!confirm('Sign out of this account on this device? Your cloud records will remain online.')) return;
-  try { await auth.signOut(); }
-  catch(err) { alert(authErrorMessage(err)); }
+  if (!auth || !currentUser) return;
+  if (!confirm('Sign out of this account?')) return;
+  try { await auth.signOut(); } catch(err) { alert(authErrorMessage(err)); }
 }
-// Offline-first behavior: all app changes are stored locally by save().
-// When connectivity returns, retry Firebase initialization (if the SDK did
-// not load at app startup), reconnect the signed-in account, and sync pending data.
-window.addEventListener('online', async()=>{
-  setCloudStatus('Internet connected — checking cloud...');
-  if (!firebaseReady) {
-    const initialized = initFirebase();
-    if (!initialized) {
-      setCloudStatus('Online, but cloud is unavailable — records remain saved on this device');
-      return;
-    }
-    // onAuthStateChanged will reconnect an existing signed-in session.
-    return;
-  }
-  if (currentUser) {
-    if (!cloudReady) await connectUserCloud(currentUser);
-    else await syncNow();
-  } else {
-    setCloudStatus('Online — local records saved; sign in for cloud backup');
-  }
-});
-window.addEventListener('offline',()=>{
-  setCloudStatus('Offline — changes are saved on this device');
-});
+
 let db={
  products:[],
  purchases:[],
@@ -826,6 +695,7 @@ let db={
   pin:'1234'
  }
 };
+
 function load(){
  try{
   let x=JSON.parse(localStorage.getItem(KEY));
@@ -848,31 +718,32 @@ function load(){
     settings:{...db.settings,...(x.settings||{})}
    };
   }
- }catch(e){
-  console.error('Data loading error:',e);
- }
+ }catch(e){}
 }
+
 function save(){
   try {
-    // Primary offline copy: save immediately on this device.
     localStorage.setItem(KEY, JSON.stringify(db));
-    // Keep a pending-sync marker until a successful cloud upload confirms it.
     if (currentUser && !applyingCloudData) localStorage.setItem(DIRTY_KEY, '1');
     scheduleCloudSave();
     return true;
   } catch(e) {
-    alert('Local storage error. Please use Download Backup immediately and check app storage permissions.');
-    console.error('Local save failed:', e);
     return false;
   }
 }
+
 function money(n){return (db.settings.currency||'MK')+' '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateNow(){return new Date().toISOString().slice(0,10)}
 let previousView='dashboard';
+
 function show(id){
   const target=document.getElementById(id);
-  if(!target || !target.classList.contains('view')){console.warn('Unknown app tab:',id);return;}
+  if(!target || !target.classList.contains('view')) return;
+  if (userRole === 'worker' && ['expenses', 'workers', 'settings'].includes(id)) {
+    alert('Access restricted to Admin.');
+    return;
+  }
   const active=document.querySelector('.view.active');
   if(active&&active.id!==id)previousView=active.id;
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));
@@ -880,59 +751,63 @@ function show(id){
   render();
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
 function goBackFromDashboard(){show(previousView&&previousView!=='dashboard'?previousView:'dashboard')}
 function finishAppUnlock(){
   appUnlocked=true;
   const lock=document.getElementById('lock');
   if(lock)lock.classList.add('hidden');
-  const msg=document.getElementById('lockMsg');
-  if(msg)msg.textContent='';
 }
+
 function unlock(){
   if(document.getElementById('pinIn').value===String(localStorage.getItem(PIN_KEY)??db.settings.pin??'1234')){
     finishAppUnlock();
     document.getElementById('pinIn').value='';
   }else document.getElementById('lockMsg').textContent='Incorrect PIN';
 }
-function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
-function del(type,id){if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}}
 
-// Remove a purchase record and reverse the quantity added to spare-parts stock.
+function table(headers,rows){if(!rows.length)return '<div class="empty">No records yet.</div>';return '<div class="tablewrap"><table><thead><tr>'+headers.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div>'}
+
+function del(type,id){
+  if (userRole === 'worker') return alert('Workers cannot delete completed records.');
+  if(confirm('Delete this record?')){db[type]=db[type].filter(x=>x.id!==id);save();render()}
+}
+
 function delSparePartPurchase(recordId){
+ if (userRole === 'worker') return alert('Workers cannot delete records.');
  const record=db.sparePartPurchases.find(x=>x.id===recordId);
  if(!record)return;
  const part=db.spareParts.find(x=>x.name===record.part);
  if(part && Number(part.qty||0)<Number(record.qty||0)){
-  alert('This purchase cannot be deleted because some of its stock has already been sold or used. Delete the related sales first, or adjust the stock before trying again.');
+  alert('Cannot delete: stock already sold.');
   return;
  }
- if(!confirm('Delete this purchase history record? Its quantity will also be removed from spare-parts stock.'))return;
+ if(!confirm('Delete this purchase history record?'))return;
  if(part)part.qty=Number(part.qty||0)-Number(record.qty||0);
  db.sparePartPurchases=db.sparePartPurchases.filter(x=>x.id!==recordId);
  save();
  render();
 }
 
-// Remove a sale record and return the sold quantity to spare-parts stock.
 function delSparePartSale(recordId){
+ if (userRole === 'worker') return alert('Workers cannot delete records.');
  const record=db.sparePartSales.find(x=>x.id===recordId);
  if(!record)return;
- if(!confirm('Delete this sales history record? Its quantity will be returned to spare-parts stock.'))return;
+ if(!confirm('Delete this sale record?'))return;
  const part=db.spareParts.find(x=>x.name===record.part);
  if(part)part.qty=Number(part.qty||0)+Number(record.qty||0);
  db.sparePartSales=db.sparePartSales.filter(x=>x.id!==recordId);
  save();
  render();
 }
+
 function render(){
- // Keep every customer selector in sync with the saved Customer List.
- const customerSelectIds=['saleCustomer','spSaleCustomer','jobCustomer','iCustomer'];
+ const customerSelectIds=['saleCustomer','spSaleCustomer','jobCustomer'];
  customerSelectIds.forEach(fieldId=>{
    const field=document.getElementById(fieldId);
    if(!field)return;
    const previousValue=field.value;
-   const firstLabel=fieldId==='iCustomer'?'Choose customer':'Walk-in / Select customer';
-   field.innerHTML=`<option value="">${firstLabel}</option>`+
+   field.innerHTML=`<option value="">Walk-in / Select customer</option>`+
      db.customers.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
    if(db.customers.some(c=>c.name===previousValue))field.value=previousValue;
  });
@@ -947,121 +822,124 @@ function render(){
  setCount('recordWorkers',db.workers.length);
  setCount('recordCustomers',db.customers.length);
  setCount('recordInvoices',db.invoices.filter(inv=>['sale','service','expense'].includes(inv.docType)).length);
- const businessTag=document.getElementById('businessTag');
- if(businessTag)businessTag.textContent=(db.settings.business||'Business')+' · '+(db.settings.address||'Malawi');
+
  let today=dateNow(),salesToday=db.sales.filter(s=>s.date===today),low=db.products.filter(p=>p.qty<=p.min);
-  // Combined report totals: retail sales + service jobs + spare-parts sales.
-  const reportServices=db.services.filter(j=>j.status!=='Cancelled');
-  const reportRevenue=
-    db.sales.reduce((sum,s)=>sum+Number(s.total||0),0)+
-    reportServices.reduce((sum,j)=>sum+Number(j.total||0),0)+
-    db.sparePartSales.reduce((sum,s)=>sum+Number(s.total||0),0);
-  const reportProfit=
-    db.sales.reduce((sum,s)=>sum+Number(s.profit||0),0)+
-    reportServices.reduce((sum,j)=>sum+Number(j.profit||0),0)+
-    db.sparePartSales.reduce((sum,s)=>sum+Number(s.profit||0),0);
-  const reportCost=reportRevenue-reportProfit;
-  const expenses=db.expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
+ const reportServices=db.services.filter(j=>j.status!=='Cancelled');
  const servicesToday=reportServices.filter(j=>j.date===today);
  const servicesTodayRevenue=servicesToday.reduce((sum,j)=>sum+Number(j.total||0),0);
  const servicesTodayProfit=servicesToday.reduce((sum,j)=>sum+Number(j.profit||0),0);
+
  document.getElementById('todaySales').textContent=money(salesToday.reduce((a,s)=>a+s.total,0));
  document.getElementById('profit').textContent=money(salesToday.reduce((a,s)=>a+s.profit,0));
  document.getElementById('todayServices').textContent=money(servicesTodayRevenue);
  document.getElementById('todayServiceProfit').textContent=money(servicesTodayProfit);
  document.getElementById('stockCount').textContent=db.products.length;
  document.getElementById('lowCount').textContent=low.length;
+
  const totalStockCost =
    db.products.reduce((sum,p)=>sum+(Number(p.qty)||0)*(Number(p.cost)||0),0) +
    db.spareParts.reduce((sum,p)=>sum+(Number(p.qty)||0)*(Number(p.cost)||0),0);
  const totalStockCostEl=document.getElementById('totalStockCost');
  if(totalStockCostEl)totalStockCostEl.textContent=money(totalStockCost);
+
  document.getElementById('recentSales').innerHTML=table(['Date','Item','Total'],db.sales.slice(-5).reverse().map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${money(s.total)}</td></tr>`));
  document.getElementById('lowStockList').innerHTML=low.length?low.map(p=>`<p>⚠ ${esc(p.name)} — ${p.qty} left</p>`).join(''):'<p class="notice">All stock levels look good.</p>';
- document.getElementById('salesTable').innerHTML=table(['Date','Item','Qty','Total','Profit','Payment',''],db.sales.slice().reverse().map(s=>`<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td><td>${esc(s.payment)}</td><td><button class="btn danger" onclick="del('sales','${s.id}')">Delete</button></td></tr>`));
-document.getElementById('productsTable').innerHTML=table(['Product','SKU','Qty','Cost','Price','Profit/unit',''],db.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.sku)}</td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${money(p.price-p.cost)}</td><td><button class="btn danger" onclick="del('products','${p.id}')">Delete</button></td></tr>`));
-// DISPLAY SPARE PARTS
-document.getElementById('sparePartsTable').innerHTML=table(
- ['Part','Code','Stock','Buying price','Selling price','Profit/unit','Action'],
- db.spareParts.map(p=>`<tr>
- <td>${esc(p.name)}</td>
- <td>${esc(p.code||'')}</td>
- <td>${p.qty}</td>
- <td>${money(p.cost)}</td>
- <td>${money(p.price)}</td>
- <td>${money(p.price-p.cost)}</td>
- <td><button class="btn danger" onclick="del('spareParts','${p.id}')">Delete</button></td>
- </tr>`)
-);
 
-document.getElementById('sparePurchaseTable').innerHTML=table(
- ['Date','Part','Quantity','Unit cost','Total','Action'],
- db.sparePartPurchases.slice().reverse().map(p=>`<tr>
- <td>${p.date}</td>
- <td>${esc(p.part)}</td>
- <td>${p.qty}</td>
- <td>${money(p.cost)}</td>
- <td>${money(p.total)}</td>
- <td><button class="btn danger" onclick="delSparePartPurchase('${p.id}')">Delete</button></td>
- </tr>`)
-);
+ // Sales Table (Worker View vs Admin View)
+ const salesHeaders = userRole === 'admin' ? ['Date','Item','Qty','Total','Profit','Payment','Action'] : ['Date','Item','Qty','Total','Payment'];
+ document.getElementById('salesTable').innerHTML=table(salesHeaders, db.sales.slice().reverse().map(s=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td><td>${esc(s.payment)}</td><td><button class="btn danger" onclick="del('sales','${s.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${s.date}</td><td>${esc(s.name)}</td><td>${s.qty}</td><td>${money(s.total)}</td><td>${esc(s.payment)}</td></tr>`;
+ }));
 
-document.getElementById('spareSalesTable').innerHTML=table(
- ['Date','Part','Quantity','Selling price','Total','Profit','Customer','Action'],
- db.sparePartSales.slice().reverse().map(s=>`<tr>
- <td>${s.date}</td>
- <td>${esc(s.part)}</td>
- <td>${s.qty}</td>
- <td>${money(s.price)}</td>
- <td>${money(s.total)}</td>
- <td>${money(s.profit)}</td>
- <td>${esc(s.customer||'Walk-in')}</td>
- <td><button class="btn danger" onclick="delSparePartSale('${s.id}')">Delete</button></td>
- </tr>`)
-);
+ // Products Table
+ const prodHeaders = userRole === 'admin' ? ['Product','SKU','Qty','Cost','Price','Profit/unit','Action'] : ['Product','SKU','Qty','Price'];
+ document.getElementById('productsTable').innerHTML=table(prodHeaders, db.products.map(p=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${esc(p.name)}</td><td>${esc(p.sku)}</td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${money(p.price-p.cost)}</td><td><button class="btn danger" onclick="del('products','${p.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${esc(p.name)}</td><td>${esc(p.sku)}</td><td>${p.qty}</td><td>${money(p.price)}</td></tr>`;
+ }));
 
-// UPDATE PRODUCT SELECTOR FOR SALES: show only products with available stock
-const saleProductSelect=document.getElementById('saleProductSelect');
-if(saleProductSelect){
- const previouslySelected=saleProductSelect.value;
- saleProductSelect.innerHTML='<option value="">Choose stocked product (optional)</option>'+
-   db.products.filter(p=>Number(p.qty)>0).map(p=>
-    `<option value="${p.id}">${esc(p.name)} — ${p.qty} available</option>`
-   ).join('');
- if(db.products.some(p=>p.id===previouslySelected&&Number(p.qty)>0))saleProductSelect.value=previouslySelected;
-}
+ // Spare Parts Table
+ const spHeaders = userRole === 'admin' ? ['Part','Code','Stock','Buying price','Selling price','Profit/unit','Action'] : ['Part','Code','Stock','Selling price'];
+ document.getElementById('sparePartsTable').innerHTML=table(spHeaders, db.spareParts.map(p=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${esc(p.name)}</td><td>${esc(p.code||'')}</td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.price)}</td><td>${money(p.price-p.cost)}</td><td><button class="btn danger" onclick="del('spareParts','${p.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${esc(p.name)}</td><td>${esc(p.code||'')}</td><td>${p.qty}</td><td>${money(p.price)}</td></tr>`;
+ }));
 
-// UPDATE SPARE PART SELECTORS
-['spPurchaseItem','spSaleItem'].forEach(id=>{
- let select=document.getElementById(id);
- let old=select.value;
- select.innerHTML=db.spareParts.map(p=>
- `<option value="${p.id}">${esc(p.name)} (${p.qty} available)</option>`
- ).join('');
- if(db.spareParts.some(p=>p.id===old))select.value=old;
-});
+ if (userRole === 'admin') {
+   document.getElementById('sparePurchaseTable').innerHTML=table(
+    ['Date','Part','Quantity','Unit cost','Total','Action'],
+    db.sparePartPurchases.slice().reverse().map(p=>`<tr><td>${p.date}</td><td>${esc(p.part)}</td><td>${p.qty}</td><td>${money(p.cost)}</td><td>${money(p.total)}</td><td><button class="btn danger" onclick="delSparePartPurchase('${p.id}')">Delete</button></td></tr>`)
+   );
+ }
 
-let selected=db.spareParts.find(p=>p.id===document.getElementById('spSaleItem').value);
-if(selected)document.getElementById('spSalePrice').value=selected.price;
-  document.getElementById('expensesTable').innerHTML=table(['Date','Description','Category','Amount',''],db.expenses.slice().reverse().map(e=>`<tr><td>${e.date}</td><td>${esc(e.name)}</td><td>${esc(e.cat)}</td><td>${money(e.amount)}</td><td><button class="btn danger" onclick="del('expenses','${e.id}')">Delete</button></td></tr>`));
-  document.getElementById('workersTable').innerHTML=table(['Worker','Role','Phone','Monthly Salary',''],db.workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.role)}</td><td>${esc(w.phone||'')}</td><td>${money(w.salary)}</td><td><button class="btn danger" onclick="del('workers','${w.id}')">Delete</button></td></tr>`));
-  const workerSelect=document.getElementById('wpWorker'),previousWorker=workerSelect.value;
-  workerSelect.innerHTML='<option value="">Choose Worker</option>'+db.workers.map(w=>`<option value="${w.id}">${esc(w.name)} — ${esc(w.role)}</option>`).join('');
-  if(db.workers.some(w=>w.id===previousWorker))workerSelect.value=previousWorker;
-  document.getElementById('workerPaymentsTable').innerHTML=table(['Date','Worker','Amount','Note',''],db.workerPayments.slice().reverse().map(pay=>{const worker=db.workers.find(w=>w.id===pay.workerId);return `<tr><td>${esc(pay.date)}</td><td>${esc(worker?worker.name:pay.workerName||'Worker')}</td><td>${money(pay.amount)}</td><td>${esc(pay.note||'')}</td><td><button class="btn danger" onclick="del('workerPayments','${pay.id}')">Delete</button></td></tr>`}));
+ const spSaleHeaders = userRole === 'admin' ? ['Date','Part','Quantity','Selling price','Total','Profit','Customer','Action'] : ['Date','Part','Quantity','Selling price','Total','Customer'];
+ document.getElementById('spareSalesTable').innerHTML=table(spSaleHeaders, db.sparePartSales.slice().reverse().map(s=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${s.date}</td><td>${esc(s.part)}</td><td>${s.qty}</td><td>${money(s.price)}</td><td>${money(s.total)}</td><td>${money(s.profit)}</td><td>${esc(s.customer||'Walk-in')}</td><td><button class="btn danger" onclick="delSparePartSale('${s.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${s.date}</td><td>${esc(s.part)}</td><td>${s.qty}</td><td>${money(s.price)}</td><td>${money(s.total)}</td><td>${esc(s.customer||'Walk-in')}</td></tr>`;
+ }));
 
- document.getElementById('customersTable').innerHTML=table(['Name','Phone','Notes',''],db.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td><td><button class="btn danger" onclick="del('customers','${c.id}')">Delete</button></td></tr>`));
+ const saleProductSelect=document.getElementById('saleProductSelect');
+ if(saleProductSelect){
+  const previouslySelected=saleProductSelect.value;
+  saleProductSelect.innerHTML='<option value="">Choose stocked product (optional)</option>'+
+    db.products.filter(p=>Number(p.qty)>0).map(p=>`<option value="${p.id}">${esc(p.name)} — ${p.qty} available</option>`).join('');
+  if(db.products.some(p=>p.id===previouslySelected&&Number(p.qty)>0))saleProductSelect.value=previouslySelected;
+ }
+
+ ['spPurchaseItem','spSaleItem'].forEach(id=>{
+  let select=document.getElementById(id);
+  if (!select) return;
+  let old=select.value;
+  select.innerHTML=db.spareParts.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.qty} available)</option>`).join('');
+  if(db.spareParts.some(p=>p.id===old))select.value=old;
+ });
+
+ let selected=db.spareParts.find(p=>p.id===document.getElementById('spSaleItem').value);
+ if(selected)document.getElementById('spSalePrice').value=selected.price;
+
+ if (userRole === 'admin') {
+   document.getElementById('expensesTable').innerHTML=table(['Date','Description','Category','Amount','Action'],db.expenses.slice().reverse().map(e=>`<tr><td>${e.date}</td><td>${esc(e.name)}</td><td>${esc(e.cat)}</td><td>${money(e.amount)}</td><td><button class="btn danger" onclick="del('expenses','${e.id}')">Delete</button></td></tr>`));
+   document.getElementById('workersTable').innerHTML=table(['Worker','Role','Phone','Monthly Salary','Action'],db.workers.map(w=>`<tr><td>${esc(w.name)}</td><td>${esc(w.role)}</td><td>${esc(w.phone||'')}</td><td>${money(w.salary)}</td><td><button class="btn danger" onclick="del('workers','${w.id}')">Delete</button></td></tr>`));
+   const workerSelect=document.getElementById('wpWorker'),previousWorker=workerSelect.value;
+   workerSelect.innerHTML='<option value="">Choose Worker</option>'+db.workers.map(w=>`<option value="${w.id}">${esc(w.name)} — ${esc(w.role)}</option>`).join('');
+   if(db.workers.some(w=>w.id===previousWorker))workerSelect.value=previousWorker;
+   document.getElementById('workerPaymentsTable').innerHTML=table(['Date','Worker','Amount','Note','Action'],db.workerPayments.slice().reverse().map(pay=>{const worker=db.workers.find(w=>w.id===pay.workerId);return `<tr><td>${esc(pay.date)}</td><td>${esc(worker?worker.name:pay.workerName||'Worker')}</td><td>${money(pay.amount)}</td><td>${esc(pay.note||'')}</td><td><button class="btn danger" onclick="del('workerPayments','${pay.id}')">Delete</button></td></tr>`}));
+ }
+
+ const custHeaders = userRole === 'admin' ? ['Name','Phone','Notes','Action'] : ['Name','Phone','Notes'];
+ document.getElementById('customersTable').innerHTML=table(custHeaders,db.customers.map(c=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td><td><button class="btn danger" onclick="del('customers','${c.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.notes)}</td></tr>`;
+ }));
+
  const generatedDocs=db.invoices.filter(inv=>['sale','service','expense'].includes(inv.docType)).slice().reverse();
- document.getElementById('invoicesTable').innerHTML=table(['Document','Type','Date','Customer / Payee','Description','Total',''],generatedDocs.map(inv=>`<tr><td>${esc(inv.id)}</td><td>${inv.docType==='expense'?'Expense Voucher':inv.docType==='service'?'Service Invoice':'Sales Invoice'}</td><td>${esc(inv.date||'')}</td><td>${esc(inv.docType==='expense'?(inv.paidTo||'—'):(inv.customer||'Walk-in'))}</td><td>${esc(inv.docType==='expense'?(inv.expenseDescription||inv.item):(inv.item||''))}</td><td>${money(inv.total)}</td><td><button class="btn soft" onclick="viewInvoice('${inv.id}')">View / PDF</button></td></tr>`));
- document.getElementById('servicesTable').innerHTML=table(['Date','Service / details','Customer','Qty','Total','Profit','Status','Payment',''],db.services.slice().reverse().map(j=>`<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${money(j.profit)}</td><td><select onchange="updateJob('${j.id}','status',this.value)">${['Received','In progress','Waiting for parts','Ready for collection','Completed','Cancelled'].map(x=>`<option ${j.status===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select onchange="updateJob('${j.id}','payment',this.value)">${['Unpaid','Deposit paid','Paid'].map(x=>`<option ${j.payment===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="btn danger" onclick="del('services','${j.id}')">Delete</button></td></tr>`));
-// Combined report totals remain calculated internally; the Reports screen has been removed.
+ document.getElementById('invoicesTable').innerHTML=table(['Document','Type','Date','Customer / Payee','Description','Total','Action'],generatedDocs.map(inv=>`<tr><td>${esc(inv.id)}</td><td>${inv.docType==='expense'?'Expense Voucher':inv.docType==='service'?'Service Invoice':'Sales Invoice'}</td><td>${esc(inv.date||'')}</td><td>${esc(inv.docType==='expense'?(inv.paidTo||'—'):(inv.customer||'Walk-in'))}</td><td>${esc(inv.docType==='expense'?(inv.expenseDescription||inv.item):(inv.item||''))}</td><td>${money(inv.total)}</td><td><button class="btn soft" onclick="viewInvoice('${inv.id}')">View / PDF</button></td></tr>`));
+
+ const srvHeaders = userRole === 'admin' ? ['Date','Service / details','Customer','Qty','Total','Profit','Status','Payment','Action'] : ['Date','Service / details','Customer','Qty','Total','Status','Payment'];
+ document.getElementById('servicesTable').innerHTML=table(srvHeaders,db.services.slice().reverse().map(j=> {
+   if (userRole === 'admin') {
+     return `<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${money(j.profit)}</td><td><select onchange="updateJob('${j.id}','status',this.value)">${['Received','In progress','Waiting for parts','Ready for collection','Completed','Cancelled'].map(x=>`<option ${j.status===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select onchange="updateJob('${j.id}','payment',this.value)">${['Unpaid','Deposit paid','Paid'].map(x=>`<option ${j.payment===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="btn danger" onclick="del('services','${j.id}')">Delete</button></td></tr>`;
+   }
+   return `<tr><td>${j.date}</td><td>${esc(j.service)}<br><small>${esc(j.description||'')}</small></td><td>${esc(j.customer||'Walk-in')}</td><td>${j.qty}</td><td>${money(j.total)}</td><td>${j.status}</td><td>${j.payment}</td></tr>`;
+ }));
 }
+
 const id=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  // SPARE PARTS MANAGEMENT
 
 document.getElementById('sparePartForm').addEventListener('submit',e=>{
  e.preventDefault();
-
+ if (userRole === 'worker') return alert('Access restricted.');
  let name=spName.value.trim();
  let existing=db.spareParts.find(p=>p.name.toLowerCase()===name.toLowerCase());
 
@@ -1081,7 +959,6 @@ document.getElementById('sparePartForm').addEventListener('submit',e=>{
    min:+spMin.value
   });
  }
-
  save();
  e.target.reset();
  spQty.value=1;
@@ -1092,7 +969,7 @@ document.getElementById('sparePartForm').addEventListener('submit',e=>{
 
 document.getElementById('spPurchaseForm').addEventListener('submit',e=>{
  e.preventDefault();
-
+ if (userRole === 'worker') return alert('Access restricted.');
  let part=db.spareParts.find(p=>p.id===spPurchaseItem.value);
  let qty=+spPurchaseQty.value;
  let cost=+spPurchaseCost.value;
@@ -1149,6 +1026,7 @@ document.getElementById('spSaleForm').addEventListener('submit',e=>{
  render();
  alert('Spare part sale recorded');
 });
+
 function fillSaleCustomerDetails(){
  const customer=db.customers.find(c=>c.name===saleCustomer.value);
  salePhone.value=customer?.phone||'';
@@ -1164,6 +1042,7 @@ document.getElementById('saleProductSelect').addEventListener('change',()=>{
  saleQty.max=Number(product.qty)||1;
  saleQty.value=1;
 });
+
 function createAutoDocument(kind,record){
  const prefix=kind==='sale'?'SAL':kind==='service'?'SRV':'EXP';
  const inv={id:prefix+'-'+Date.now().toString().slice(-8),docType:kind,type:'product',
@@ -1180,36 +1059,77 @@ function createAutoDocument(kind,record){
  db.invoices.push(inv);save();render();show('invoices');
  document.getElementById('invoicePreview').innerHTML=invoiceMarkup(inv);
 }
+
 document.getElementById('saleForm').addEventListener('submit',e=>{
- e.preventDefault();let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value,cost=+saleCost.value;
- if(!name||qty<1||price<0||cost<0)return alert('Check sale values');
+ e.preventDefault();
+ let name=saleName.value.trim(),qty=+saleQty.value,price=+salePrice.value;
+ let cost = userRole === 'admin' ? +saleCost.value : 0;
+ if(!name||qty<1||price<0)return alert('Check sale values');
  let p=db.products.find(x=>x.name.toLowerCase()===name.toLowerCase());
- if(p&&p.qty<qty)return alert(`Not enough stock. Only ${p.qty} available.`);
- if(p)p.qty-=qty;
+ if(p) {
+   if (p.qty < qty) return alert(`Not enough stock. Only ${p.qty} available.`);
+   cost = p.cost; // Auto-assign product cost in background for profit calculation
+   p.qty-=qty;
+ }
  const record={id:id(),date:dateNow(),name,qty,price,cost,total:qty*price,profit:qty*(price-cost),customer:saleCustomer.value,phone:salePhone.value.trim(),address:saleAddress.value.trim(),payment:salePayment.value};
  db.sales.push(record);save();e.target.reset();saleQty.value=1;saleCost.value=0;saleProductSelect.value='';saleQty.removeAttribute('max');render();createAutoDocument('sale',record);alert('Sale saved and invoice generated');
 });
-document.getElementById('productForm').addEventListener('submit',e=>{e.preventDefault();let name=pName.value.trim(),existing=db.products.find(p=>p.name.toLowerCase()===name.toLowerCase());if(existing){existing.qty+=+pQty.value;existing.cost=+pCost.value;existing.price=+pPrice.value;existing.min=+pMin.value;existing.sku=pSku.value}else db.products.push({id:id(),name,sku:pSku.value,qty:+pQty.value,cost:+pCost.value,price:+pPrice.value,min:+pMin.value});save();e.target.reset();pQty.value=1;pMin.value=3;render();alert('Stock saved')});
-document.getElementById('expenseForm').addEventListener('submit',e=>{e.preventDefault();const record={id:id(),date:dateNow(),name:eName.value.trim(),amount:+eAmount.value,cat:eCat.value,total:+eAmount.value};db.expenses.push(record);save();e.target.reset();render();createAutoDocument('expense',record);alert('Expense saved and expense voucher generated')});
-document.getElementById('workerForm').addEventListener('submit',e=>{e.preventDefault();db.workers.push({id:id(),name:wName.value.trim(),role:wRole.value.trim(),phone:wPhone.value.trim(),salary:+wSalary.value});save();e.target.reset();render();alert('Worker saved')});
-document.getElementById('workerPaymentForm').addEventListener('submit',e=>{e.preventDefault();const worker=db.workers.find(w=>w.id===wpWorker.value),amount=+wpAmount.value;if(!worker)return alert('Please choose a worker');if(!(amount>0))return alert('Payment amount must be greater than zero');const payment={id:id(),workerId:worker.id,workerName:worker.name,date:wpDate.value||dateNow(),amount,note:wpNote.value.trim()};db.workerPayments.push(payment);db.expenses.push({id:id(),date:payment.date,name:'Worker salary — '+worker.name+(payment.note?' ('+payment.note+')':''),amount,cat:'Salary',workerPaymentId:payment.id});save();e.target.reset();wpDate.value=dateNow();render();alert('Worker payment recorded and included in combined expenses')});
+
+document.getElementById('productForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ if (userRole === 'worker') return alert('Access restricted.');
+ let name=pName.value.trim(),existing=db.products.find(p=>p.name.toLowerCase()===name.toLowerCase());
+ if(existing){
+   existing.qty+=+pQty.value;existing.cost=+pCost.value;existing.price=+pPrice.value;existing.min=+pMin.value;existing.sku=pSku.value
+ }else db.products.push({id:id(),name,sku:pSku.value,qty:+pQty.value,cost:+pCost.value,price:+pPrice.value,min:+pMin.value});
+ save();e.target.reset();pQty.value=1;pMin.value=3;render();alert('Stock saved')
+});
+
+document.getElementById('expenseForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ if (userRole === 'worker') return alert('Access restricted.');
+ const record={id:id(),date:dateNow(),name:eName.value.trim(),amount:+eAmount.value,cat:eCat.value,total:+eAmount.value};
+ db.expenses.push(record);save();e.target.reset();render();createAutoDocument('expense',record);alert('Expense saved and expense voucher generated')
+});
+
+document.getElementById('workerForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ if (userRole === 'worker') return alert('Access restricted.');
+ const wUidVal = document.getElementById('wUid').value.trim();
+ const newWorker = {id:id(),uid:wUidVal,name:wName.value.trim(),role:wRole.value.trim(),phone:wPhone.value.trim(),salary:+wSalary.value};
+ db.workers.push(newWorker);
+ 
+ if (wUidVal && cloudDb) {
+   cloudDb.collection('businesses').doc(ADMIN_UID).collection('members').doc(wUidVal).set({
+     name: newWorker.name,
+     role: 'worker',
+     addedAt: firebase.firestore.FieldValue.serverTimestamp()
+   }).catch(err => console.error("Could not write worker member doc:", err));
+ }
+ 
+ save();e.target.reset();render();alert('Worker saved')
+});
+
+document.getElementById('workerPaymentForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ if (userRole === 'worker') return alert('Access restricted.');
+ const worker=db.workers.find(w=>w.id===wpWorker.value),amount=+wpAmount.value;
+ if(!worker)return alert('Please choose a worker');
+ if(!(amount>0))return alert('Payment amount must be greater than zero');
+ const payment={id:id(),workerId:worker.id,workerName:worker.name,date:wpDate.value||dateNow(),amount,note:wpNote.value.trim()};
+ db.workerPayments.push(payment);
+ db.expenses.push({id:id(),date:payment.date,name:'Worker salary — '+worker.name+(payment.note?' ('+payment.note+')':''),amount,cat:'Salary',workerPaymentId:payment.id});
+ save();e.target.reset();wpDate.value=dateNow();render();alert('Worker payment recorded and included in combined expenses')
+});
 
 document.getElementById('jobCustomer').addEventListener('change',()=>{
  const customer=db.customers.find(c=>c.name===jobCustomer.value);
  if(customer){jobPhone.value=customer.phone||'';jobAddress.value=customer.address||'';}
  else{jobPhone.value='';jobAddress.value='';}
 });
+
 document.getElementById('customerForm').addEventListener('submit',e=>{e.preventDefault();db.customers.push({id:id(),name:cName.value,phone:cPhone.value,address:cAddress.value,notes:cNotes.value});save();e.target.reset();render();alert('Customer saved')});
-function toggleInvoiceType(){
- const printing=iInvoiceType.value==='printing';
- invoicePagesField.style.display=printing?'block':'none';
- invoiceQtyLabel.textContent=printing?'Copies / Quantity':'Quantity';
- invoicePriceLabel.textContent=printing?'Price per page (MK)':'Unit price (MK)';
-}
-function fillInvoiceCustomerDetails(){const customer=db.customers.find(c=>c.name===iCustomer.value);if(customer){iPhone.value=customer.phone||'';iAddress.value=customer.address||'';}else{iPhone.value='';iAddress.value='';}}
-document.getElementById('iCustomer').addEventListener('change',fillInvoiceCustomerDetails);
-function updateInvoicePaymentFields(){const status=iPaymentStatus.value;iAdvance.disabled=status!=='Advance paid';if(status==='Unpaid')iAdvance.value=0;else if(status==='Paid')iAdvance.value='';else if(status==='Advance paid'&&(!iAdvance.value||+iAdvance.value===0))iAdvance.value='';}
-function newInvoice(){show('invoices');iDate.value=dateNow();iCustomer.value='';iPhone.value='';iAddress.value='';iItem.value='';iQty.value=1;iPages.value=1;iPrice.value='';iDiscount.value=0;iAdvance.value=0;iPaymentStatus.value='Unpaid';iPaymentMethod.value='';iNotes.value='';iInvoiceType.value='product';toggleInvoiceType();updateInvoicePaymentFields();document.getElementById('invoicePreview').innerHTML=''}
+
 function expenseAmountWords(value){
  const n=Math.round(Number(value)||0);
  if(n===0)return 'Zero Malawi Kwacha Only';
@@ -1225,6 +1145,7 @@ function expenseAmountWords(value){
  }
  return words(n)+' Malawi Kwacha Only';
 }
+
 function expenseVoucherMarkup(inv){
  const category=inv.expenseCategory||((inv.item||'').split(':')[0]||'Other');
  const description=inv.expenseDescription||((inv.item||'').split(':').slice(1).join(':').trim()||'Business expense');
@@ -1247,10 +1168,10 @@ function expenseVoucherMarkup(inv){
  <div class="no-print" style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button class="btn primary" onclick="window.print()">Print / Save as PDF</button></div>
  </div>`;
 }
+
 function invoiceMarkup(inv){
  if(inv.docType==='expense')return expenseVoucherMarkup(inv);
  const qty=Number(inv.qty||1),pages=Number(inv.pages||1),price=Number(inv.price||0);
- const detail=inv.type==='printing'?`${pages} page(s) × ${qty} copy/copies`:`${qty} item(s)`;
  const amount=Number(inv.subtotal??(qty*pages*price));
  const discount=Number(inv.discount||0),total=Number(inv.total??(amount-discount));
  const advance=Number(inv.advance||0),balance=Number(inv.balance??(total-advance));
@@ -1266,21 +1187,34 @@ function invoiceMarkup(inv){
  <div class="invoice-footer">Thank You for Your Support</div>
  <div class="no-print" style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button class="btn primary" onclick="window.print()">Print / Save as PDF</button></div></div>`;
 }
+
 function viewInvoice(invoiceId){const inv=db.invoices.find(x=>x.id===invoiceId);if(!inv)return;show('invoices');const panel=document.getElementById('generatedDocumentPreviewPanel');panel.style.display='block';document.getElementById('invoicePreview').innerHTML=invoiceMarkup(inv);panel.scrollIntoView({behavior:'smooth',block:'start'});}
+
 const serviceCatalog={
  'Printing & design':['Photocopying','Black & white document printing','Colour document printing','Scanning','Typing / formatting','CV / résumé preparation','Lamination','Binding / spiral binding','ID / passport photos','Business cards','Flyers / brochures','Posters','Banners / large format printing','Invitations','Certificates','Receipt books','Letterheads','Stickers / labels','T-shirt printing','Mug printing','Graphic design','Logo design','Bulk printing','Custom printing'],
  'Phone & electronics repair':['Phone diagnostics','Screen / LCD replacement','Battery replacement','Charging port repair','Speaker repair','Microphone repair','Camera repair','Power button repair','Software troubleshooting','Firmware / OS service','Data transfer','Phone backup','Water damage inspection','Accessory fitting','Tablet repair','General electronics repair'],
  'Computer & IT services':['Laptop diagnostics','Desktop computer repair','Laptop screen replacement','Keyboard replacement','Laptop battery replacement','Windows installation','Operating system installation','Virus / malware cleanup','Software installation','Printer repair','Printer setup','Wi-Fi / networking setup','RAM / SSD upgrade','Data recovery assessment','Computer maintenance','IT support / troubleshooting']
 };
+
 function loadServiceOptions(){const cat=serviceCategory.value;serviceType.innerHTML=serviceCatalog[cat].map(s=>`<option>${esc(s)}</option>`).join('');servicePreset()}
 function servicePreset(){jobDesc.value=serviceType.value}
-document.getElementById('serviceForm').addEventListener('submit',e=>{e.preventDefault();let qty=Math.max(1,+jobQty.value||1),price=Math.max(0,+jobPrice.value||0),cost=Math.max(0,+jobCost.value||0);const record={id:id(),date:dateNow(),category:serviceCategory.value,service:serviceType.value,description:jobDesc.value,customer:jobCustomer.value,phone:jobPhone.value.trim(),address:jobAddress.value.trim(),qty,price,cost,total:qty*price,profit:qty*(price-cost),status:jobStatus.value,payment:jobPayment.value};db.services.push(record);save();e.target.reset();jobQty.value=1;jobPrice.value=0;jobCost.value=0;loadServiceOptions();render();createAutoDocument('service',record);alert('Service job saved and document generated')});
-function updateJob(id,key,value){let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}}
+
+document.getElementById('serviceForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ let qty=Math.max(1,+jobQty.value||1),price=Math.max(0,+jobPrice.value||0);
+ let cost=userRole==='admin'?Math.max(0,+jobCost.value||0):0;
+ const record={id:id(),date:dateNow(),category:serviceCategory.value,service:serviceType.value,description:jobDesc.value,customer:jobCustomer.value,phone:jobPhone.value.trim(),address:jobAddress.value.trim(),qty,price,cost,total:qty*price,profit:qty*(price-cost),status:jobStatus.value,payment:jobPayment.value};
+ db.services.push(record);save();e.target.reset();jobQty.value=1;jobPrice.value=0;jobCost.value=0;loadServiceOptions();render();createAutoDocument('service',record);alert('Service job saved and document generated')
+});
+
+function updateJob(id,key,value){
+ if (userRole === 'worker' && key !== 'status') return alert('Workers can only update repair status.');
+ let j=db.services.find(x=>x.id===id);if(j){j[key]=value;save();render()}
+}
+
 document.getElementById('settingsForm').addEventListener('submit',async e=>{
  e.preventDefault();
-
- // Read settings by explicit element IDs. Do not rely on browser-created
- // global variables for form controls (which can resolve inconsistently in WebView).
+ if (userRole === 'worker') return alert('Access restricted.');
  const business=document.getElementById('sBusiness').value;
  const tag=document.getElementById('sTag').value;
  const address=document.getElementById('sAddress').value;
@@ -1289,49 +1223,44 @@ document.getElementById('settingsForm').addEventListener('submit',async e=>{
  const pin=document.getElementById('sPin').value.trim();
 
  if(!/^\d{4,8}$/.test(pin)){
-  alert('PIN must be 4–8 digits. The PIN has not been changed.');
+  alert('PIN must be 4–8 digits.');
   return;
  }
 
-
- // Update only settings and the two PIN storage locations; business records remain untouched.
  const previousPin=localStorage.getItem(PIN_KEY);
  const previousSettings={...db.settings};
  try{
-  // Write the local PIN key first because unlock() checks this key before settings.pin.
   localStorage.setItem(PIN_KEY,pin);
-  db.settings={...db.settings,business,tag,address,phone,currency,pin,biometricEnabled:false};
+  db.settings={...db.settings,business,tag,address,phone,currency,pin};
   const saved=save();
-  if(!saved) throw new Error('The app could not save its settings.');
-
-  // Verify both stored values match the new PIN before reporting success.
-  const stored=JSON.parse(localStorage.getItem(KEY)||'null');
-  const localPin=localStorage.getItem(PIN_KEY);
-  if(!stored || !stored.settings || String(stored.settings.pin)!==pin || localPin!==pin){
-   throw new Error('The new PIN could not be verified in both storage locations.');
-  }
+  if(!saved) throw new Error('Could not save settings.');
  }catch(err){
-  // Roll back the PIN/settings change if storage verification fails.
-  try{
-   if(previousPin===null)localStorage.removeItem(PIN_KEY);
-   else localStorage.setItem(PIN_KEY,previousPin);
-   db.settings=previousSettings;
-   localStorage.setItem(KEY,JSON.stringify(db));
-  }catch(rollbackError){console.error('PIN rollback failed:',rollbackError);}
-  console.error('PIN settings save failed:',err);
-  alert('PIN settings were not confirmed as saved. Your previous PIN is being kept. '+(err.message||''));
+  localStorage.setItem(PIN_KEY,previousPin);
+  db.settings=previousSettings;
+  alert('Settings saved failed.');
   return;
  }
  initSettings();
  render();
- // Saving settings must not lock the owner out of the current open session.
  finishAppUnlock();
  alert('Settings saved.');
 });
-function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)}
-document.getElementById('restoreFile').addEventListener('change',e=>{let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)});
-function clearAll(){if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);localStorage.removeItem(PIN_KEY);location.reload()}}
-function exportCSV(){let csv='Date,Item,Qty,Total,Profit,Payment\n'+db.sales.map(s=>[s.date,'"'+s.name.replace(/"/g,'""')+'"',s.qty,s.total,s.profit,s.payment].join(',')).join('\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='sia-sales.csv';a.click()}
+
+function backup(){
+ if (userRole === 'worker') return alert('Access restricted.');
+ let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sia-business-pro-backup-'+dateNow()+'.json';a.click();URL.revokeObjectURL(a.href)
+}
+
+document.getElementById('restoreFile').addEventListener('change',e=>{
+ if (userRole === 'worker') return alert('Access restricted.');
+ let f=e.target.files[0];if(!f)return;let reader=new FileReader();reader.onload=()=>{try{let x=JSON.parse(reader.result);if(!x.products||!x.settings)throw Error();if(confirm('Replace current app data with this backup?')){db=x;localStorage.setItem(PIN_KEY,String(db.settings.pin||'1234'));save();render();alert('Backup restored')}}catch(err){alert('Invalid backup file')}};reader.readAsText(f)
+});
+
+function clearAll(){
+ if (userRole === 'worker') return alert('Access restricted.');
+ if(confirm('Permanently delete all business data from this device?')){localStorage.removeItem(KEY);localStorage.removeItem(PIN_KEY);location.reload()}
+}
+
 function initSettings(){
  document.getElementById('sBusiness').value=db.settings.business||'';
  document.getElementById('sTag').value=db.settings.tag||'';
@@ -1340,7 +1269,12 @@ function initSettings(){
  document.getElementById('sCurrency').value=db.settings.currency||'MK';
  document.getElementById('sPin').value=String(localStorage.getItem(PIN_KEY)??db.settings.pin??'1234');
 }
-load();initSettings();loadServiceOptions();render();document.getElementById('purchaseDate').value=dateNow();document.getElementById('iDate').value=dateNow();document.getElementById('wpDate').value=dateNow();document.getElementById('lock').style.display='flex';
+
+load();initSettings();loadServiceOptions();render();
+if(document.getElementById('purchaseDate')) document.getElementById('purchaseDate').value=dateNow();
+if(document.getElementById('iDate')) document.getElementById('iDate').value=dateNow();
+if(document.getElementById('wpDate')) document.getElementById('wpDate').value=dateNow();
+document.getElementById('lock').style.display='flex';
 </script>
 </body>
 </html>
