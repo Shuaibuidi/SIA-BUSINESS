@@ -103,3 +103,40 @@ exports.recordService = onCall(async (req) => {
   await ref.create({ type: 'service', serviceName: String(serviceName).slice(0,120), description: String(description).slice(0,500), quantity: Number(quantity), unitPrice: Number(unitPrice), total, customerName: String(customerName).slice(0,100), customerPhone: String(customerPhone).slice(0,30), customerAddress: String(customerAddress).slice(0,160), workerUid: uid, workerName: member.data().name || 'Worker', createdAt: FieldValue.serverTimestamp(), date: new Date().toISOString().slice(0,10) });
   return { transactionId: ref.id, total };
 });
+exports.setStockCost = onCall(async (req) => {
+  const uid = requireAuth(req);
+  const { businessId, itemId, costPrice } = req.data || {};
+
+  await requireAdmin(businessId, uid);
+
+  if (
+    !itemId ||
+    !Number.isFinite(Number(costPrice)) ||
+    Number(costPrice) < 0
+  ) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Enter a valid stock cost price.'
+    );
+  }
+
+  const stockRef = db.doc(
+    `businesses/${businessId}/stock/${itemId}`
+  );
+
+  const stockSnap = await stockRef.get();
+
+  if (!stockSnap.exists) {
+    throw new HttpsError('not-found', 'Stock item not found.');
+  }
+
+  await db.doc(
+    `businesses/${businessId}/private/stockCosts/${itemId}`
+  ).set({
+    itemId,
+    costPrice: Number(costPrice),
+    updatedAt: FieldValue.serverTimestamp()
+  }, { merge: true });
+
+  return { ok: true };
+});
