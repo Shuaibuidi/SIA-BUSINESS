@@ -293,8 +293,20 @@ alert("Stock saved.");
 
 }catch(e){alert(e.message)}
 }
+  
+async function deleteStock(id,name){
+if(!confirm("Delete "+name+"?"))return;
 
+try{
+await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).delete();
+alert("Stock item deleted.");
+}catch(e){
+alert("Delete failed: "+e.message);
+}
+}
+  
 async function recordSale(){
+
 try{
 let p=stock.find(x=>x.id===$("itemSelect").value);
 let qty=Number($("saleQty").value);
