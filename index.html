@@ -229,7 +229,23 @@ $("itemSelect").innerHTML=stock.filter(p=>p.quantity>0).map(p=>
 ).join("");
 })
 );
+unsubs.push(
+db.collection(`businesses/${BUSINESS_ID}/spareParts`)
+.onSnapshot(s=>{
+let parts=s.docs.map(d=>({id:d.id,...d.data()}));
 
+$("sparePartsList").innerHTML=parts.map(p=>
+`<div class="item">
+<b>${esc(p.name)}</b>
+<br>Quantity: ${p.quantity}
+<br>Buying price: ${money(p.buyingPrice)}
+<br>Selling price: ${money(p.sellingPrice)}
+<br>Profit per item: ${money(p.sellingPrice-p.buyingPrice)}
+<br>Total potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
+</div>`
+).join("")||"No spare parts recorded";
+})
+);
 if(role==="admin"){
 unsubs.push(
 db.collection(`businesses/${BUSINESS_ID}/transactions`)
@@ -271,7 +287,38 @@ $("mySales").textContent="Sales loading error: "+e.message;
 );
 }
 }
+async function saveSparePart(){
+try{
+let name=$("spname").value.trim();
+let quantity=Number($("spqty").value);
+let buyingPrice=Number($("spbuy").value);
+let sellingPrice=Number($("spsell").value);
 
+if(!name||
+!Number.isInteger(quantity)||quantity<0||
+!Number.isFinite(buyingPrice)||buyingPrice<0||
+!Number.isFinite(sellingPrice)||sellingPrice<0)
+throw Error("Enter valid spare part details.");
+
+let id=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+
+await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).set({
+name,quantity,buyingPrice,sellingPrice,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+updatedBy:user.uid
+},{merge:true});
+
+$("spname").value="";
+$("spqty").value="";
+$("spbuy").value="";
+$("spsell").value="";
+
+alert("Spare part saved successfully.");
+
+}catch(e){
+alert(e.message);
+}
+}
 async function saveProduct(){
 try{
 let name=$("pname").value.trim();
