@@ -216,6 +216,7 @@ stock=s.docs.map(d=>({id:d.id,...d.data()}));
 $("adminStock").innerHTML=stock.map(p=>
 `<div class="item">
 ${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}
+<button onclick="editStock('${p.id}')">Edit</button>
 <button onclick="deleteStock('${p.id}','${esc(p.name)}')">Delete</button>
 </div>`
 ).join("")||"No stock";
@@ -293,7 +294,39 @@ alert("Stock saved.");
 
 }catch(e){alert(e.message)}
 }
-  
+
+async function editStock(id){
+let p=stock.find(x=>x.id===id);
+if(!p)return;
+
+let name=prompt("Product name:",p.name);
+if(name===null)return;
+
+let quantity=Number(prompt("Quantity:",p.quantity));
+if(!Number.isInteger(quantity)||quantity<0){
+alert("Enter a valid quantity.");
+return;
+}
+
+let price=Number(prompt("Selling price:",p.sellingPrice));
+if(!Number.isFinite(price)||price<0){
+alert("Enter a valid selling price.");
+return;
+}
+
+try{
+await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).update({
+name:name.trim(),
+quantity:quantity,
+sellingPrice:price,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+updatedBy:user.uid
+});
+alert("Stock updated successfully.");
+}catch(e){
+alert("Update failed: "+e.message);
+}
+}
 async function deleteStock(id,name){
 if(!confirm("Delete "+name+"?"))return;
 
