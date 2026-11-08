@@ -214,9 +214,11 @@ db.collection(`businesses/${BUSINESS_ID}/stock`).onSnapshot(s=>{
 stock=s.docs.map(d=>({id:d.id,...d.data()}));
 
 $("adminStock").innerHTML=stock.map(p=>
-`<div class="item">${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}</div>`
+`<div class="item">
+${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}
+<button onclick="deleteStock('${p.id}','${esc(p.name)}')">Delete</button>
+</div>`
 ).join("")||"No stock";
-
 $("workerStock").innerHTML=stock.map(p=>
 `<div class="item">${esc(p.name)} · ${p.quantity} available · ${money(p.sellingPrice)}</div>`
 ).join("")||"No stock";
