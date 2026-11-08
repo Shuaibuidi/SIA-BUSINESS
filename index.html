@@ -250,11 +250,21 @@ if(role==="worker"){
 unsubs.push(
 db.collection(`businesses/${BUSINESS_ID}/transactions`)
 .where("workerUid","==",user.uid)
-.orderBy("createdAt","desc").limit(100)
-.onSnapshot(s=>$("mySales").innerHTML=s.docs.map(d=>{
-let x=d.data();
-return `<div class="item">${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}</div>`;
-}).join("")||"No sales yet")
+.limit(100)
+.onSnapshot(s=>{
+let docs=s.docs.map(d=>d.data());
+
+docs.sort((a,b)=>
+(b.createdAt?.toMillis?.()||0)-
+(a.createdAt?.toMillis?.()||0)
+);
+
+$("mySales").innerHTML=docs.map(x=>
+`<div class="item">${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}</div>`
+).join("")||"No sales yet";
+},e=>{
+$("mySales").textContent="Sales loading error: "+e.message;
+})
 );
 }
 }
