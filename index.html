@@ -5,26 +5,43 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#071a2c">
 <title>S I A BUSINESS</title>
-
 <style>
 :root{font-family:Arial,sans-serif;color:#edf6ff;background:#071a2c}
 *{box-sizing:border-box}
-body{margin:0;padding:14px}
-.wrap{max-width:900px;margin:auto}
-.card{background:#102b43;border:1px solid #294c66;border-radius:15px;padding:16px;margin:12px 0}
-h1,h2,h3{margin:5px 0 12px}
+body{margin:0;padding:12px}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:1100px;margin:auto}
+.card{background:#102b43;border:1px solid #294c66;border-radius:14px;padding:15px;margin:12px 0}
+h1,h2,h3{margin:4px 0 12px}
 .muted{color:#a9bfd1;font-size:13px;line-height:1.5}
-label{display:block;margin:10px 0 5px;font-size:13px;color:#b9cee0}
-input,select,textarea{width:100%;padding:12px;border-radius:9px;border:1px solid #3a5d77;background:#071a2c;color:white;font-size:16px}
-button{border:0;border-radius:9px;padding:12px 15px;background:#1686d9;color:white;font-weight:bold;margin:5px 3px 5px 0}
+label{display:block;margin:9px 0 5px;color:#b9cee0;font-size:13px}
+input,select,textarea{width:100%;padding:11px;border-radius:8px;border:1px solid #3a5d77;background:#071a2c;color:white;font-size:16px}
+textarea{min-height:75px}
+button{border:0;border-radius:8px;padding:11px 14px;background:#1686d9;color:white;font-weight:bold;margin:4px 3px 4px 0}
 button.secondary{background:#31516b}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+button.danger{background:#a93636}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .hidden{display:none!important}
-.item{padding:12px 0;border-bottom:1px solid #31516b}
-#msg{white-space:pre-wrap;color:#ffd18b}
+.tabs{display:flex;gap:6px;overflow:auto;padding:6px 0}
+.tabs button{white-space:nowrap}
+.tabs button.active{background:#e39a28;color:#071a2c}
+.item{padding:11px 0;border-bottom:1px solid #31516b;line-height:1.55}
+.item:last-child{border:0}
+.stat{font-size:22px;font-weight:bold}
+.small{font-size:12px;color:#a9bfd1}
+#msg,#status{white-space:pre-wrap;color:#ffd18b}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{text-align:left;padding:8px;border-bottom:1px solid #31516b;vertical-align:top}
+.actions{display:flex;gap:4px;flex-wrap:wrap}
+.actions button{padding:7px 10px;font-size:12px}
+@media print{
+ body{background:white;color:black}
+ .no-print,#appHeader,#nav{display:none!important}
+ .card{background:white;color:black;border:0}
+ input,select,textarea{border:0;color:black}
+}
 </style>
-
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -33,627 +50,1191 @@ button.secondary{background:#31516b}
 <body>
 <div class="wrap">
 
-<header class="row">
-<div>
-<h1>S I A BUSINESS</h1>
-<div class="muted">S I A TECH PRINT MEDIA · HOME OF PRINTING & COMPUTING</div>
-<div class="muted">Matindi Trading Centre, Blantyre · Malawi</div>
-</div>
-<button id="logout" class="secondary hidden" onclick="logout()">Sign out</button>
+<header id="appHeader" class="row">
+ <div>
+  <h1>S I A BUSINESS</h1>
+  <div class="muted">S I A TECH PRINT MEDIA · HOME OF PRINTING & COMPUTING</div>
+  <div class="muted">Matindi Trading Centre, Blantyre · Malawi</div>
+ </div>
+ <button id="logoutBtn" class="secondary hidden no-print" onclick="logout()">Sign out</button>
 </header>
 
 <section id="login" class="card">
-<h2>Sign in</h2>
-<label>Email</label>
-<input id="email" type="email">
-<label>Password</label>
-<input id="password" type="password">
-<button onclick="login()">Sign in</button>
-<button class="secondary" onclick="register()">Create account</button>
-<div id="msg"></div>
-<p class="muted">Admin accounts must be authorized in Firebase Firestore. Workers cannot register themselves as Admin.</p>
+ <h2>Sign in</h2>
+ <label>Email</label>
+ <input id="email" type="email" autocomplete="username">
+ <label>Password</label>
+ <input id="password" type="password" autocomplete="current-password">
+ <button onclick="login()">Sign in</button>
+ <button class="secondary" onclick="register()">Create worker account</button>
+ <div id="msg"></div>
+ <p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p>
 </section>
 
 <section id="app" class="hidden">
+ <div class="card row">
+  <div>
+   <h2 id="welcome">Dashboard</h2>
+   <span id="roleTag" class="muted"></span>
+  </div>
+  <div>
+   <div class="stat" id="salesTotal">MK 0</div>
+   <div class="small">Sales recorded (admin view)</div>
+  </div>
+ </div>
 
-<div class="card row">
-<div>
-<h2 id="welcome">Dashboard</h2>
-<span id="roleTag" class="muted"></span>
-</div>
-<div>
-<b id="totalSales">MK 0</b>
-<div class="muted">Sales total (Admin only)</div>
-</div>
-</div>
-
-<section id="admin" class="hidden">
-
-<div class="card">
-<h3>Stock Management</h3>
-<div class="grid">
-<div><label>Product name</label><input id="pname"></div>
-<div><label>Quantity</label><input id="pqty" type="number" min="0"></div>
-<div><label>Selling price (MK)</label><input id="pprice" type="number" min="0" step="0.01"></div>
-</div>
-<button onclick="saveProduct()">Save stock item</button>
-<div id="adminStock"></div>
-</div>
-
-<div class="card">
-<h3>Spare Parts Management</h3>
-<div class="grid">
-<div><label>Spare part name</label><input id="spname"></div>
-<div><label>Quantity</label><input id="spqty" type="number" min="0"></div>
-<div><label>Buying price (MK)</label><input id="spbuy" type="number" min="0" step="0.01"></div>
-<div><label>Selling price (MK)</label><input id="spsell" type="number" min="0" step="0.01"></div>
-</div>
-<button onclick="saveSparePart()">Save spare part</button>
-<div id="sparePartsList"></div>
-</div>
-
-<div class="card">
-<h3>Worker accounts</h3>
-<p class="muted">Create worker accounts in Firebase Authentication, then add a member record under businesses/ADMIN_UID/members/WORKER_UID. Set role=worker and active=true.</p>
-</div>
-
-<div class="card">
-<h3>All sales</h3>
-<div id="allSales"></div>
-</div>
-
-</section>
-
-<section id="worker" class="hidden">
-
-<div class="card">
-<h3>Record a stock sale</h3>
-<label>Stock item</label>
-<select id="itemSelect"></select>
-<div class="grid">
-<div><label>Quantity</label><input id="saleQty" type="number" min="1" step="1" value="1"></div>
-<div><label>Customer name</label><input id="custName" placeholder="Walk-in"></div>
-<div><label>Customer phone</label><input id="custPhone"></div>
-</div>
-<button onclick="recordSale()">Record sale</button>
-<div id="saleMsg"></div>
-</div>
-
-<div class="card">
-<h3>Available stock</h3>
-<div id="workerStock"></div>
-</div>
-
-<div class="card">
-<h3>My sales</h3>
-<div id="mySales"></div>
-</div>
-
-</section>
+ <nav id="nav" class="tabs no-print"></nav>
+ <main id="screen"></main>
+ <div id="status" class="muted"></div>
 </section>
 </div>
 
 <script>
 const firebaseConfig={
-apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",
-authDomain:"smart-business-manager-f319f.firebaseapp.com",
-projectId:"smart-business-manager-f319f",
-storageBucket:"smart-business-manager-f319f.firebasestorage.app",
-messagingSenderId:"716400037263",
-appId:"1:716400037263:web:42a1e961b1597d0d280ffa"
+ apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",
+ authDomain:"smart-business-manager-f319f.firebaseapp.com",
+ projectId:"smart-business-manager-f319f",
+ storageBucket:"smart-business-manager-f319f.firebasestorage.app",
+ messagingSenderId:"716400037263",
+ appId:"1:716400037263:web:42a1e961b1597d0d280ffa"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const auth=firebase.auth();
 const db=firebase.firestore();
-
 const BUSINESS_ID="7RqIYO3IDSVCYex1LsDo6rDw5V33";
 
-let user=null;
-let role=null;
-let member=null;
-let stock=[];
-let unsubs=[];
+let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 
 const $=id=>document.getElementById(id);
-
-const money=n=>"MK "+Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2});
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
+ "&":"&amp;",
+ "<":"&lt;",
+ ">":"&gt;",
+ '"':"&quot;",
+ "'":"&#39;"
 }[c]));
 
-function msg(t){
-$("msg").textContent=t;
+const path=c=>`businesses/${BUSINESS_ID}/${c}`;
+const isAdmin=()=>role==="admin";
+
+function say(t){$("status").textContent=t||""}
+function stamp(){return firebase.firestore.FieldValue.serverTimestamp()}
+
+function navItems(){
+ let all=[
+ ["dashboard","Dashboard"],
+ ["stock","Stock"],
+ ["spares","Spare parts"],
+ ["sales","Sales"],
+ ["jobs","Repairs / Jobs"],
+ ["services","Services"],
+ ["customers","Customers"],
+ ["invoices","Invoices"]
+ ];
+
+ if(isAdmin())all.push(
+ ["purchases","Purchases"],
+ ["suppliers","Suppliers"],
+ ["expenses","Expenses"],
+ ["cashbook","Cashbook"],
+ ["reports","Reports"],
+ ["settings","Settings"]
+ );
+
+ return all;
 }
 
-function showApp(){
-$("login").classList.add("hidden");
-$("app").classList.remove("hidden");
-$("logout").classList.remove("hidden");
-
-$("welcome").textContent="Welcome, "+(member.name||user.email);
-$("roleTag").textContent=role.toUpperCase()+" · "+user.email;
-
-$("admin").classList.toggle("hidden",role!=="admin");
-$("worker").classList.toggle("hidden",role!=="worker");
+function renderNav(){
+ $("nav").innerHTML=navItems().map(([id,label])=>
+ `<button class="${current===id?"active":""}" onclick="go('${id}')">${label}</button>`
+ ).join("");
 }
 
-async function login(){
-try{
-msg("Signing in…");
-await auth.signInWithEmailAndPassword(
-$("email").value.trim(),
-$("password").value
-);
-}catch(e){
-msg(e.message);
+function go(id){
+ current=id;
+ renderNav();
+ renderScreen();
+ say("");
 }
+
+function formField(id,label,type="text",placeholder="",step=""){
+ return `<div>
+ <label>${label}</label>
+ <input id="${id}" type="${type}" placeholder="${placeholder}" ${step?`step="${step}"`:""}>
+ </div>`;
+}
+
+function selectField(id,label,opts){
+ return `<div><label>${label}</label><select id="${id}">${opts}</select></div>`;
+}
+
+function val(id){return $(id)?.value?.trim()||""}
+function num(id){return Number($(id)?.value||0)}
+
+function safeId(s){
+ return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now());
+}
+
+async function addDoc(collection,data){
+ return db.collection(path(collection)).add({
+  ...data,
+  createdAt:stamp(),
+  createdBy:user.uid
+ });
+}
+
+async function updateDoc(collection,id,data){
+ return db.doc(`${path(collection)}/${id}`).update({
+  ...data,
+  updatedAt:stamp(),
+  updatedBy:user.uid
+ });
+}
+
+async function removeDoc(collection,id){
+ if(!isAdmin())return alert("Admin permission required.");
+ if(!confirm("Delete this record? This cannot be undone."))return;
+
+ try{
+  await db.doc(`${path(collection)}/${id}`).delete();
+  say("Record deleted.");
+ }catch(e){
+  alert("Delete failed: "+e.message);
+ }
+}
+
+function records(c){return cache[c]||[]}
+
+function listHtml(c,render){
+ return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||
+ `<p class="muted">No ${c} records yet.</p>`;
+}
+
+function actionButtons(c,id,allow=true){
+ if(!allow||!isAdmin())return "";
+ return `<div class="actions">
+ <button class="danger" onclick="removeDoc('${c}','${id}')">Delete</button>
+ </div>`;
+}
+
+function renderScreen(){
+ const s=$("screen");
+ if(!s)return;
+
+ if(current==="dashboard")return dashboard(s);
+ if(current==="stock")return stockScreen(s);
+ if(current==="spares")return spareScreen(s);
+ if(current==="sales")return salesScreen(s);
+ if(current==="jobs")return jobsScreen(s);
+ if(current==="services")return servicesScreen(s);
+ if(current==="customers")return customersScreen(s);
+ if(current==="invoices")return invoicesScreen(s);
+ if(current==="purchases")return purchasesScreen(s);
+ if(current==="suppliers")return suppliersScreen(s);
+ if(current==="expenses")return expensesScreen(s);
+ if(current==="cashbook")return cashbookScreen(s);
+ if(current==="reports")return reportsScreen(s);
+ if(current==="settings")return settingsScreen(s);
+}
+
+function dashboard(s){
+ let tx=records("transactions");
+ let sp=records("spareSales");
+ let jobs=records("jobs");
+ let exp=records("expenses");
+
+ let sales=tx.reduce((a,x)=>a+Number(x.total||0),0)+
+ sp.reduce((a,x)=>a+Number(x.total||0),0);
+
+ let expense=exp.reduce((a,x)=>a+Number(x.amount||0),0);
+
+ s.innerHTML=`
+ <div class="grid">
+ <div class="card">
+ <div class="muted">Sales total</div>
+ <div class="stat">${money(isAdmin()?sales:tx.filter(x=>x.workerUid===user.uid).reduce((a,x)=>a+Number(x.total||0),0))}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Stock items</div>
+ <div class="stat">${records("stock").length}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Spare parts</div>
+ <div class="stat">${records("spareParts").length}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Repair jobs</div>
+ <div class="stat">${jobs.length}</div>
+ </div>
+
+ ${isAdmin()?`
+ <div class="card">
+ <div class="muted">Expenses</div>
+ <div class="stat">${money(expense)}</div>
+ </div>
+ <div class="card">
+ <div class="muted">Estimated gross profit</div>
+ <div class="stat">${money(grossProfit())}</div>
+ </div>`:""}
+ </div>
+
+ <div class="card">
+ <h3>Welcome to S I A BUSINESS</h3>
+ <p class="muted">Manage stock, spare parts, sales, repairs, printing and computing services from one place.</p>
+ </div>`;
+}
+
+function stockScreen(s){
+ s.innerHTML=`
+ ${isAdmin()?`
+ <div class="card">
+ <h3>Stock management</h3>
+ <div class="grid">
+ ${formField("stName","Product name")}
+ ${formField("stQty","Quantity","number")}
+ ${formField("stBuy","Buying price (MK)","number","","0.01")}
+ ${formField("stSell","Selling price (MK)","number","","0.01")}
+ </div>
+ <button onclick="saveStock()">Save stock item</button>
+ </div>`:""}
+
+ <div class="card">
+ <h3>Stock list</h3>
+ ${listHtml("stock",p=>`
+ <b>${esc(p.name)}</b> · Qty ${p.quantity}<br>
+ Selling: ${money(p.sellingPrice)}
+ ${isAdmin()?`
+ <br>Buying: ${money(p.buyingPrice)} · Profit/unit: ${money(Number(p.sellingPrice)-Number(p.buyingPrice))}
+ <div class="actions">
+ <button onclick="editItem('stock','${p.id}')">Edit</button>
+ <button class="danger" onclick="removeDoc('stock','${p.id}')">Delete</button>
+ </div>`:""}
+ `)}
+ </div>`;
+}
+
+async function saveStock(){
+ let name=val("stName");
+ let quantity=num("stQty");
+ let buyingPrice=num("stBuy");
+ let sellingPrice=num("stSell");
+
+ if(!name||!Number.isInteger(quantity)||quantity<0||buyingPrice<0||sellingPrice<0)
+ return alert("Enter valid stock details.");
+
+ let id=safeId(name);
+
+ await db.doc(`${path("stock")}/${id}`).set({
+  name,quantity,buyingPrice,sellingPrice,
+  updatedAt:stamp(),
+  updatedBy:user.uid
+ },{merge:true});
+
+ say("Stock item saved.");
+ renderScreen();
+}
+
+async function editItem(c,id){
+ if(!isAdmin())return alert("Admin only.");
+
+ let x=records(c).find(v=>v.id===id);
+ if(!x)return;
+
+ let name=prompt("Name:",x.name);
+ if(name===null)return;
+
+ let quantity=Number(prompt("Quantity:",x.quantity));
+ if(!Number.isInteger(quantity)||quantity<0)
+ return alert("Invalid quantity.");
+
+ let buy=Number(prompt("Buying price:",x.buyingPrice||0));
+ if(buy<0||!Number.isFinite(buy))
+ return alert("Invalid buying price.");
+
+ let sell=Number(prompt("Selling price:",x.sellingPrice||0));
+ if(sell<0||!Number.isFinite(sell))
+ return alert("Invalid selling price.");
+
+ await updateDoc(c,id,{
+  name:name.trim(),
+  quantity,
+  buyingPrice:buy,
+  sellingPrice:sell
+ });
+
+ say("Updated.");
+ renderScreen();
+}
+
+function spareScreen(s){
+ s.innerHTML=`
+ ${isAdmin()?`
+ <div class="card">
+ <h3>Spare parts management</h3>
+ <div class="grid">
+ ${formField("spName","Spare part name")}
+ ${formField("spQty","Quantity","number")}
+ ${formField("spBuy","Buying price (MK)","number","","0.01")}
+ ${formField("spSell","Selling price (MK)","number","","0.01")}
+ </div>
+ <button onclick="saveSpare()">Save spare part</button>
+ </div>`:""}
+
+ <div class="card">
+ <h3>Spare parts list</h3>
+ ${listHtml("spareParts",p=>`
+ <b>${esc(p.name)}</b><br>
+ Qty: ${p.quantity} · Selling: ${money(p.sellingPrice)}
+ ${isAdmin()?`
+ <br>Buy: ${money(p.buyingPrice)}
+ · Profit/unit: ${money(p.sellingPrice-p.buyingPrice)}
+ · Potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
+ <div class="actions">
+ <button onclick="editItem('spareParts','${p.id}')">Edit</button>
+ <button class="danger" onclick="removeDoc('spareParts','${p.id}')">Delete</button>
+ </div>`:""}
+ `)}
+ </div>`;
+}
+
+async function saveSpare(){
+ let name=val("spName");
+ let quantity=num("spQty");
+ let buyingPrice=num("spBuy");
+ let sellingPrice=num("spSell");
+
+ if(!name||!Number.isInteger(quantity)||quantity<0||buyingPrice<0||sellingPrice<0)
+ return alert("Enter valid spare part details.");
+
+ await db.doc(`${path("spareParts")}/${safeId(name)}`).set({
+  name,quantity,buyingPrice,sellingPrice,
+  updatedAt:stamp(),
+  updatedBy:user.uid
+ },{merge:true});
+
+ say("Spare part saved.");
+ renderScreen();
+}
+
+function salesScreen(s){
+ let stockOpts=records("stock").map(x=>
+ `<option value="${x.id}">${esc(x.name)} (${x.quantity} available)</option>`
+ ).join("");
+
+ let spareOpts=records("spareParts").map(x=>
+ `<option value="${x.id}">${esc(x.name)} (${x.quantity} available)</option>`
+ ).join("");
+
+ s.innerHTML=`
+ <div class="card">
+ <h3>Record stock sale</h3>
+ <div class="grid">
+ ${selectField("saleStock","Stock item",stockOpts)}
+ ${formField("saleQty","Quantity","number")}
+ ${formField("saleCustomer","Customer name")}
+ ${formField("salePhone","Customer phone")}
+ </div>
+ <button onclick="sellItem('stock')">Record stock sale</button>
+ </div>
+
+ <div class="card">
+ <h3>Record spare part sale</h3>
+ <div class="grid">
+ ${selectField("saleSpare","Spare part",spareOpts)}
+ ${formField("spareQtySale","Quantity","number")}
+ ${formField("spareCustomer","Customer name")}
+ ${formField("sparePhone","Customer phone")}
+ </div>
+ <button onclick="sellItem('spareParts')">Record spare part sale</button>
+ </div>
+
+ <div class="card">
+ <h3>Sales history</h3>
+
+ <h3>Stock sales</h3>
+ ${listHtml("transactions",x=>`
+ <b>${esc(x.itemName)}</b> × ${x.quantity} = ${money(x.total)}<br>
+ <span class="muted">${esc(x.customerName||"Walk-in")} · ${esc(x.workerName||"")} · ${dateText(x.createdAt)}</span>
+ ${isAdmin()?`
+ <br>Profit: ${money(x.profit||0)}
+ <div class="actions">
+ <button class="danger" onclick="removeDoc('transactions','${x.id}')">Delete history</button>
+ </div>`:""}
+ `)}
+
+ <h3>Spare part sales</h3>
+ ${listHtml("spareSales",x=>`
+ <b>${esc(x.itemName)}</b> × ${x.quantity} = ${money(x.total)}<br>
+ <span class="muted">${esc(x.customerName||"Walk-in")} · ${esc(x.workerName||"")} · ${dateText(x.createdAt)}</span>
+ ${isAdmin()?`
+ <br>Profit: ${money(x.profit||0)}
+ <div class="actions">
+ <button class="danger" onclick="removeDoc('spareSales','${x.id}')">Delete history</button>
+ </div>`:""}
+ `)}
+ </div>`;
+}
+
+async function sellItem(kind){
+ let spare=kind==="spareParts";
+ let id=val(spare?"saleSpare":"saleStock");
+ let qty=num(spare?"spareQtySale":"saleQty");
+
+ let item=records(kind).find(x=>x.id===id);
+
+ if(!item||!Number.isInteger(qty)||qty<1)
+ return alert("Choose an item and enter a valid quantity.");
+
+ const collection=spare?"spareSales":"transactions";
+ const ref=db.doc(`${path(kind)}/${id}`);
+ const tx=db.collection(path(collection)).doc();
+
+ try{
+  await db.runTransaction(async t=>{
+   let snap=await t.get(ref);
+
+   if(!snap.exists||Number(snap.data().quantity)<qty)
+   throw Error("Not enough stock available.");
+
+   let d=snap.data();
+   let total=qty*Number(d.sellingPrice||0);
+   let cost=qty*Number(d.buyingPrice||0);
+
+   t.update(ref,{
+    quantity:Number(d.quantity)-qty,
+    lastSaleTxId:tx.id,
+    updatedAt:stamp(),
+    updatedBy:user.uid
+   });
+
+   t.set(tx,{
+    itemId:id,
+    itemName:d.name,
+    quantity:qty,
+    unitPrice:Number(d.sellingPrice||0),
+    unitCost:Number(d.buyingPrice||0),
+    total,
+    cost,
+    profit:total-cost,
+    customerName:val(spare?"spareCustomer":"saleCustomer")||"Walk-in",
+    customerPhone:val(spare?"sparePhone":"salePhone"),
+    workerUid:user.uid,
+    workerName:member.name||user.email,
+    type:spare?"spare_sale":"sale",
+    createdAt:stamp()
+   });
+  });
+
+  say("Sale recorded and stock quantity updated.");
+  renderScreen();
+
+ }catch(e){
+  alert(e.message);
+ }
+}
+
+function jobsScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>New repair / technician job</h3>
+ <div class="grid">
+ ${formField("jobCustomer","Customer name")}
+ ${formField("jobPhone","Customer phone")}
+ ${formField("jobDevice","Device / item")}
+ ${formField("jobIssue","Problem / work required")}
+ ${formField("jobFee","Service charge (MK)","number","","0.01")}
+ ${formField("jobParts","Parts cost (MK)","number","","0.01")}
+ </div>
+ <label>Job notes</label>
+ <textarea id="jobNotes"></textarea>
+ <button onclick="saveJob()">Save job</button>
+ </div>
+
+ <div class="card">
+ <h3>Repair jobs</h3>
+ ${listHtml("jobs",j=>`
+ <b>${esc(j.device)}</b> · ${esc(j.customerName)}<br>
+ ${esc(j.issue)}<br>
+ Charge: ${money(j.fee)} · Parts: ${money(j.partsCost)} · Status: <b>${esc(j.status)}</b><br>
+ <span class="muted">Technician: ${esc(j.workerName||"")}</span>
+ <div class="actions">
+ <button onclick="changeJob('${j.id}')">Update status</button>
+ ${isAdmin()?`<button class="danger" onclick="removeDoc('jobs','${j.id}')">Delete</button>`:""}
+ </div>
+ `)}
+ </div>`;
+}
+
+async function saveJob(){
+ let d={
+  customerName:val("jobCustomer"),
+  customerPhone:val("jobPhone"),
+  device:val("jobDevice"),
+  issue:val("jobIssue"),
+  fee:num("jobFee"),
+  partsCost:num("jobParts"),
+  notes:val("jobNotes"),
+  status:"Received",
+  workerUid:user.uid,
+  workerName:member.name||user.email
+ };
+
+ if(!d.customerName||!d.device||!d.issue||d.fee<0||d.partsCost<0)
+ return alert("Complete the job details.");
+
+ await addDoc("jobs",d);
+ say("Repair job saved.");
+ renderScreen();
+}
+
+async function changeJob(id){
+ let j=records("jobs").find(x=>x.id===id);
+ if(!j)return;
+
+ let status=prompt(
+ "Enter status: Received, Diagnosing, Waiting for parts, In progress, Completed, Collected",
+ j.status
+ );
+
+ if(!status)return;
+
+ await updateDoc("jobs",id,{status});
+ say("Job status updated.");
+ renderScreen();
+}
+
+function servicesScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Printing & computing service record</h3>
+ <div class="grid">
+ ${formField("svcCustomer","Customer name")}
+ ${formField("svcPhone","Phone")}
+ ${selectField("svcType","Service type",'<option>Printing</option><option>Photocopy</option><option>Typing</option><option>Scanning</option><option>Computer repair</option><option>Software installation</option><option>Other</option>')}
+ ${formField("svcDesc","Description")}
+ ${formField("svcQty","Quantity / pages","number")}
+ ${formField("svcPrice","Amount charged (MK)","number","","0.01")}
+ ${formField("svcCost","Direct cost (MK)","number","","0.01")}
+ </div>
+ <button onclick="saveService()">Save service</button>
+ </div>
+
+ <div class="card">
+ <h3>Service history</h3>
+ ${listHtml("services",x=>`
+ <b>${esc(x.serviceType)}</b> · ${esc(x.customerName)}<br>
+ ${esc(x.description)} · Qty ${x.quantity}<br>
+ Charged: ${money(x.amount)} · Cost: ${money(x.cost)} · Profit: ${money(x.amount-x.cost)}<br>
+ <span class="muted">${dateText(x.createdAt)} · ${esc(x.workerName||"")}</span>
+ ${isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('services','${x.id}')">Delete</button></div>`:""}
+ `)}
+ </div>`;
+}
+
+async function saveService(){
+ let d={
+  customerName:val("svcCustomer"),
+  phone:val("svcPhone"),
+  serviceType:val("svcType"),
+  description:val("svcDesc"),
+  quantity:num("svcQty"),
+  amount:num("svcPrice"),
+  cost:num("svcCost"),
+  workerUid:user.uid,
+  workerName:member.name||user.email
+ };
+
+ if(!d.customerName||!d.description||d.amount<0||d.cost<0||d.quantity<0)
+ return alert("Enter valid service details.");
+
+ await addDoc("services",d);
+ say("Service saved.");
+ renderScreen();
+}
+
+function customersScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Add customer</h3>
+ <div class="grid">
+ ${formField("cuName","Customer name")}
+ ${formField("cuPhone","Phone")}
+ ${formField("cuEmail","Email")}
+ </div>
+ <button onclick="saveSimple('customers',{name:val('cuName'),phone:val('cuPhone'),email:val('cuEmail')})">Save customer</button>
+ </div>
+
+ <div class="card">
+ <h3>Customers</h3>
+ ${listHtml("customers",x=>`
+ <b>${esc(x.name)}</b><br>
+ ${esc(x.phone)} · ${esc(x.email)}
+ ${isAdmin()?actionButtons("customers",x.id):""}
+ `)}
+ </div>`;
+}
+
+function suppliersScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Add supplier</h3>
+ <div class="grid">
+ ${formField("suName","Supplier name")}
+ ${formField("suPhone","Phone")}
+ ${formField("suEmail","Email")}
+ </div>
+ <button onclick="saveSimple('suppliers',{name:val('suName'),phone:val('suPhone'),email:val('suEmail')})">Save supplier</button>
+ </div>
+
+ <div class="card">
+ <h3>Suppliers</h3>
+ ${listHtml("suppliers",x=>`
+ <b>${esc(x.name)}</b><br>
+ ${esc(x.phone)} · ${esc(x.email)}
+ ${actionButtons("suppliers",x.id)}
+ `)}
+ </div>`;
+}
+
+async function saveSimple(c,d){
+ if(!d.name)return alert("Enter a name.");
+ await addDoc(c,d);
+ say("Saved.");
+ renderScreen();
+}
+
+function purchasesScreen(s){
+ let opts=records("stock").map(x=>
+ `<option value="${x.id}">${esc(x.name)}</option>`
+ ).join("");
+
+ let spopts=records("spareParts").map(x=>
+ `<option value="${x.id}">${esc(x.name)}</option>`
+ ).join("");
+
+ s.innerHTML=`
+ <div class="card">
+ <h3>Record stock purchase</h3>
+ <div class="grid">
+ ${selectField("purStock","Stock item",opts)}
+ ${formField("purQty","Quantity purchased","number")}
+ ${formField("purCost","Buying price per item (MK)","number","","0.01")}
+ ${formField("purSupplier","Supplier")}
+ </div>
+ <button onclick="purchase('stock')">Save stock purchase</button>
+ </div>
+
+ <div class="card">
+ <h3>Record spare parts purchase</h3>
+ <div class="grid">
+ ${selectField("purSpare","Spare part",spopts)}
+ ${formField("purSpQty","Quantity purchased","number")}
+ ${formField("purSpCost","Buying price per item (MK)","number","","0.01")}
+ ${formField("purSpSupplier","Supplier")}
+ </div>
+ <button onclick="purchase('spareParts')">Save spare parts purchase</button>
+ </div>
+
+ <div class="card">
+ <h3>Purchase history</h3>
+ ${listHtml("purchases",p=>`
+ <b>${esc(p.itemName)}</b> × ${p.quantity} · ${money(p.totalCost)}<br>
+ <span class="muted">${esc(p.supplier||"")} · ${dateText(p.createdAt)}</span>
+ <div class="actions">
+ <button class="danger" onclick="removeDoc('purchases','${p.id}')">Delete history record</button>
+ </div>
+ `)}
+ </div>`;
+}
+
+async function purchase(c){
+ let spare=c==="spareParts";
+ let id=val(spare?"purSpare":"purStock");
+ let qty=num(spare?"purSpQty":"purQty");
+ let cost=num(spare?"purSpCost":"purCost");
+ let supplier=val(spare?"purSpSupplier":"purSupplier");
+
+ let item=records(c).find(x=>x.id===id);
+
+ if(!item||!Number.isInteger(qty)||qty<1||cost<0)
+ return alert("Enter valid purchase details.");
+
+ let ref=db.doc(`${path(c)}/${id}`);
+
+ await db.runTransaction(async t=>{
+  let snap=await t.get(ref);
+  if(!snap.exists)throw Error("Item not found.");
+
+  t.update(ref,{
+   quantity:Number(snap.data().quantity||0)+qty,
+   buyingPrice:cost,
+   updatedAt:stamp(),
+   updatedBy:user.uid
+  });
+ });
+
+ await addDoc("purchases",{
+  itemId:id,
+  itemName:item.name,
+  category:c,
+  quantity:qty,
+  unitCost:cost,
+  totalCost:qty*cost,
+  supplier
+ });
+
+ say("Purchase saved and stock increased.");
+ renderScreen();
+}
+
+function expensesScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Record business expense</h3>
+ <div class="grid">
+ ${formField("exTitle","Expense description")}
+ ${formField("exAmount","Amount (MK)","number","","0.01")}
+ ${selectField("exCategory","Category",'<option>Rent</option><option>Electricity</option><option>Transport</option><option>Wages</option><option>Internet</option><option>Supplies</option><option>Other</option>')}
+ </div>
+ <button onclick="saveExpense()">Save expense</button>
+ </div>
+
+ <div class="card">
+ <h3>Expenses history</h3>
+ ${listHtml("expenses",x=>`
+ <b>${esc(x.title)}</b> · ${money(x.amount)}<br>
+ <span class="muted">${esc(x.category)} · ${dateText(x.createdAt)}</span>
+ <div class="actions"><button class="danger" onclick="removeDoc('expenses','${x.id}')">Delete</button></div>
+ `)}
+ </div>`;
+}
+
+async function saveExpense(){
+ let title=val("exTitle");
+ let amount=num("exAmount");
+ let category=val("exCategory");
+
+ if(!title||amount<=0)return alert("Enter expense details.");
+
+ await addDoc("expenses",{title,amount,category});
+ say("Expense saved.");
+ renderScreen();
+}
+
+function cashbookScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Cashbook entry</h3>
+ <div class="grid">
+ ${selectField("cashType","Entry type",'<option value="income">Money in</option><option value="expense">Money out</option>')}
+ ${formField("cashDesc","Description")}
+ ${formField("cashAmount","Amount (MK)","number","","0.01")}
+ </div>
+ <button onclick="saveCash()">Save cashbook entry</button>
+ </div>
+
+ <div class="card">
+ <h3>Cashbook history</h3>
+ ${listHtml("cashbook",x=>`
+ <b>${esc(x.description)}</b> · ${x.type==="income"?"+":"-"}${money(x.amount)}<br>
+ <span class="muted">${dateText(x.createdAt)}</span>
+ <div class="actions"><button class="danger" onclick="removeDoc('cashbook','${x.id}')">Delete</button></div>
+ `)}
+ </div>`;
+}
+
+async function saveCash(){
+ let description=val("cashDesc");
+ let amount=num("cashAmount");
+ let type=val("cashType");
+
+ if(!description||amount<=0)return alert("Enter valid entry.");
+
+ await addDoc("cashbook",{description,amount,type});
+ say("Cashbook entry saved.");
+ renderScreen();
+}
+
+function invoicesScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Create invoice / receipt</h3>
+ <div class="grid">
+ ${formField("invCustomer","Customer name")}
+ ${formField("invPhone","Customer phone")}
+ ${formField("invItem","Item / service description")}
+ ${formField("invQty","Quantity","number")}
+ ${formField("invPrice","Unit price (MK)","number","","0.01")}
+ ${formField("invPaid","Amount paid (MK)","number","","0.01")}
+ </div>
+ <button onclick="createInvoice()">Generate invoice</button>
+ </div>
+
+ <div class="card">
+ <h3>Saved invoices</h3>
+ ${listHtml("invoices",x=>`
+ <b>${esc(x.invoiceNo)}</b> · ${esc(x.customerName)} · ${money(x.total)}<br>
+ <span class="muted">${dateText(x.createdAt)}</span>
+ <div class="actions">
+ <button onclick="printInvoice('${x.id}')">View / Print</button>
+ ${isAdmin()?`<button class="danger" onclick="removeDoc('invoices','${x.id}')">Delete</button>`:""}
+ </div>
+ `)}
+ </div>
+
+ <div id="invoicePrint"></div>`;
+}
+
+async function createInvoice(){
+ let d={
+  invoiceNo:"SIA-"+Date.now().toString().slice(-8),
+  customerName:val("invCustomer"),
+  phone:val("invPhone"),
+  description:val("invItem"),
+  quantity:num("invQty"),
+  unitPrice:num("invPrice"),
+  paid:num("invPaid")
+ };
+
+ if(!d.customerName||!d.description||d.quantity<=0||d.unitPrice<0||d.paid<0)
+ return alert("Enter valid invoice details.");
+
+ d.total=d.quantity*d.unitPrice;
+ d.balance=d.total-d.paid;
+
+ let ref=await addDoc("invoices",d);
+
+ say("Invoice created.");
+ renderScreen();
+
+ setTimeout(()=>printInvoice(ref.id),250);
+}
+
+function printInvoice(id){
+ let x=records("invoices").find(v=>v.id===id);
+ if(!x)return;
+
+ $("invoicePrint").innerHTML=`
+ <div class="card">
+ <h2>S I A BUSINESS</h2>
+ <p>S I A TECH PRINT MEDIA<br>
+ Matindi Trading Centre, Blantyre · Malawi</p>
+ <hr>
+ <h3>INVOICE / RECEIPT</h3>
+ <p>
+ Invoice: ${esc(x.invoiceNo)}<br>
+ Customer: ${esc(x.customerName)}<br>
+ Phone: ${esc(x.phone)}
+ </p>
+ <table>
+ <tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Total</th></tr>
+ <tr>
+ <td>${esc(x.description)}</td>
+ <td>${x.quantity}</td>
+ <td>${money(x.unitPrice)}</td>
+ <td>${money(x.total)}</td>
+ </tr>
+ </table>
+ <h3>Total: ${money(x.total)}</h3>
+ <p>Paid: ${money(x.paid)}<br>Balance: ${money(x.balance)}</p>
+ <p>Thank you for doing business with us.</p>
+ <button class="no-print" onclick="window.print()">Print invoice</button>
+ </div>`;
+
+ $("invoicePrint").scrollIntoView({behavior:"smooth"});
+}
+
+function reportsScreen(s){
+ let tx=records("transactions");
+ let sp=records("spareSales");
+ let services=records("services");
+ let jobs=records("jobs");
+ let expenses=records("expenses");
+ let purchases=records("purchases");
+
+ let sales=[...tx,...sp].reduce((a,x)=>a+Number(x.total||0),0)+
+ services.reduce((a,x)=>a+Number(x.amount||0),0);
+
+ let profit=[...tx,...sp].reduce((a,x)=>a+Number(x.profit||0),0)+
+ services.reduce((a,x)=>a+Number(x.amount||0)-Number(x.cost||0),0)+
+ jobs.reduce((a,x)=>a+Number(x.fee||0)-Number(x.partsCost||0),0);
+
+ let ex=expenses.reduce((a,x)=>a+Number(x.amount||0),0);
+
+ s.innerHTML=`
+ <div class="grid">
+ <div class="card">
+ <div class="muted">Recorded sales / services</div>
+ <div class="stat">${money(sales)}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Estimated gross profit</div>
+ <div class="stat">${money(profit)}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Expenses</div>
+ <div class="stat">${money(ex)}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Profit after expenses</div>
+ <div class="stat">${money(profit-ex)}</div>
+ </div>
+
+ <div class="card">
+ <div class="muted">Purchases recorded</div>
+ <div class="stat">${money(purchases.reduce((a,x)=>a+Number(x.totalCost||0),0))}</div>
+ </div>
+ </div>
+
+ <div class="card">
+ <h3>Report note</h3>
+ <p class="muted">Profit is an estimate based on saved buying costs and service costs. Enter accurate purchase costs and expenses for better reports.</p>
+ <button onclick="exportBackup()">Download business backup</button>
+ </div>`;
+}
+
+function grossProfit(){
+ let tx=[...records("transactions"),...records("spareSales")];
+
+ return tx.reduce((a,x)=>a+Number(x.profit||0),0)+
+ records("services").reduce((a,x)=>a+Number(x.amount||0)-Number(x.cost||0),0)+
+ records("jobs").reduce((a,x)=>a+Number(x.fee||0)-Number(x.partsCost||0),0);
+}
+
+function settingsScreen(s){
+ s.innerHTML=`
+ <div class="card">
+ <h3>Business settings</h3>
+ <p class="muted">
+ Business: S I A BUSINESS<br>
+ S I A TECH PRINT MEDIA<br>
+ Matindi Trading Centre, Blantyre · Malawi
+ </p>
+
+ <button onclick="exportBackup()">Download full backup (JSON)</button>
+
+ <label>Restore backup file</label>
+ <input type="file" id="restoreFile" accept=".json,application/json">
+
+ <button onclick="restoreBackup()">Restore backup</button>
+
+ <p class="muted">Restore adds or updates records from the backup. Keep a copy of your current data first.</p>
+ </div>`;
+}
+
+const COLLECTIONS=[
+ "stock","spareParts","transactions","spareSales",
+ "jobs","services","customers","suppliers",
+ "purchases","expenses","cashbook","invoices"
+];
+
+async function exportBackup(){
+ try{
+  let out={
+   business:"S I A BUSINESS",
+   exportedAt:new Date().toISOString(),
+   data:{}
+  };
+
+  for(let c of COLLECTIONS){
+   let snap=await db.collection(path(c)).get();
+   out.data[c]=snap.docs.map(d=>({id:d.id,...d.data()}));
+  }
+
+  let blob=new Blob([JSON.stringify(out,null,2)],{
+   type:"application/json"
+  });
+
+  let url=URL.createObjectURL(blob);
+  let a=document.createElement("a");
+
+  a.href=url;
+  a.download="sia-business-backup-"+new Date().toISOString().slice(0,10)+".json";
+  a.click();
+
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+  say("Backup downloaded.");
+
+ }catch(e){
+  alert("Backup failed: "+e.message);
+ }
+}
+
+async function restoreBackup(){
+ if(!isAdmin())return alert("Admin only.");
+
+ let file=$("restoreFile").files[0];
+ if(!file)return alert("Choose a backup file.");
+
+ if(!confirm("Restore records from this backup? Existing records with matching IDs will be overwritten."))
+ return;
+
+ try{
+  let backup=JSON.parse(await file.text());
+
+  if(!backup.data)throw Error("Invalid backup file.");
+
+  for(let c of COLLECTIONS){
+   for(let x of (backup.data[c]||[])){
+    let {id,...data}=x;
+    if(!id)continue;
+
+    await db.doc(`${path(c)}/${id}`).set(data,{merge:true});
+   }
+  }
+
+  alert("Backup restored.");
+  say("Backup restored.");
+
+ }catch(e){
+  alert("Restore failed: "+e.message);
+ }
+}
+
+function dateText(v){
+ try{
+  return v?.toDate?v.toDate().toLocaleString():
+  v?new Date(v).toLocaleString():"";
+ }catch(e){
+  return "";
+ }
 }
 
 async function register(){
-try{
-let email=$("email").value.trim();
-let pass=$("password").value;
+ try{
+  let email=$("email").value.trim();
+  let pass=$("password").value;
 
-if(!email||pass.length<8){
-throw Error("Enter email and password (minimum 8 characters).");
+  if(!email||pass.length<8)
+  throw Error("Enter email and password (minimum 8 characters).");
+
+  await auth.createUserWithEmailAndPassword(email,pass);
+
+  $("msg").textContent=
+  "Account created. Ask the Admin to add your UID to businesses/"+BUSINESS_ID+"/members with role=worker and active=true.";
+
+ }catch(e){
+  $("msg").textContent=e.message;
+ }
 }
 
-await auth.createUserWithEmailAndPassword(email,pass);
-
-msg("Account created. Ask the Admin to authorize your account in Firebase. You cannot self-assign Admin access.");
-
-}catch(e){
-msg(e.message);
-}
+async function login(){
+ try{
+  $("msg").textContent="Signing in…";
+  await auth.signInWithEmailAndPassword(
+   $("email").value.trim(),
+   $("password").value
+  );
+ }catch(e){
+  $("msg").textContent=e.message;
+ }
 }
 
 async function logout(){
-unsubs.forEach(f=>f());
-unsubs=[];
-await auth.signOut();
+ unsubs.forEach(f=>f());
+ unsubs=[];
+ await auth.signOut();
 }
 
 auth.onAuthStateChanged(async u=>{
-user=u;
+ user=u;
 
-if(!u){
-$("login").classList.remove("hidden");
-$("app").classList.add("hidden");
-$("logout").classList.add("hidden");
-return;
-}
+ if(!u){
+  $("login").classList.remove("hidden");
+  $("app").classList.add("hidden");
+  $("logoutBtn").classList.add("hidden");
+  return;
+ }
 
-try{
-let ref=db.doc(`businesses/${BUSINESS_ID}/members/${u.uid}`);
-let snap=await ref.get();
+ try{
+  let snap=await db.doc(`${path("members")}/${u.uid}`).get();
 
-if(!snap.exists||snap.data().active!==true){
-await auth.signOut();
-msg("This account is not authorized yet. Contact your Admin.");
-return;
-}
+  if(!snap.exists||snap.data().active!==true){
+   await auth.signOut();
+   $("msg").textContent="This account is not authorized. Contact the Admin.";
+   return;
+  }
 
-member=snap.data();
-role=member.role;
+  member=snap.data();
+  role=member.role;
 
-if(!["admin","worker"].includes(role)){
-throw Error("Invalid account role.");
-}
+  if(!["admin","worker"].includes(role))
+  throw Error("Invalid account role.");
 
-showApp();
-startListeners();
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("logoutBtn").classList.remove("hidden");
 
-}catch(e){
-await auth.signOut();
-msg(e.message);
-}
+  $("welcome").textContent="Welcome, "+(member.name||u.email);
+  $("roleTag").textContent=role.toUpperCase()+" · "+u.email;
+
+  startData();
+  current="dashboard";
+  renderNav();
+  renderScreen();
+
+ }catch(e){
+  await auth.signOut();
+  $("msg").textContent=e.message;
+ }
 });
 
-function startListeners(){
-
-unsubs.forEach(f=>f());
-unsubs=[];
-
-unsubs.push(
-db.collection(`businesses/${BUSINESS_ID}/stock`)
-.onSnapshot(s=>{
-
-stock=s.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
-
-$("adminStock").innerHTML=stock.map(p=>
-`<div class="item">
-${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}
-<button onclick="editStock('${p.id}')">Edit</button>
-<button onclick="deleteStock('${p.id}','${esc(p.name)}')">Delete</button>
-</div>`
-).join("")||"No stock";
-
-$("workerStock").innerHTML=stock.map(p=>
-`<div class="item">
-${esc(p.name)} · ${p.quantity} available · ${money(p.sellingPrice)}
-</div>`
-).join("")||"No stock";
-
-$("itemSelect").innerHTML=stock.filter(p=>p.quantity>0).map(p=>
-`<option value="${p.id}">
-${esc(p.name)} — ${p.quantity} available (${money(p.sellingPrice)})
-</option>`
-).join("");
-
-},e=>{
-$("adminStock").textContent="Stock loading error: "+e.message;
-})
-);
-
-unsubs.push(
-db.collection(`businesses/${BUSINESS_ID}/spareParts`)
-.onSnapshot(s=>{
-
-let parts=s.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
-
-$("sparePartsList").innerHTML=parts.map(p=>
-`<div class="item">
-<b>${esc(p.name)}</b>
-<br>Quantity: ${p.quantity}
-<br>Buying price: ${money(p.buyingPrice)}
-<br>Selling price: ${money(p.sellingPrice)}
-<br>Profit per item: ${money(p.sellingPrice-p.buyingPrice)}
-<br>Total potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
-<br>
-<button onclick="editSparePart('${p.id}')">Edit</button>
-<button onclick="deleteSparePart('${p.id}')">Delete</button>
-</div>`
-).join("")||"No spare parts recorded";
-
-},e=>{
-$("sparePartsList").textContent="Spare parts loading error: "+e.message;
-})
-);
-
-if(role==="admin"){
-
-unsubs.push(
-db.collection(`businesses/${BUSINESS_ID}/transactions`)
-.orderBy("createdAt","desc")
-.limit(100)
-.onSnapshot(s=>{
-
-let docs=s.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
-
-$("allSales").innerHTML=docs.map(x=>
-`<div class="item">
-${esc(x.itemName)} × ${x.quantity} = <b>${money(x.total)}</b>
-<div class="muted">
-${esc(x.workerName)} · ${esc(x.customerName||"Walk-in")}
-</div>
-</div>`
-).join("")||"No sales";
-
-$("totalSales").textContent=money(
-docs.reduce((a,x)=>a+Number(x.total||0),0)
-);
-
-},e=>{
-$("allSales").textContent="Sales loading error: "+e.message;
-})
-);
-
-}
-
-if(role==="worker"){
-
-unsubs.push(
-db.collection(`businesses/${BUSINESS_ID}/transactions`)
-.where("workerUid","==",user.uid)
-.limit(100)
-.onSnapshot(s=>{
-
-let docs=s.docs.map(d=>d.data());
-
-docs.sort((a,b)=>
-(b.createdAt?.toMillis?.()||0)-
-(a.createdAt?.toMillis?.()||0)
-);
-
-$("mySales").innerHTML=docs.map(x=>
-`<div class="item">
-${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}
-</div>`
-).join("")||"No sales yet";
-
-},e=>{
-$("mySales").textContent="Sales loading error: "+e.message;
-})
-);
-
-}
-
-}
-
-async function editSparePart(id){
-
-try{
-
-let ref=db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`);
-let snap=await ref.get();
-
-if(!snap.exists){
-throw Error("Spare part not found.");
-}
-
-let p=snap.data();
-
-let name=prompt("Spare part name:",p.name);
-if(name===null)return;
-if(!name.trim())return alert("Enter a name.");
-
-let quantity=Number(prompt("Quantity:",p.quantity));
-if(!Number.isInteger(quantity)||quantity<0){
-return alert("Invalid quantity.");
-}
-
-let buyingPrice=Number(prompt("Buying price:",p.buyingPrice));
-if(!Number.isFinite(buyingPrice)||buyingPrice<0){
-return alert("Invalid buying price.");
-}
-
-let sellingPrice=Number(prompt("Selling price:",p.sellingPrice));
-if(!Number.isFinite(sellingPrice)||sellingPrice<0){
-return alert("Invalid selling price.");
-}
-
-await ref.update({
-name:name.trim(),
-quantity,
-buyingPrice,
-sellingPrice,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-updatedBy:user.uid
-});
-
-alert("Spare part updated.");
-
-}catch(e){
-alert("Update failed: "+e.message);
-}
-
-}
-
-async function deleteSparePart(id){
-
-if(!confirm("Delete this spare part?"))return;
-
-try{
-
-await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).delete();
-
-alert("Spare part deleted.");
-
-}catch(e){
-alert("Delete failed: "+e.message);
-}
-
-}
-
-async function saveSparePart(){
-
-try{
-
-let name=$("spname").value.trim();
-let quantity=Number($("spqty").value);
-let buyingPrice=Number($("spbuy").value);
-let sellingPrice=Number($("spsell").value);
-
-if(!name||
-!Number.isInteger(quantity)||quantity<0||
-!Number.isFinite(buyingPrice)||buyingPrice<0||
-!Number.isFinite(sellingPrice)||sellingPrice<0){
-throw Error("Enter valid spare part details.");
-}
-
-let id=name.toLowerCase()
-.replace(/[^a-z0-9]+/g,"-")
-.replace(/(^-|-$)/g,"");
-
-await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).set({
-
-name,
-quantity,
-buyingPrice,
-sellingPrice,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-updatedBy:user.uid
-
-},{merge:true});
-
-$("spname").value="";
-$("spqty").value="";
-$("spbuy").value="";
-$("spsell").value="";
-
-alert("Spare part saved successfully.");
-
-}catch(e){
-alert(e.message);
-}
-
-}
-
-async function saveProduct(){
-
-try{
-
-let name=$("pname").value.trim();
-let quantity=Number($("pqty").value);
-let sellingPrice=Number($("pprice").value);
-
-if(!name||
-!Number.isInteger(quantity)||quantity<0||
-!Number.isFinite(sellingPrice)||sellingPrice<0){
-throw Error("Enter valid name, quantity and selling price.");
-}
-
-let id=name.toLowerCase()
-.replace(/[^a-z0-9]+/g,"-")
-.replace(/(^-|-$)/g,"");
-
-await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).set({
-
-name,
-quantity,
-sellingPrice,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-updatedBy:user.uid
-
-},{merge:true});
-
-$("pname").value="";
-$("pqty").value="";
-$("pprice").value="";
-
-alert("Stock saved.");
-
-}catch(e){
-alert(e.message);
-}
-
-}
-
-async function editStock(id){
-
-let p=stock.find(x=>x.id===id);
-if(!p)return;
-
-let name=prompt("Product name:",p.name);
-if(name===null)return;
-if(!name.trim())return alert("Enter a product name.");
-
-let quantity=Number(prompt("Quantity:",p.quantity));
-
-if(!Number.isInteger(quantity)||quantity<0){
-alert("Enter a valid quantity.");
-return;
-}
-
-let price=Number(prompt("Selling price:",p.sellingPrice));
-
-if(!Number.isFinite(price)||price<0){
-alert("Enter a valid selling price.");
-return;
-}
-
-try{
-
-await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).update({
-
-name:name.trim(),
-quantity,
-sellingPrice:price,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-updatedBy:user.uid
-
-});
-
-alert("Stock updated successfully.");
-
-}catch(e){
-alert("Update failed: "+e.message);
-}
-
-}
-
-async function deleteStock(id,name){
-
-if(!confirm("Delete "+name+"?"))return;
-
-try{
-
-await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).delete();
-
-alert("Stock item deleted.");
-
-}catch(e){
-alert("Delete failed: "+e.message);
-}
-
-}
-
-async function recordSale(){
-
-try{
-
-let p=stock.find(x=>x.id===$("itemSelect").value);
-let qty=Number($("saleQty").value);
-
-if(!p)throw Error("Choose a stock item.");
-if(!Number.isInteger(qty)||qty<1)throw Error("Quantity must be at least 1.");
-if(qty>p.quantity)throw Error("Not enough stock available.");
-
-let total=qty*Number(p.sellingPrice);
-
-let tx=db.collection(`businesses/${BUSINESS_ID}/transactions`).doc();
-
-let stockRef=db.doc(`businesses/${BUSINESS_ID}/stock/${p.id}`);
-
-await db.runTransaction(async t=>{
-
-let fresh=await t.get(stockRef);
-
-if(!fresh.exists||fresh.data().quantity<qty){
-throw Error("Stock changed. Refresh and try again.");
-}
-
-t.update(stockRef,{
-
-quantity:fresh.data().quantity-qty,
-lastSaleTxId:tx.id,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-
-});
-
-t.set(tx,{
-
-type:"sale",
-itemId:p.id,
-itemName:p.name,
-quantity:qty,
-unitPrice:p.sellingPrice,
-total,
-customerName:$("custName").value.trim()||"Walk-in",
-customerPhone:$("custPhone").value.trim(),
-workerUid:user.uid,
-workerName:member.name||user.email,
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
-
-});
-
-});
-
-$("saleMsg").textContent=
-`Sale saved: ${p.name} × ${qty} = ${money(total)}`;
-
-$("saleQty").value=1;
-
-}catch(e){
-$("saleMsg").textContent=e.message;
-}
-
+function startData(){
+ unsubs.forEach(f=>f());
+ unsubs=[];
+
+ const listen=(c,query=null)=>{
+  let ref=db.collection(path(c));
+  if(query)ref=query(ref);
+
+  unsubs.push(ref.onSnapshot(s=>{
+   cache[c]=s.docs.map(d=>({id:d.id,...d.data()}));
+
+   if(c==="transactions"||c==="spareSales"){
+    let total=
+    records("transactions").reduce((a,x)=>a+Number(x.total||0),0)+
+    records("spareSales").reduce((a,x)=>a+Number(x.total||0),0);
+
+    if(isAdmin())$("salesTotal").textContent=money(total);
+   }
+
+   if([
+    "dashboard","reports","sales","invoices","jobs",
+    "services","stock","spares","customers","purchases",
+    "suppliers","expenses","cashbook"
+   ].includes(current)){
+    renderScreen();
+   }
+
+  },e=>say(c+" loading error: "+e.message)));
+ };
+
+ ["stock","spareParts","customers"].forEach(c=>listen(c));
+
+ if(isAdmin()){
+  [
+   "transactions","spareSales","jobs","services",
+   "suppliers","purchases","expenses","cashbook","invoices"
+  ].forEach(c=>listen(c));
+
+ }else{
+  listen("transactions",r=>r.where("workerUid","==",user.uid));
+  listen("spareSales",r=>r.where("workerUid","==",user.uid));
+  listen("jobs",r=>r.where("workerUid","==",user.uid));
+  listen("services",r=>r.where("workerUid","==",user.uid));
+  listen("invoices",r=>r.where("createdBy","==",user.uid));
+ }
 }
 </script>
 </body>
