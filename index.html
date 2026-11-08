@@ -258,6 +258,17 @@ $("sparePartsList").innerHTML=parts.map(p=>
 <br>Selling price: ${money(p.sellingPrice)}
 <br>Profit per item: ${money(p.sellingPrice-p.buyingPrice)}
 <br>Total potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
+<br>
+<button onclick="editSparePart('${p.id}')">Edit</button>
+<button onclick="deleteSparePart('${p.id}')">Delete</button>
+</div>`
+).join("")||"No spare parts recorded";
+<b>${esc(p.name)}</b>
+<br>Quantity: ${p.quantity}
+<br>Buying price: ${money(p.buyingPrice)}
+<br>Selling price: ${money(p.sellingPrice)}
+<br>Profit per item: ${money(p.sellingPrice-p.buyingPrice)}
+<br>Total potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
 </div>`
 ).join("")||"No spare parts recorded";
 })
@@ -301,6 +312,57 @@ $("mySales").innerHTML=docs.map(x=>
 $("mySales").textContent="Sales loading error: "+e.message;
 })
 );
+}
+}
+async function editSparePart(id){
+let p=parts.find(x=>x.id===id);
+if(!p)return;
+
+let name=prompt("Spare part name:",p.name);
+if(name===null)return;
+if(!name.trim()){
+alert("Enter a name.");
+return;
+}
+
+let quantity=Number(prompt("Quantity:",p.quantity));
+if(!Number.isInteger(quantity)||quantity<0){
+alert("Invalid quantity.");
+return;
+}
+
+let buyingPrice=Number(prompt("Buying price:",p.buyingPrice));
+let sellingPrice=Number(prompt("Selling price:",p.sellingPrice));
+
+if(!Number.isFinite(buyingPrice)||buyingPrice<0||
+!Number.isFinite(sellingPrice)||sellingPrice<0){
+alert("Invalid price.");
+return;
+}
+
+try{
+await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).update({
+name:name.trim(),
+quantity,
+buyingPrice,
+sellingPrice,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+updatedBy:user.uid
+});
+alert("Spare part updated.");
+}catch(e){
+alert(e.message);
+}
+}
+
+async function deleteSparePart(id){
+if(!confirm("Delete this spare part?"))return;
+
+try{
+await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).delete();
+alert("Spare part deleted.");
+}catch(e){
+alert("Delete failed: "+e.message);
 }
 }
 async function saveSparePart(){
