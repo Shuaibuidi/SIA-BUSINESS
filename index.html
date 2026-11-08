@@ -315,14 +315,34 @@ $("mySales").textContent="Sales loading error: "+e.message;
 }
 }
 async function editSparePart(id){
-let p=parts.find(x=>x.id===id);
-if(!p)return;
+try{
+let ref=db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`);
+let snap=await ref.get();
+if(!snap.exists)throw Error("Spare part not found.");
+let p=snap.data();
 
 let name=prompt("Spare part name:",p.name);
 if(name===null)return;
-if(!name.trim()){
-alert("Enter a name.");
-return;
+if(!name.trim())return alert("Enter a name.");
+
+let quantity=Number(prompt("Quantity:",p.quantity));
+if(!Number.isInteger(quantity)||quantity<0)return alert("Invalid quantity.");
+
+let buyingPrice=Number(prompt("Buying price:",p.buyingPrice));
+if(!Number.isFinite(buyingPrice)||buyingPrice<0)return alert("Invalid buying price.");
+
+let sellingPrice=Number(prompt("Selling price:",p.sellingPrice));
+if(!Number.isFinite(sellingPrice)||sellingPrice<0)return alert("Invalid selling price.");
+
+await ref.update({
+name:name.trim(),quantity,buyingPrice,sellingPrice,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+updatedBy:user.uid
+});
+alert("Spare part updated.");
+}catch(e){
+alert("Update failed: "+e.message);
+}
 }
 
 let quantity=Number(prompt("Quantity:",p.quantity));
