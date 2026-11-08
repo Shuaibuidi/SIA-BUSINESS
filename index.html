@@ -71,30 +71,27 @@ button.secondary{background:#31516b}
 
 <div class="card">
 <h3>Stock Management</h3>
-
 <div class="grid">
 <div><label>Product name</label><input id="pname"></div>
 <div><label>Quantity</label><input id="pqty" type="number" min="0"></div>
 <div><label>Selling price (MK)</label><input id="pprice" type="number" min="0" step="0.01"></div>
 </div>
-
 <button onclick="saveProduct()">Save stock item</button>
 <div id="adminStock"></div>
 </div>
 
 <div class="card">
 <h3>Spare Parts Management</h3>
-
 <div class="grid">
 <div><label>Spare part name</label><input id="spname"></div>
 <div><label>Quantity</label><input id="spqty" type="number" min="0"></div>
 <div><label>Buying price (MK)</label><input id="spbuy" type="number" min="0" step="0.01"></div>
 <div><label>Selling price (MK)</label><input id="spsell" type="number" min="0" step="0.01"></div>
 </div>
-
 <button onclick="saveSparePart()">Save spare part</button>
 <div id="sparePartsList"></div>
 </div>
+
 <div class="card">
 <h3>Worker accounts</h3>
 <p class="muted">Create worker accounts in Firebase Authentication, then add a member record under businesses/ADMIN_UID/members/WORKER_UID. Set role=worker and active=true.</p>
@@ -104,9 +101,11 @@ button.secondary{background:#31516b}
 <h3>All sales</h3>
 <div id="allSales"></div>
 </div>
+
 </section>
 
 <section id="worker" class="hidden">
+
 <div class="card">
 <h3>Record a stock sale</h3>
 <label>Stock item</label>
@@ -129,6 +128,7 @@ button.secondary{background:#31516b}
 <h3>My sales</h3>
 <div id="mySales"></div>
 </div>
+
 </section>
 </section>
 </div>
@@ -144,23 +144,42 @@ appId:"1:716400037263:web:42a1e961b1597d0d280ffa"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(),db=firebase.firestore();
+
+const auth=firebase.auth();
+const db=firebase.firestore();
 
 const BUSINESS_ID="7RqIYO3IDSVCYex1LsDo6rDw5V33";
-let user=null,role=null,member=null,stock=[],unsubs=[];
+
+let user=null;
+let role=null;
+let member=null;
+let stock=[];
+let unsubs=[];
 
 const $=id=>document.getElementById(id);
-const money=n=>"MK "+Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
-const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-function msg(t){$("msg").textContent=t}
+const money=n=>"MK "+Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+'"':"&quot;",
+"'":"&#39;"
+}[c]));
+
+function msg(t){
+$("msg").textContent=t;
+}
 
 function showApp(){
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logout").classList.remove("hidden");
+
 $("welcome").textContent="Welcome, "+(member.name||user.email);
 $("roleTag").textContent=role.toUpperCase()+" · "+user.email;
+
 $("admin").classList.toggle("hidden",role!=="admin");
 $("worker").classList.toggle("hidden",role!=="worker");
 }
@@ -168,17 +187,31 @@ $("worker").classList.toggle("hidden",role!=="worker");
 async function login(){
 try{
 msg("Signing in…");
-await auth.signInWithEmailAndPassword($("email").value.trim(),$("password").value);
-}catch(e){msg(e.message)}
+await auth.signInWithEmailAndPassword(
+$("email").value.trim(),
+$("password").value
+);
+}catch(e){
+msg(e.message);
+}
 }
 
 async function register(){
 try{
-let email=$("email").value.trim(),pass=$("password").value;
-if(!email||pass.length<8)throw Error("Enter email and password (minimum 8 characters).");
+let email=$("email").value.trim();
+let pass=$("password").value;
+
+if(!email||pass.length<8){
+throw Error("Enter email and password (minimum 8 characters).");
+}
+
 await auth.createUserWithEmailAndPassword(email,pass);
+
 msg("Account created. Ask the Admin to authorize your account in Firebase. You cannot self-assign Admin access.");
-}catch(e){msg(e.message)}
+
+}catch(e){
+msg(e.message);
+}
 }
 
 async function logout(){
@@ -189,6 +222,7 @@ await auth.signOut();
 
 auth.onAuthStateChanged(async u=>{
 user=u;
+
 if(!u){
 $("login").classList.remove("hidden");
 $("app").classList.add("hidden");
@@ -209,8 +243,9 @@ return;
 member=snap.data();
 role=member.role;
 
-if(!["admin","worker"].includes(role))
+if(!["admin","worker"].includes(role)){
 throw Error("Invalid account role.");
+}
 
 showApp();
 startListeners();
@@ -222,12 +257,18 @@ msg(e.message);
 });
 
 function startListeners(){
+
 unsubs.forEach(f=>f());
 unsubs=[];
 
 unsubs.push(
-db.collection(`businesses/${BUSINESS_ID}/stock`).onSnapshot(s=>{
-stock=s.docs.map(d=>({id:d.id,...d.data()}));
+db.collection(`businesses/${BUSINESS_ID}/stock`)
+.onSnapshot(s=>{
+
+stock=s.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
 
 $("adminStock").innerHTML=stock.map(p=>
 `<div class="item">
@@ -236,19 +277,32 @@ ${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}
 <button onclick="deleteStock('${p.id}','${esc(p.name)}')">Delete</button>
 </div>`
 ).join("")||"No stock";
+
 $("workerStock").innerHTML=stock.map(p=>
-`<div class="item">${esc(p.name)} · ${p.quantity} available · ${money(p.sellingPrice)}</div>`
+`<div class="item">
+${esc(p.name)} · ${p.quantity} available · ${money(p.sellingPrice)}
+</div>`
 ).join("")||"No stock";
 
 $("itemSelect").innerHTML=stock.filter(p=>p.quantity>0).map(p=>
-`<option value="${p.id}">${esc(p.name)} — ${p.quantity} available (${money(p.sellingPrice)})</option>`
+`<option value="${p.id}">
+${esc(p.name)} — ${p.quantity} available (${money(p.sellingPrice)})
+</option>`
 ).join("");
+
+},e=>{
+$("adminStock").textContent="Stock loading error: "+e.message;
 })
 );
+
 unsubs.push(
 db.collection(`businesses/${BUSINESS_ID}/spareParts`)
 .onSnapshot(s=>{
-let parts=s.docs.map(d=>({id:d.id,...d.data()}));
+
+let parts=s.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
 
 $("sparePartsList").innerHTML=parts.map(p=>
 `<div class="item">
@@ -263,41 +317,53 @@ $("sparePartsList").innerHTML=parts.map(p=>
 <button onclick="deleteSparePart('${p.id}')">Delete</button>
 </div>`
 ).join("")||"No spare parts recorded";
-<b>${esc(p.name)}</b>
-<br>Quantity: ${p.quantity}
-<br>Buying price: ${money(p.buyingPrice)}
-<br>Selling price: ${money(p.sellingPrice)}
-<br>Profit per item: ${money(p.sellingPrice-p.buyingPrice)}
-<br>Total potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}
-</div>`
-).join("")||"No spare parts recorded";
+
+},e=>{
+$("sparePartsList").textContent="Spare parts loading error: "+e.message;
 })
 );
+
 if(role==="admin"){
+
 unsubs.push(
 db.collection(`businesses/${BUSINESS_ID}/transactions`)
-.orderBy("createdAt","desc").limit(100)
+.orderBy("createdAt","desc")
+.limit(100)
 .onSnapshot(s=>{
-let docs=s.docs.map(d=>({id:d.id,...d.data()}));
+
+let docs=s.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
 
 $("allSales").innerHTML=docs.map(x=>
-`<div class="item">${esc(x.itemName)} × ${x.quantity} = <b>${money(x.total)}</b>
-<div class="muted">${esc(x.workerName)} · ${esc(x.customerName||"Walk-in")}</div></div>`
+`<div class="item">
+${esc(x.itemName)} × ${x.quantity} = <b>${money(x.total)}</b>
+<div class="muted">
+${esc(x.workerName)} · ${esc(x.customerName||"Walk-in")}
+</div>
+</div>`
 ).join("")||"No sales";
 
 $("totalSales").textContent=money(
 docs.reduce((a,x)=>a+Number(x.total||0),0)
 );
+
+},e=>{
+$("allSales").textContent="Sales loading error: "+e.message;
 })
 );
+
 }
 
 if(role==="worker"){
+
 unsubs.push(
 db.collection(`businesses/${BUSINESS_ID}/transactions`)
 .where("workerUid","==",user.uid)
 .limit(100)
 .onSnapshot(s=>{
+
 let docs=s.docs.map(d=>d.data());
 
 docs.sort((a,b)=>
@@ -306,19 +372,31 @@ docs.sort((a,b)=>
 );
 
 $("mySales").innerHTML=docs.map(x=>
-`<div class="item">${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}</div>`
+`<div class="item">
+${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}
+</div>`
 ).join("")||"No sales yet";
+
 },e=>{
 $("mySales").textContent="Sales loading error: "+e.message;
 })
 );
+
 }
+
 }
+
 async function editSparePart(id){
+
 try{
+
 let ref=db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`);
 let snap=await ref.get();
-if(!snap.exists)throw Error("Spare part not found.");
+
+if(!snap.exists){
+throw Error("Spare part not found.");
+}
+
 let p=snap.data();
 
 let name=prompt("Spare part name:",p.name);
@@ -326,42 +404,21 @@ if(name===null)return;
 if(!name.trim())return alert("Enter a name.");
 
 let quantity=Number(prompt("Quantity:",p.quantity));
-if(!Number.isInteger(quantity)||quantity<0)return alert("Invalid quantity.");
+if(!Number.isInteger(quantity)||quantity<0){
+return alert("Invalid quantity.");
+}
 
 let buyingPrice=Number(prompt("Buying price:",p.buyingPrice));
-if(!Number.isFinite(buyingPrice)||buyingPrice<0)return alert("Invalid buying price.");
+if(!Number.isFinite(buyingPrice)||buyingPrice<0){
+return alert("Invalid buying price.");
+}
 
 let sellingPrice=Number(prompt("Selling price:",p.sellingPrice));
-if(!Number.isFinite(sellingPrice)||sellingPrice<0)return alert("Invalid selling price.");
+if(!Number.isFinite(sellingPrice)||sellingPrice<0){
+return alert("Invalid selling price.");
+}
 
 await ref.update({
-name:name.trim(),quantity,buyingPrice,sellingPrice,
-updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
-updatedBy:user.uid
-});
-alert("Spare part updated.");
-}catch(e){
-alert("Update failed: "+e.message);
-}
-}
-
-let quantity=Number(prompt("Quantity:",p.quantity));
-if(!Number.isInteger(quantity)||quantity<0){
-alert("Invalid quantity.");
-return;
-}
-
-let buyingPrice=Number(prompt("Buying price:",p.buyingPrice));
-let sellingPrice=Number(prompt("Selling price:",p.sellingPrice));
-
-if(!Number.isFinite(buyingPrice)||buyingPrice<0||
-!Number.isFinite(sellingPrice)||sellingPrice<0){
-alert("Invalid price.");
-return;
-}
-
-try{
-await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).update({
 name:name.trim(),
 quantity,
 buyingPrice,
@@ -369,24 +426,35 @@ sellingPrice,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
 updatedBy:user.uid
 });
+
 alert("Spare part updated.");
+
 }catch(e){
-alert(e.message);
+alert("Update failed: "+e.message);
 }
+
 }
 
 async function deleteSparePart(id){
+
 if(!confirm("Delete this spare part?"))return;
 
 try{
+
 await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).delete();
+
 alert("Spare part deleted.");
+
 }catch(e){
 alert("Delete failed: "+e.message);
 }
+
 }
+
 async function saveSparePart(){
+
 try{
+
 let name=$("spname").value.trim();
 let quantity=Number($("spqty").value);
 let buyingPrice=Number($("spbuy").value);
@@ -395,15 +463,23 @@ let sellingPrice=Number($("spsell").value);
 if(!name||
 !Number.isInteger(quantity)||quantity<0||
 !Number.isFinite(buyingPrice)||buyingPrice<0||
-!Number.isFinite(sellingPrice)||sellingPrice<0)
+!Number.isFinite(sellingPrice)||sellingPrice<0){
 throw Error("Enter valid spare part details.");
+}
 
-let id=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+let id=name.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/(^-|-$)/g,"");
 
 await db.doc(`businesses/${BUSINESS_ID}/spareParts/${id}`).set({
-name,quantity,buyingPrice,sellingPrice,
+
+name,
+quantity,
+buyingPrice,
+sellingPrice,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
 updatedBy:user.uid
+
 },{merge:true});
 
 $("spname").value="";
@@ -416,76 +492,112 @@ alert("Spare part saved successfully.");
 }catch(e){
 alert(e.message);
 }
+
 }
+
 async function saveProduct(){
+
 try{
+
 let name=$("pname").value.trim();
 let quantity=Number($("pqty").value);
 let sellingPrice=Number($("pprice").value);
 
-if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isFinite(sellingPrice)||sellingPrice<0)
+if(!name||
+!Number.isInteger(quantity)||quantity<0||
+!Number.isFinite(sellingPrice)||sellingPrice<0){
 throw Error("Enter valid name, quantity and selling price.");
+}
 
-let id=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+let id=name.toLowerCase()
+.replace(/[^a-z0-9]+/g,"-")
+.replace(/(^-|-$)/g,"");
 
 await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).set({
-name,quantity,sellingPrice,
+
+name,
+quantity,
+sellingPrice,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
 updatedBy:user.uid
+
 },{merge:true});
 
-$("pname").value=$("pqty").value=$("pprice").value="";
+$("pname").value="";
+$("pqty").value="";
+$("pprice").value="";
+
 alert("Stock saved.");
 
-}catch(e){alert(e.message)}
+}catch(e){
+alert(e.message);
+}
+
 }
 
 async function editStock(id){
+
 let p=stock.find(x=>x.id===id);
 if(!p)return;
 
 let name=prompt("Product name:",p.name);
 if(name===null)return;
+if(!name.trim())return alert("Enter a product name.");
 
 let quantity=Number(prompt("Quantity:",p.quantity));
+
 if(!Number.isInteger(quantity)||quantity<0){
 alert("Enter a valid quantity.");
 return;
 }
 
 let price=Number(prompt("Selling price:",p.sellingPrice));
+
 if(!Number.isFinite(price)||price<0){
 alert("Enter a valid selling price.");
 return;
 }
 
 try{
+
 await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).update({
+
 name:name.trim(),
-quantity:quantity,
+quantity,
 sellingPrice:price,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
 updatedBy:user.uid
+
 });
+
 alert("Stock updated successfully.");
+
 }catch(e){
 alert("Update failed: "+e.message);
 }
+
 }
+
 async function deleteStock(id,name){
+
 if(!confirm("Delete "+name+"?"))return;
 
 try{
+
 await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).delete();
+
 alert("Stock item deleted.");
+
 }catch(e){
 alert("Delete failed: "+e.message);
 }
+
 }
-  
+
 async function recordSale(){
 
 try{
+
 let p=stock.find(x=>x.id===$("itemSelect").value);
 let qty=Number($("saleQty").value);
 
@@ -494,22 +606,29 @@ if(!Number.isInteger(qty)||qty<1)throw Error("Quantity must be at least 1.");
 if(qty>p.quantity)throw Error("Not enough stock available.");
 
 let total=qty*Number(p.sellingPrice);
+
 let tx=db.collection(`businesses/${BUSINESS_ID}/transactions`).doc();
+
 let stockRef=db.doc(`businesses/${BUSINESS_ID}/stock/${p.id}`);
 
 await db.runTransaction(async t=>{
+
 let fresh=await t.get(stockRef);
 
-if(!fresh.exists||fresh.data().quantity<qty)
+if(!fresh.exists||fresh.data().quantity<qty){
 throw Error("Stock changed. Refresh and try again.");
+}
 
 t.update(stockRef,{
+
 quantity:fresh.data().quantity-qty,
 lastSaleTxId:tx.id,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+
 });
 
 t.set(tx,{
+
 type:"sale",
 itemId:p.id,
 itemName:p.name,
@@ -521,15 +640,20 @@ customerPhone:$("custPhone").value.trim(),
 workerUid:user.uid,
 workerName:member.name||user.email,
 createdAt:firebase.firestore.FieldValue.serverTimestamp()
-});
+
 });
 
-$("saleMsg").textContent=`Sale saved: ${p.name} × ${qty} = ${money(total)}`;
+});
+
+$("saleMsg").textContent=
+`Sale saved: ${p.name} × ${qty} = ${money(total)}`;
+
 $("saleQty").value=1;
 
 }catch(e){
 $("saleMsg").textContent=e.message;
 }
+
 }
 </script>
 </body>
