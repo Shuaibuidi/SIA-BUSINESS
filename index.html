@@ -1,58 +1,334 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#071a2c"><title>Smart Business Manager</title><style>
-:root{font-family:Arial,sans-serif;color:#eaf3fb;background:#071a2c}*{box-sizing:border-box}body{margin:0;padding:16px}.wrap{max-width:850px;margin:auto}.card{background:#102b43;border:1px solid #294c66;border-radius:16px;padding:18px;margin:12px 0}h1,h2,h3{margin:6px 0 14px}label{display:block;font-size:13px;margin:10px 0 5px;color:#b9cee0}input,select,textarea{width:100%;padding:12px;border-radius:9px;border:1px solid #3a5d77;background:#071a2c;color:white;font-size:16px}button{border:0;border-radius:9px;padding:12px 15px;background:#1686d9;color:white;font-weight:bold;font-size:15px;margin:5px 3px 5px 0}button.secondary{background:#31516b}button.danger{background:#a83d48}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.muted{color:#a9bfd1;font-size:13px;line-height:1.5}.hidden{display:none!important}.row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.item{padding:12px 0;border-bottom:1px solid #31516b}.price{font-weight:bold;color:#7ee0ae}.receipt{background:white;color:#142536;padding:18px;border-radius:8px}.receipt h2{color:#174c7a}.small{font-size:12px;color:#536779}#message{white-space:pre-wrap;color:#ffd18b}
-</style><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script></head><body><div class="wrap"><header class="row"><div><h1>Smart Business Manager</h1><div class="muted">Admin & Worker Management</div></div><button id="logout" class="secondary hidden" onclick="logout()">Sign out</button></header>
-<section id="login" class="card"><h2>Sign in</h2><label>Email address</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><button class="secondary" onclick="registerOwner()">Create owner account</button><p class="muted">The first owner account must be created and claimed before workers are invited.</p><div id="message"></div></section>
-<section id="claim" class="card hidden"><h2>Set up your business Admin account</h2><label>Business name</label><input id="businessName" value="Smart Business Manager"><label>Owner name</label><input id="ownerName" placeholder="Your name"><button onclick="claimOwner()">Set up as Admin</button><p class="muted">Only do this with the account that belongs to the business owner, before sharing the app with workers.</p><div id="claimMessage" class="muted" role="status" aria-live="polite"></div></section>
-<section id="admin" class="hidden"><div class="card"><div class="row"><h2>Admin Dashboard</h2><span id="adminEmail" class="muted"></span></div><div class="grid"><div><b>Worker accounts</b><h2 id="workerCount">0</h2></div><div><b>Recorded transactions</b><h2 id="transactionCount">0</h2></div><div><b>Sales & services total</b><h2 id="revenue">MK 0</h2></div></div><p class="muted">Workers cannot access buying costs, expenses, salaries, profit reports or settings through this system.</p></div>
-<div class="card"><h3>Create worker login</h3><div class="grid"><div><label>Worker full name</label><input id="wName"></div><div><label>Job title</label><input id="wRole" placeholder="Technician / Salesperson"></div><div><label>Phone</label><input id="wPhone"></div><div><label>Worker email</label><input id="wEmail" type="email"></div><div><label>Temporary password (8+ characters)</label><input id="wPassword" type="password"></div></div><button onclick="createWorker()">Create worker account</button><p id="workerResult" class="muted"></p></div>
-<div class="card"><h3>Stock available to workers</h3><div class="grid"><div><label>Product / spare part name</label><input id="stockName"></div><div><label>Quantity in stock</label><input id="stockQty" type="number" min="0" step="1"></div><div><label>Selling price (MK)</label><input id="stockPrice" type="number" min="0" step="0.01"></div></div><button onclick="saveStock()">Save / update stock item</button><div id="stockList"></div></div>
-<div class="card"><h3>All worker transactions</h3><div id="adminTransactions"></div></div><div class="card"><h3>Existing full business app</h3><p class="muted">Your previous app is preserved separately. Do not use its old whole-database cloud sync with worker accounts; keep it owner-only until its data migration is completed.</p><a href="legacy-index.html" style="color:#7bc8ff">Open original business records app</a></div></section>
-<section id="worker" class="hidden"><div class="card"><div class="row"><h2>Worker Dashboard</h2><span id="workerIdentity" class="muted"></span></div><p class="muted">You can record sales and services and view your own records. You cannot see business costs, profits, expenses, salaries or Admin settings.</p></div>
-<div class="card"><h3>Record product / spare-part sale</h3><label>Stock item</label><select id="saleItem"></select><div class="grid"><div><label>Quantity</label><input id="saleQty" type="number" min="1" step="1" value="1"></div><div><label>Selling price per item (MK)</label><input id="salePrice" type="number" min="0" step="0.01"></div><div><label>Customer name</label><input id="customerName" placeholder="Walk-in"></div><div><label>Customer phone</label><input id="customerPhone" inputmode="tel"></div></div><label>Customer address</label><input id="customerAddress"><button onclick="submitSale()">Record sale & generate receipt</button></div>
-<div class="card"><h3>Record printing / repair service</h3><div class="grid"><div><label>Service name</label><input id="serviceName" placeholder="Phone repair / Printing"></div><div><label>Quantity</label><input id="serviceQty" type="number" min="1" value="1"></div><div><label>Price per unit (MK)</label><input id="servicePrice" type="number" min="0" step="0.01"></div><div><label>Customer name</label><input id="serviceCustomer" placeholder="Walk-in"></div><div><label>Customer phone</label><input id="servicePhone"></div></div><label>Customer address</label><input id="serviceAddress"><label>Details</label><textarea id="serviceDescription" rows="2"></textarea><button onclick="submitService()">Record service & generate receipt</button></div>
-<div class="card"><h3>Available stock</h3><div id="workerStock"></div></div><div class="card"><h3>My records</h3><div id="myTransactions"></div></div><div id="receiptCard" class="card hidden"><div id="receipt" class="receipt"></div><button onclick="printReceipt()">Print / Save PDF</button></div></section></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#071a2c">
+<title>S I A BUSINESS</title>
+
+<style>
+:root{font-family:Arial,sans-serif;color:#edf6ff;background:#071a2c}
+*{box-sizing:border-box}
+body{margin:0;padding:14px}
+.wrap{max-width:900px;margin:auto}
+.card{background:#102b43;border:1px solid #294c66;border-radius:15px;padding:16px;margin:12px 0}
+h1,h2,h3{margin:5px 0 12px}
+.muted{color:#a9bfd1;font-size:13px;line-height:1.5}
+label{display:block;margin:10px 0 5px;font-size:13px;color:#b9cee0}
+input,select,textarea{width:100%;padding:12px;border-radius:9px;border:1px solid #3a5d77;background:#071a2c;color:white;font-size:16px}
+button{border:0;border-radius:9px;padding:12px 15px;background:#1686d9;color:white;font-weight:bold;margin:5px 3px 5px 0}
+button.secondary{background:#31516b}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hidden{display:none!important}
+.item{padding:12px 0;border-bottom:1px solid #31516b}
+#msg{white-space:pre-wrap;color:#ffd18b}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+<div class="wrap">
+
+<header class="row">
+<div>
+<h1>S I A BUSINESS</h1>
+<div class="muted">S I A TECH PRINT MEDIA · HOME OF PRINTING & COMPUTING</div>
+<div class="muted">Matindi Trading Centre, Blantyre · Malawi</div>
+</div>
+<button id="logout" class="secondary hidden" onclick="logout()">Sign out</button>
+</header>
+
+<section id="login" class="card">
+<h2>Sign in</h2>
+<label>Email</label>
+<input id="email" type="email">
+<label>Password</label>
+<input id="password" type="password">
+<button onclick="login()">Sign in</button>
+<button class="secondary" onclick="register()">Create account</button>
+<div id="msg"></div>
+<p class="muted">Admin accounts must be authorized in Firebase Firestore. Workers cannot register themselves as Admin.</p>
+</section>
+
+<section id="app" class="hidden">
+
+<div class="card row">
+<div>
+<h2 id="welcome">Dashboard</h2>
+<span id="roleTag" class="muted"></span>
+</div>
+<div>
+<b id="totalSales">MK 0</b>
+<div class="muted">Sales total (Admin only)</div>
+</div>
+</div>
+
+<section id="admin" class="hidden">
+<div class="card">
+<h3>Stock management</h3>
+<div class="grid">
+<div><label>Product / spare part</label><input id="pname"></div>
+<div><label>Quantity</label><input id="pqty" type="number" min="0" step="1"></div>
+<div><label>Selling price (MK)</label><input id="pprice" type="number" min="0" step="0.01"></div>
+</div>
+<button onclick="saveProduct()">Save stock item</button>
+<div id="adminStock"></div>
+</div>
+
+<div class="card">
+<h3>Worker accounts</h3>
+<p class="muted">Create worker accounts in Firebase Authentication, then add a member record under businesses/ADMIN_UID/members/WORKER_UID. Set role=worker and active=true.</p>
+</div>
+
+<div class="card">
+<h3>All sales</h3>
+<div id="allSales"></div>
+</div>
+</section>
+
+<section id="worker" class="hidden">
+<div class="card">
+<h3>Record a stock sale</h3>
+<label>Stock item</label>
+<select id="itemSelect"></select>
+<div class="grid">
+<div><label>Quantity</label><input id="saleQty" type="number" min="1" step="1" value="1"></div>
+<div><label>Customer name</label><input id="custName" placeholder="Walk-in"></div>
+<div><label>Customer phone</label><input id="custPhone"></div>
+</div>
+<button onclick="recordSale()">Record sale</button>
+<div id="saleMsg"></div>
+</div>
+
+<div class="card">
+<h3>Available stock</h3>
+<div id="workerStock"></div>
+</div>
+
+<div class="card">
+<h3>My sales</h3>
+<div id="mySales"></div>
+</div>
+</section>
+</section>
+</div>
+
 <script>
-const firebaseConfig={apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",authDomain:"smart-business-manager-f319f.firebaseapp.com",projectId:"smart-business-manager-f319f",storageBucket:"smart-business-manager-f319f.firebasestorage.app",messagingSenderId:"716400037263",appId:"1:716400037263:web:42a1e961b1597d0d280ffa"};
-firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),fs=firebase.firestore(),fn=firebase.app().functions('us-central1');let user=null,businessId=null,role=null,member=null,stockCache=[],unsub=[];
-const $=id=>document.getElementById(id),money=n=>'MK '+Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2}),msg=t=>{const a=$('message');const b=$('claimMessage');if(a)a.textContent=t;if(b)b.textContent=t},show=id=>['login','claim','admin','worker'].forEach(x=>$(x).classList.toggle('hidden',x!==id));
-async function login(){try{msg('Signing in...');await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value)}catch(e){msg(e.message)}}
-async function registerOwner(){try{if(!$('email').value.trim()||$('password').value.length<8)throw Error('Enter an email and a password of at least 8 characters.');msg('Creating owner account...');await auth.createUserWithEmailAndPassword($('email').value.trim(),$('password').value)}catch(e){msg(e.message)}}
-async function claimOwner(){
-  const businessName=$('businessName').value.trim();
-  const ownerName=$('ownerName').value.trim();
-  if(!user){msg('Please sign in or create the owner login first.');return}
-  if(!businessName||!ownerName){msg('Enter both the business name and owner name, then try again.');return}
-  const button=document.querySelector('#claim button[onclick="claimOwner()"]');
-  if(button){button.disabled=true;button.textContent='Setting up...'}
-  try{
-    msg('Setting up Admin account. Please wait...');
-    await fn.httpsCallable('claimBusiness')({businessName,ownerName});
-    await user.getIdToken(true);
-    await loadRole();
-    msg('Admin account setup completed.');
-  }catch(e){
-    const code=e&&e.code?e.code:'';
-    let detail=(e&&e.message)?e.message:'Unknown error';
-    if(code.includes('functions/not-found')) detail='Firebase cannot find the claimBusiness Cloud Function. Deploy the backend functions to your Firebase project, then try again.';
-    else if(code.includes('functions/unavailable')||code.includes('functions/deadline-exceeded')) detail='The Firebase Cloud Function is unavailable or timed out. Check your internet connection and whether the functions are deployed in us-central1.';
-    else if(code.includes('functions/unauthenticated')) detail='Your login session has expired. Sign out, sign in again, and retry Admin setup.';
-    else if(code.includes('functions/permission-denied')) detail='Firebase rejected the Admin claim. Check the claimBusiness function and its first-owner setup rules.';
-    msg('Admin setup failed. '+detail+(code?' (Code: '+code+')':''));
-  }finally{
-    if(button){button.disabled=false;button.textContent='Set up as Admin'}
-  }
+const firebaseConfig={
+apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",
+authDomain:"smart-business-manager-f319f.firebaseapp.com",
+projectId:"smart-business-manager-f319f",
+storageBucket:"smart-business-manager-f319f.firebasestorage.app",
+messagingSenderId:"716400037263",
+appId:"1:716400037263:web:42a1e961b1597d0d280ffa"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),db=firebase.firestore();
+
+const BUSINESS_ID="7RqIYO3IDSVCYex1LsDo6rDw5V33";
+let user=null,role=null,member=null,stock=[],unsubs=[];
+
+const $=id=>document.getElementById(id);
+const money=n=>"MK "+Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function msg(t){$("msg").textContent=t}
+
+function showApp(){
+$("login").classList.add("hidden");
+$("app").classList.remove("hidden");
+$("logout").classList.remove("hidden");
+$("welcome").textContent="Welcome, "+(member.name||user.email);
+$("roleTag").textContent=role.toUpperCase()+" · "+user.email;
+$("admin").classList.toggle("hidden",role!=="admin");
+$("worker").classList.toggle("hidden",role!=="worker");
 }
-async function logout(){unsub.forEach(f=>f());unsub=[];await auth.signOut()}
-auth.onAuthStateChanged(async u=>{user=u;if(!u){$('logout').classList.add('hidden');show('login');return}$('logout').classList.remove('hidden');msg('Checking account permissions...');try{const token=await u.getIdTokenResult(true);businessId=token.claims.businessId||null;role=token.claims.role||null;if(!businessId||!role){show('claim');msg('This account is not yet linked to a business. If you are the owner, complete setup below. Workers must be created by the Admin.');return}await loadRole()}catch(e){show('login');msg(e.message)}});
-async function loadRole(){const token=await user.getIdTokenResult(true);businessId=token.claims.businessId;role=token.claims.role;const m=await fs.doc(`businesses/${businessId}/members/${user.uid}`).get();if(!m.exists||m.data().active!==true)throw Error('Your worker access is disabled. Contact the Admin.');member=m.data();if(role==='admin'){show('admin');$('adminEmail').textContent=user.email;listenAdmin()}else if(role==='worker'){show('worker');$('workerIdentity').textContent=member.name||user.email;listenWorker()}else throw Error('Unknown account role');}
-function listenAdmin(){unsub.forEach(f=>f());unsub=[];unsub.push(fs.collection(`businesses/${businessId}/members`).onSnapshot(s=>{$('workerCount').textContent=s.docs.filter(d=>d.data().role==='worker').length}));unsub.push(fs.collection(`businesses/${businessId}/transactions`).orderBy('createdAt','desc').limit(100).onSnapshot(s=>{const rows=s.docs.map(d=>({id:d.id,...d.data()}));$('transactionCount').textContent=rows.length;$('revenue').textContent=money(rows.reduce((a,x)=>a+Number(x.total||0),0));$('adminTransactions').innerHTML=rows.map(x=>`<div class="item"><b>${esc(x.type==='sale'?x.itemName:x.serviceName)}</b> — ${money(x.total)}<div class="muted">${esc(x.workerName)} · ${esc(x.customerName)} · ${esc(x.date)}</div></div>`).join('')||'No transactions yet.'}));unsub.push(fs.collection(`businesses/${businessId}/stock`).onSnapshot(renderStock));}
-async function createWorker(){try{const d={businessId,email:$('wEmail').value.trim(),password:$('wPassword').value,name:$('wName').value.trim(),role:$('wRole').value.trim(),phone:$('wPhone').value.trim()};$('workerResult').textContent='Creating worker login...';const r=await fn.httpsCallable('createWorker')(d);$('workerResult').textContent=`Worker account created: ${r.data.email}. Give the worker this email and temporary password securely.`;$('wPassword').value='';}catch(e){$('workerResult').textContent=e.message}}
-async function saveStock(){try{const name=$('stockName').value.trim(),quantity=Number($('stockQty').value),sellingPrice=Number($('stockPrice').value);if(!name)throw Error('Enter an item name.');const itemId=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');await fn.httpsCallable('setStockItem')({businessId,itemId,name,quantity,sellingPrice});$('stockName').value='';$('stockQty').value='';$('stockPrice').value='';}catch(e){alert(e.message)}}
-function renderStock(s){stockCache=s.docs.map(d=>({id:d.id,...d.data()}));$('stockList').innerHTML=stockCache.map(x=>`<div class="item">${esc(x.name)} · ${x.quantity} in stock · ${money(x.sellingPrice)}</div>`).join('')||'No stock entered.'}
-function listenWorker(){unsub.forEach(f=>f());unsub=[];unsub.push(fs.collection(`businesses/${businessId}/stock`).onSnapshot(s=>{stockCache=s.docs.map(d=>({id:d.id,...d.data()}));$('saleItem').innerHTML=stockCache.filter(x=>x.quantity>0).map(x=>`<option value="${x.id}">${esc(x.name)} — ${x.quantity} available</option>`).join('');$('workerStock').innerHTML=stockCache.map(x=>`<div class="item">${esc(x.name)} · ${x.quantity} available · ${money(x.sellingPrice)}</div>`).join('')||'No stock available.';if(stockCache.length&&$('saleItem').value){const p=stockCache.find(x=>x.id===$('saleItem').value);$('salePrice').value=p?.sellingPrice||''}}));unsub.push(fs.collection(`businesses/${businessId}/transactions`).where('workerUid','==',user.uid).orderBy('createdAt','desc').limit(100).onSnapshot(s=>{$('myTransactions').innerHTML=s.docs.map(d=>{const x=d.data();return `<div class="item"><b>${esc(x.type==='sale'?x.itemName:x.serviceName)}</b> · ${money(x.total)}<div class="muted">${esc(x.customerName)} · ${esc(x.date)}</div></div>`}).join('')||'No records yet.'}));}
-async function submitSale(){try{const p=stockCache.find(x=>x.id===$('saleItem').value);if(!p)throw Error('Choose an available stock item.');const r=await fn.httpsCallable('recordSale')({businessId,itemId:p.id,quantity:Number($('saleQty').value),unitPrice:Number($('salePrice').value),customerName:$('customerName').value.trim()||'Walk-in',customerPhone:$('customerPhone').value.trim(),customerAddress:$('customerAddress').value.trim()});showReceipt({type:'Sales Receipt',item:r.data.itemName,qty:r.data.quantity,price:r.data.unitPrice,total:r.data.total,customer:$('customerName').value||'Walk-in',phone:$('customerPhone').value,address:$('customerAddress').value,id:r.data.transactionId});}catch(e){alert(e.message)}}
-async function submitService(){try{const r=await fn.httpsCallable('recordService')({businessId,serviceName:$('serviceName').value.trim(),description:$('serviceDescription').value.trim(),quantity:Number($('serviceQty').value),unitPrice:Number($('servicePrice').value),customerName:$('serviceCustomer').value.trim()||'Walk-in',customerPhone:$('servicePhone').value.trim(),customerAddress:$('serviceAddress').value.trim()});showReceipt({type:'Service Receipt',item:$('serviceName').value,qty:Number($('serviceQty').value),price:Number($('servicePrice').value),total:r.data.total,customer:$('serviceCustomer').value||'Walk-in',phone:$('servicePhone').value,address:$('serviceAddress').value,id:r.data.transactionId});}catch(e){alert(e.message)}}
-function showReceipt(x){$('receiptCard').classList.remove('hidden');$('receipt').innerHTML=`<h2>Smart Business Manager</h2><h3>${esc(x.type)}</h3><p><b>Receipt:</b> ${esc(x.id)}<br><b>Date:</b> ${new Date().toLocaleString()}</p><p><b>Customer:</b> ${esc(x.customer)}<br><b>Phone:</b> ${esc(x.phone)}<br><b>Address:</b> ${esc(x.address)}</p><hr><p>${esc(x.item)} × ${x.qty} @ ${money(x.price)}</p><h2>Total: ${money(x.total)}</h2><p>Served by: ${esc(member.name||user.email)}</p><p>Thank You for Your Support</p>`;$('receiptCard').scrollIntoView({behavior:'smooth'})}
-function printReceipt(){const w=window.open('','_blank');if(!w)return alert('Allow pop-ups to print the receipt.');w.document.write('<html><head><title>Receipt</title><style>body{font-family:Arial;padding:24px;color:#142536}hr{margin:20px 0}</style></head><body>'+ $('receipt').innerHTML+'</body></html>');w.document.close();w.focus();w.print()}
-function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-</script></body></html>
+
+async function login(){
+try{
+msg("Signing in…");
+await auth.signInWithEmailAndPassword($("email").value.trim(),$("password").value);
+}catch(e){msg(e.message)}
+}
+
+async function register(){
+try{
+let email=$("email").value.trim(),pass=$("password").value;
+if(!email||pass.length<8)throw Error("Enter email and password (minimum 8 characters).");
+await auth.createUserWithEmailAndPassword(email,pass);
+msg("Account created. Ask the Admin to authorize your account in Firebase. You cannot self-assign Admin access.");
+}catch(e){msg(e.message)}
+}
+
+async function logout(){
+unsubs.forEach(f=>f());
+unsubs=[];
+await auth.signOut();
+}
+
+auth.onAuthStateChanged(async u=>{
+user=u;
+if(!u){
+$("login").classList.remove("hidden");
+$("app").classList.add("hidden");
+$("logout").classList.add("hidden");
+return;
+}
+
+try{
+let ref=db.doc(`businesses/${BUSINESS_ID}/members/${u.uid}`);
+let snap=await ref.get();
+
+if(!snap.exists||snap.data().active!==true){
+await auth.signOut();
+msg("This account is not authorized yet. Contact your Admin.");
+return;
+}
+
+member=snap.data();
+role=member.role;
+
+if(!["admin","worker"].includes(role))
+throw Error("Invalid account role.");
+
+showApp();
+startListeners();
+
+}catch(e){
+await auth.signOut();
+msg(e.message);
+}
+});
+
+function startListeners(){
+unsubs.forEach(f=>f());
+unsubs=[];
+
+unsubs.push(
+db.collection(`businesses/${BUSINESS_ID}/stock`).onSnapshot(s=>{
+stock=s.docs.map(d=>({id:d.id,...d.data()}));
+
+$("adminStock").innerHTML=stock.map(p=>
+`<div class="item">${esc(p.name)} · Qty ${p.quantity} · ${money(p.sellingPrice)}</div>`
+).join("")||"No stock";
+
+$("workerStock").innerHTML=stock.map(p=>
+`<div class="item">${esc(p.name)} · ${p.quantity} available · ${money(p.sellingPrice)}</div>`
+).join("")||"No stock";
+
+$("itemSelect").innerHTML=stock.filter(p=>p.quantity>0).map(p=>
+`<option value="${p.id}">${esc(p.name)} — ${p.quantity} available (${money(p.sellingPrice)})</option>`
+).join("");
+})
+);
+
+if(role==="admin"){
+unsubs.push(
+db.collection(`businesses/${BUSINESS_ID}/transactions`)
+.orderBy("createdAt","desc").limit(100)
+.onSnapshot(s=>{
+let docs=s.docs.map(d=>({id:d.id,...d.data()}));
+
+$("allSales").innerHTML=docs.map(x=>
+`<div class="item">${esc(x.itemName)} × ${x.quantity} = <b>${money(x.total)}</b>
+<div class="muted">${esc(x.workerName)} · ${esc(x.customerName||"Walk-in")}</div></div>`
+).join("")||"No sales";
+
+$("totalSales").textContent=money(
+docs.reduce((a,x)=>a+Number(x.total||0),0)
+);
+})
+);
+}
+
+if(role==="worker"){
+unsubs.push(
+db.collection(`businesses/${BUSINESS_ID}/transactions`)
+.where("workerUid","==",user.uid)
+.orderBy("createdAt","desc").limit(100)
+.onSnapshot(s=>$("mySales").innerHTML=s.docs.map(d=>{
+let x=d.data();
+return `<div class="item">${esc(x.itemName)} × ${x.quantity} · ${money(x.total)}</div>`;
+}).join("")||"No sales yet")
+);
+}
+}
+
+async function saveProduct(){
+try{
+let name=$("pname").value.trim();
+let quantity=Number($("pqty").value);
+let sellingPrice=Number($("pprice").value);
+
+if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isFinite(sellingPrice)||sellingPrice<0)
+throw Error("Enter valid name, quantity and selling price.");
+
+let id=name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+
+await db.doc(`businesses/${BUSINESS_ID}/stock/${id}`).set({
+name,quantity,sellingPrice,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+updatedBy:user.uid
+},{merge:true});
+
+$("pname").value=$("pqty").value=$("pprice").value="";
+alert("Stock saved.");
+
+}catch(e){alert(e.message)}
+}
+
+async function recordSale(){
+try{
+let p=stock.find(x=>x.id===$("itemSelect").value);
+let qty=Number($("saleQty").value);
+
+if(!p)throw Error("Choose a stock item.");
+if(!Number.isInteger(qty)||qty<1)throw Error("Quantity must be at least 1.");
+if(qty>p.quantity)throw Error("Not enough stock available.");
+
+let total=qty*Number(p.sellingPrice);
+let tx=db.collection(`businesses/${BUSINESS_ID}/transactions`).doc();
+let stockRef=db.doc(`businesses/${BUSINESS_ID}/stock/${p.id}`);
+
+await db.runTransaction(async t=>{
+let fresh=await t.get(stockRef);
+
+if(!fresh.exists||fresh.data().quantity<qty)
+throw Error("Stock changed. Refresh and try again.");
+
+t.update(stockRef,{
+quantity:fresh.data().quantity-qty,
+lastSaleTxId:tx.id,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+
+t.set(tx,{
+type:"sale",
+itemId:p.id,
+itemName:p.name,
+quantity:qty,
+unitPrice:p.sellingPrice,
+total,
+customerName:$("custName").value.trim()||"Walk-in",
+customerPhone:$("custPhone").value.trim(),
+workerUid:user.uid,
+workerName:member.name||user.email,
+createdAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+});
+
+$("saleMsg").textContent=`Sale saved: ${p.name} × ${qty} = ${money(total)}`;
+$("saleQty").value=1;
+
+}catch(e){
+$("saleMsg").textContent=e.message;
+}
+}
+</script>
+</body>
+</html>
