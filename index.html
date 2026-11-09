@@ -57,11 +57,11 @@ function formField(id,label,type="text",placeholder="",step=""){return `<div><la
 function selectField(id,label,opts){return `<div><label>${label}</label><select id="${id}">${opts}</select></div>`}
 async function addDoc(c,data){return db.collection(path(c)).add({...data,createdAt:stamp(),createdBy:user.uid})}
 async function updateDoc(c,id,data){return db.doc(`${path(c)}/${id}`).update({...data,updatedAt:stamp(),updatedBy:user.uid})}
-async function removeDoc(c,id){if(!isAdmin())return alert("Admin permission required.");if(!confirm("Delete this record permanently?"))return;try{await db.doc(`${path(c)}/${id}`).delete();say("Record deleted.")}catch(e){alert("Delete failed: "+e.message)}}
+async function removeDoc(c,id){if(!isAdmin())return alert("Admin permission required.");if(!confirm("Delete this record permanently?"))return;try{await db.doc(`${path(c)}/${id}`).delete();if(c==="stock"||c==="spareParts")await publishWorkerCatalog();say("Record deleted.")}catch(e){alert("Delete failed: "+e.message)}}
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
 function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
-function dashboard(s){let tx=[...records("transactions"),...records("spareSales")],sales=tx.reduce((a,x)=>a+Number(x.total||0),0)+records("services").reduce((a,x)=>a+Number(x.amount||0),0),exp=records("expenses").reduce((a,x)=>a+Number(x.amount||0),0);s.innerHTML=`<div class="grid"><div class="card"><div class="muted">Sales / services</div><div class="stat">${money(isAdmin()?sales:tx.filter(x=>x.workerUid===user.uid).reduce((a,x)=>a+Number(x.total||0),0))}</div></div><div class="card"><div class="muted">Stock items</div><div class="stat">${records("stock").length}</div></div><div class="card"><div class="muted">Spare parts</div><div class="stat">${records("spareParts").length}</div></div><div class="card"><div class="muted">Repair jobs</div><div class="stat">${records("jobs").length}</div></div>${isAdmin()?`<div class="card"><div class="muted">Expenses</div><div class="stat">${money(exp)}</div></div><div class="card"><div class="muted">Estimated gross profit</div><div class="stat">${money(grossProfit())}</div></div>`:""}</div><div class="card"><h3>Welcome to S I A BUSINESS</h3><p class="muted">Manage stock, spare parts, sales, repairs and printing services from one place.</p></div>`}
+function dashboard(s){let tx=[...records("transactions"),...records("spareSales")],sales=tx.reduce((a,x)=>a+Number(x.total||0),0)+records("services").reduce((a,x)=>a+Number(x.amount||0),0),exp=records("expenses").reduce((a,x)=>a+Number(x.amount||0),0);s.innerHTML=`<div class="grid"><div class="card"><div class="muted">Sales / services</div><div class="stat">${money(isAdmin()?sales:tx.filter(x=>x.workerUid===user.uid).reduce((a,x)=>a+Number(x.total||0),0))}</div></div><div class="card"><div class="muted">Stock items</div><div class="stat">${isAdmin()?records("stock").length:records("workerStock").filter(x=>x.sourceCollection==="stock"&&x.active!==false).length}</div></div><div class="card"><div class="muted">Spare parts</div><div class="stat">${isAdmin()?records("spareParts").length:records("workerStock").filter(x=>x.sourceCollection==="spareParts"&&x.active!==false).length}</div></div><div class="card"><div class="muted">Repair jobs</div><div class="stat">${records("jobs").length}</div></div>${isAdmin()?`<div class="card"><div class="muted">Expenses</div><div class="stat">${money(exp)}</div></div><div class="card"><div class="muted">Estimated gross profit</div><div class="stat">${money(grossProfit())}</div></div>`:""}</div><div class="card"><h3>Welcome to S I A BUSINESS</h3><p class="muted">Manage stock, spare parts, sales, repairs and printing services from one place.</p></div>`}
 function stockScreen(s){
   let rows=isAdmin()?records("stock"):records("workerStock").filter(x=>x.sourceCollection==="stock"&&x.active!==false);
   s.innerHTML=`${isAdmin()?`<div class="card"><h3>Stock management</h3><div class="grid">${formField("stName","Product name")}${formField("stQty","Quantity","number")}${formField("stBuy","Buying price (MK)","number","","0.01")}${formField("stSell","Selling price (MK)","number","","0.01")}</div><button onclick="saveStock()">Save stock item</button><button class="secondary" onclick="publishWorkerCatalog()">Publish stock & spare parts to workers</button></div>`:""}<div class="card"><h3>Stock list</h3>${rows.map(p=>`<div class="item"><b>📦 ${esc(p.name)}</b><br><span class="muted">Available quantity: ${p.quantity}</span><br><b>Selling price: ${money(p.sellingPrice)}</b>${isAdmin()?`<br>Buying: ${money(p.buyingPrice)} · Profit/unit: ${money(Number(p.sellingPrice)-Number(p.buyingPrice))}<div class="actions"><button onclick="editItem('stock','${p.id}')">Edit</button><button class="danger" onclick="removeDoc('stock','${p.id}')">Delete</button></div>`:""}</div>`).join("")||'<p class="muted">No stock items available.</p>'}</div>`;
@@ -96,12 +96,19 @@ async function saveSpare(){
 async function publishWorkerCatalog(){
   if(!isAdmin())return alert("Admin permission required.");
   try{
-    let writes=[];
-    for(let c of ["stock","spareParts"])for(let item of records(c)){
-      let version="v"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),catalogId=safeId(c+"-"+item.id);
-      writes.push({ref:db.doc(`${path("private")}/stockCost__${version}`),data:{sourceCollection:c,sourceId:item.id,buyingPrice:Number(item.buyingPrice||0),sellingPrice:Number(item.sellingPrice||0),createdAt:stamp()}});
-      writes.push({ref:db.doc(`${path("workerStock")}/${catalogId}`),data:{sourceCollection:c,sourceId:item.id,name:String(item.name||""),quantity:Number(item.quantity||0),sellingPrice:Number(item.sellingPrice||0),costVersion:version,active:true,updatedAt:stamp()}});
+    let writes=[],publishedIds=new Set();
+    for(let c of ["stock","spareParts"]){
+      let snap=await db.collection(path(c)).get();
+      for(let doc of snap.docs){
+        let item={id:doc.id,...doc.data()};
+        let version="v"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),catalogId=safeId(c+"-"+item.id);
+        publishedIds.add(catalogId);
+        writes.push({ref:db.doc(\`\${path("private")}/stockCost__\${version}\`),data:{sourceCollection:c,sourceId:item.id,buyingPrice:Number(item.buyingPrice||0),sellingPrice:Number(item.sellingPrice||0),createdAt:stamp()}});
+        writes.push({ref:db.doc(\`\${path("workerStock")}/\${catalogId}\`),data:{sourceCollection:c,sourceId:item.id,name:String(item.name||""),quantity:Number(item.quantity||0),sellingPrice:Number(item.sellingPrice||0),costVersion:version,active:true,updatedAt:stamp()}});
+      }
     }
+    let old=await db.collection(path("workerStock")).get();
+    for(let doc of old.docs)if(!publishedIds.has(doc.id))writes.push({ref:doc.ref,data:{active:false,updatedAt:stamp()}});
     for(let i=0;i<writes.length;i+=400){let batch=db.batch();writes.slice(i,i+400).forEach(w=>batch.set(w.ref,w.data,{merge:true}));await batch.commit()}
     say("Worker catalogue published. Buying costs remain Admin-only.");
   }catch(e){alert("Catalogue publishing failed: "+e.message)}
