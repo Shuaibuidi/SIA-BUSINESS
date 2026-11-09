@@ -103,8 +103,8 @@ async function publishWorkerCatalog(){
         let item={id:doc.id,...doc.data()};
         let version="v"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),catalogId=safeId(c+"-"+item.id);
         publishedIds.add(catalogId);
-        writes.push({ref:db.doc(\`\${path("private")}/stockCost__\${version}\`),data:{sourceCollection:c,sourceId:item.id,buyingPrice:Number(item.buyingPrice||0),sellingPrice:Number(item.sellingPrice||0),createdAt:stamp()}});
-        writes.push({ref:db.doc(\`\${path("workerStock")}/\${catalogId}\`),data:{sourceCollection:c,sourceId:item.id,name:String(item.name||""),quantity:Number(item.quantity||0),sellingPrice:Number(item.sellingPrice||0),costVersion:version,active:true,updatedAt:stamp()}});
+        writes.push({ref:db.doc(`${path("private")}/stockCost__${version}`),data:{sourceCollection:c,sourceId:item.id,buyingPrice:Number(item.buyingPrice||0),sellingPrice:Number(item.sellingPrice||0),createdAt:stamp()}});
+        writes.push({ref:db.doc(`${path("workerStock")}/${catalogId}`),data:{sourceCollection:c,sourceId:item.id,name:String(item.name||""),quantity:Number(item.quantity||0),sellingPrice:Number(item.sellingPrice||0),costVersion:version,active:true,updatedAt:stamp()}});
       }
     }
     let old=await db.collection(path("workerStock")).get();
