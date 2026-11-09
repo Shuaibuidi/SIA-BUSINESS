@@ -41,6 +41,7 @@ service cloud.firestore {
         && getAfter(stockPath).data.sourceId == request.resource.data.sourceId
         && getAfter(stockPath).data.costVersion == request.resource.data.costVersion
         && getAfter(stockPath).data.sellingPrice == request.resource.data.unitPrice
+        && request.resource.data.type == (sourceCollection == 'spareParts' ? 'spare_sale' : 'sale')
         && getAfter(sourcePath).data.lastSaleTxId == saleId
         && getAfter(sourcePath).data.quantity == get(sourcePath).data.quantity - request.resource.data.quantity
         && request.resource.data.quantity is int
@@ -70,6 +71,7 @@ service cloud.firestore {
         && getAfter(salePath).data.workerUid == request.auth.uid
         && getAfter(salePath).data.sourceId == sourceId
         && getAfter(salePath).data.sourceCollection == sourceCollection
+        && request.resource.data.updatedBy == request.auth.uid
         && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
         && request.resource.data.quantity >= 0
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleTxId','updatedAt','updatedBy']);
