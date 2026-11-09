@@ -1,48 +1,197 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function member(businessId) {
-      return signedIn() && exists(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid));
+    function signedIn() {
+      return request.auth != null;
     }
-    function role(businessId) {
-      return get(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid)).data.role;
+    function memberPath(businessId, uid) {
+      return /databases/$(database)/documents/businesses/$(businessId)/members/$(uid);
+    }
+    function member(businessId) {
+      return signedIn() && exists(memberPath(businessId, request.auth.uid));
+    }
+    function memberData(businessId) {
+      return get(memberPath(businessId)).data;
     }
     function activeMember(businessId) {
-      return member(businessId) && get(/databases/$(database)/documents/businesses/$(businessId)/members/$(request.auth.uid)).data.active == true;
+      return member(businessId) && memberData(businessId).active == true;
     }
-    function admin(businessId) { return activeMember(businessId) && role(businessId) == 'admin'; }
-    function worker(businessId) { return activeMember(businessId) && role(businessId) == 'worker'; }
+    function admin(businessId) {
+      return activeMember(businessId) && memberData(businessId).role == 'admin';
+    }
+    function worker(businessId) {
+      return activeMember(businessId) && memberData(businessId).role == 'worker';
+    }
 
-    // Existing legacy backup remains private to its signed-in account only.
+    // A worker sale must be paired with a matching stock decrement in the same
+    // Firestore transaction. Price and cost-version are taken from the
+    // Admin-published worker catalogue, not supplied freely by the worker.
+    function validSale(businessId, saleId, sourceCollection) {
+      let itemId = request.resource.data.itemId;
+      let stockPath = /databases/$(database)/documents/businesses/$(businessId)/workerStock/$(itemId);
+      let sourcePath = /databases/$(database)/documents/businesses/$(businessId)/$(sourceCollection)/$(request.resource.data.sourceId);
+      return itemId is string
+        && exists(stockPath)
+        && existsAfter(stockPath)
+        && exists(sourcePath)
+        && existsAfter(sourcePath)
+        && get(stockPath).data.sourceCollection == sourceCollection
+        && getAfter(stockPath).data.lastSaleId == saleId
+        && getAfter(stockPath).data.quantity == get(stockPath).data.quantity - request.resource.data.quantity
+        && getAfter(stockPath).data.sourceId == request.resource.data.sourceId
+        && getAfter(stockPath).data.costVersion == request.resource.data.costVersion
+        && getAfter(stockPath).data.sellingPrice == request.resource.data.unitPrice
+        && request.resource.data.type == (sourceCollection == 'spareParts' ? 'spare_sale' : 'sale')
+        && getAfter(sourcePath).data.lastSaleTxId == saleId
+        && getAfter(sourcePath).data.quantity == get(sourcePath).data.quantity - request.resource.data.quantity
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity > 0
+        && request.resource.data.total == request.resource.data.quantity * request.resource.data.unitPrice;
+    }
+    function validWorkerStockSale(businessId, itemId) {
+      let saleId = request.resource.data.lastSaleId;
+      let saleCollection = resource.data.sourceCollection == 'spareParts' ? 'spareSales' : 'transactions';
+      let salePath = /databases/$(database)/documents/businesses/$(businessId)/$(saleCollection)/$(saleId);
+      return saleId is string
+        && existsAfter(salePath)
+        && getAfter(salePath).data.workerUid == request.auth.uid
+        && getAfter(salePath).data.itemId == itemId
+        && getAfter(salePath).data.sourceId == resource.data.sourceId
+        && getAfter(salePath).data.costVersion == resource.data.costVersion
+        && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
+        && request.resource.data.quantity >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleId','updatedAt']);
+    }
+    function validPrivateStockSale(businessId, sourceId, sourceCollection) {
+      let saleId = request.resource.data.lastSaleTxId;
+      let saleCollection = sourceCollection == 'spareParts' ? 'spareSales' : 'transactions';
+      let salePath = /databases/$(database)/documents/businesses/$(businessId)/$(saleCollection)/$(saleId);
+      return saleId is string
+        && existsAfter(salePath)
+        && getAfter(salePath).data.workerUid == request.auth.uid
+        && getAfter(salePath).data.sourceId == sourceId
+        && getAfter(salePath).data.sourceCollection == sourceCollection
+        && request.resource.data.updatedBy == request.auth.uid
+        && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
+        && request.resource.data.quantity >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleTxId','updatedAt','updatedBy']);
+    }
+
+    // Legacy owner backup is not shared with workers.
     match /users/{uid}/appData/{docId} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
     match /businesses/{businessId} {
       allow read: if admin(businessId);
-      allow write: if false; // Admin SDK Cloud Functions only.
+      allow create: if signedIn()
+        && request.auth.uid == businessId
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if admin(businessId);
+      allow delete: if false;
 
       match /members/{uid} {
         allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
-        allow write: if false; // Never let a client promote itself or create accounts.
+        // Admin accounts are provisioned once by the project owner in the
+        // Firebase Console (Console writes bypass client security rules).
+        // Client-side account creation is Admin-only and limited to workers.
+        allow create: if admin(businessId)
+          && uid != request.auth.uid
+          && request.resource.data.uid == uid
+          && request.resource.data.role == 'worker'
+          && request.resource.data.active == true
+          && request.resource.data.createdBy == request.auth.uid;
+        allow update: if admin(businessId)
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.role == resource.data.role;
+        allow delete: if admin(businessId) && resource.data.role == 'worker';
       }
+
+      // Full inventory, buying prices and cost data are Admin-only.
       match /stock/{itemId} {
+        allow read, create, delete: if admin(businessId);
+        allow update: if admin(businessId) || worker(businessId) && validPrivateStockSale(businessId, itemId, 'stock');
+      }
+      match /spareParts/{itemId} {
+        allow read, create, delete: if admin(businessId);
+        allow update: if admin(businessId) || worker(businessId) && validPrivateStockSale(businessId, itemId, 'spareParts');
+      }
+      match /private/{document=**} {
+        allow read, write: if admin(businessId);
+      }
+      match /workerProfiles/{workerUid} {
+        allow read, write: if admin(businessId);
+      }
+
+      // Workers see only sellable fields in this separate catalogue.
+      match /workerStock/{itemId} {
         allow read: if activeMember(businessId);
-        allow create, update, delete: if admin(businessId);
+        allow create, delete: if admin(businessId);
+        allow update: if admin(businessId) || worker(businessId) && validWorkerStockSale(businessId, itemId);
+      }
+
+      match /transactions/{transactionId} {
+        allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
+        allow create: if admin(businessId) || worker(businessId)
+          && request.resource.data.workerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['itemId','sourceId','sourceCollection','costVersion','itemName','quantity','unitPrice','total','customerName','customerPhone','workerUid','workerName','type','createdAt'])
+          && request.resource.data.sourceCollection == 'stock'
+          && validSale(businessId, transactionId, 'stock');
+        allow update, delete: if admin(businessId);
+      }
+      match /spareSales/{saleId} {
+        allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
+        allow create: if admin(businessId) || worker(businessId)
+          && request.resource.data.workerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['itemId','sourceId','sourceCollection','costVersion','itemName','quantity','unitPrice','total','customerName','customerPhone','workerUid','workerName','type','createdAt'])
+          && request.resource.data.sourceCollection == 'spareParts'
+          && validSale(businessId, saleId, 'spareParts');
+        allow update, delete: if admin(businessId);
+      }
+
+      match /jobs/{jobId} {
+        allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
+        allow create: if admin(businessId) || worker(businessId)
+          && request.resource.data.workerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['customerName','customerPhone','device','issue','fee','notes','status','workerUid','workerName','createdAt','createdBy']);
+        allow update: if admin(businessId) || worker(businessId)
+          && resource.data.workerUid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','updatedBy'])
+          && request.resource.data.status in ['Received','Diagnosing','Waiting for parts','In progress','Completed','Collected'];
+        allow delete: if admin(businessId);
+      }
+      match /services/{serviceId} {
+        allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
+        allow create: if admin(businessId) || worker(businessId)
+          && request.resource.data.workerUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['customerName','phone','serviceType','description','quantity','amount','cost','workerUid','workerName','createdAt','createdBy'])
+          && (!('cost' in request.resource.data) || admin(businessId));
+        allow update, delete: if admin(businessId);
+      }
+      match /invoices/{invoiceId} {
+        allow read: if admin(businessId) || worker(businessId) && resource.data.recordedByUid == request.auth.uid;
+        allow create: if admin(businessId) || worker(businessId)
+          && request.resource.data.recordedByUid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['invoiceNo','customerName','phone','description','quantity','unitPrice','total','paid','balance','sourceType','sourceId','recordedBy','recordedByUid','createdAt','createdBy']);
+        allow update, delete: if admin(businessId);
       }
       match /customers/{customerId} {
         allow read: if activeMember(businessId);
         allow create: if activeMember(businessId)
-          && request.resource.data.keys().hasOnly(['name','phone','address','createdBy','createdAt'])
+          && request.resource.data.keys().hasOnly(['name','phone','email','createdBy','createdAt'])
           && request.resource.data.createdBy == request.auth.uid;
         allow update, delete: if admin(businessId);
       }
-      match /transactions/{transactionId} {
-        allow read: if admin(businessId) || (worker(businessId) && resource.data.workerUid == request.auth.uid);
-        allow create, update, delete: if false; // All transactions go through trusted callable functions.
+      match /suppliers/{supplierId} {
+        allow read, write: if admin(businessId);
       }
-      match /private/{document=**} {
+      match /purchases/{purchaseId} {
+        allow read, write: if admin(businessId);
+      }
+      match /expenses/{expenseId} {
+        allow read, write: if admin(businessId);
+      }
+      match /cashbook/{entryId} {
         allow read, write: if admin(businessId);
       }
     }
