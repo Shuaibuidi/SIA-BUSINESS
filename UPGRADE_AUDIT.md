@@ -1,34 +1,35 @@
 # S I A BUSINESS upgrade audit
 
-This branch is the safe working branch for the Admin/Worker upgrade. The live `main` branch has not been changed.
+This is a safe working branch for the Admin/Worker upgrade:
+`codex/sia-business-secure-admin-worker`. The live `main` branch has not been changed.
 
-## Repository findings (2026-11-09)
+## Repository findings
 
-- Default branch: `main`.
-- The repository contains both `index.html` and `Index.html` (different files on case-sensitive hosting).
-- `firebase.json` points Cloud Functions at `functions/`, but the repository tree has no `functions/` directory. A root-level `index.js` exists instead.
-- `firestore.rules` describes a `businesses/{businessId}/...` data model.
-- The full offline-first app previously supplied by the owner stores its cloud backup at `users/{uid}/appData/main`, with the complete business database inside one `payload` field. That model cannot safely provide worker access: Firestore rules cannot hide selected fields inside a shared document.
-- The existing full app includes sensitive owner data (buying costs, expenses, salary/payment records, profit, invoices, settings and worker records). Do not expose the complete owner payload to worker accounts.
-- The current README describes a Cloud Functions workflow. The requested target is Spark-compatible and must not depend on Cloud Functions or Blaze billing.
+- The default branch is `main`.
+- The repository contains both `index.html` and `Index.html`; these are different files on case-sensitive hosting. This branch changes the lowercase `index.html`.
+- The original `firebase.json` referenced a missing `functions/` directory. This branch removes that Cloud Functions deploy target and configures Firestore rules plus Firebase Hosting.
+- The legacy app stores an owner cloud backup at `users/{uid}/appData/{docId}`. Rules keep that path readable/writable only by its owning signed-in account.
+- The previous single-payload model cannot be shared with workers because Firestore rules cannot hide selected fields inside one shared document.
+- Sensitive information includes buying costs, expenses, purchases, payroll/salary, profit, private settings and worker identity details.
 
-## Non-negotiable data safety
+## Changes made on this branch
 
-- Do not delete, overwrite, or automatically migrate existing local records, existing `users/{uid}/appData/main` backups, or existing worker records/accounts.
-- Keep the current live `main` branch untouched until the replacement is reviewed and tested.
-- Do not merge legacy and new business data automatically.
-- Keep an explicit owner-only legacy backup path. Any future migration must be opt-in, backed up, and separately verified.
+- Removed public worker self-registration.
+- Added Admin-only worker account creation using a secondary Firebase Auth instance, so the Admin's main session is not replaced.
+- Added Admin activate/deactivate controls for worker logins.
+- Restricted stock and spare-part master documents and private cost snapshots to Admin.
+- Added a worker-safe catalogue with item name, quantity and selling price only.
+- Added paired Firestore transaction checks so a worker sale must create a matching sale record and decrement both the worker catalogue and master inventory quantities.
+- Worker sales, services, repair jobs and invoices are restricted to the worker who created them; workers cannot delete or edit transaction records.
+- Expenses, purchases, cashbook, suppliers, worker profiles and private cost snapshots are Admin-only.
+- Kept the owner-only legacy backup path unchanged.
+- Removed the Cloud Functions deployment target to keep the intended Firebase Spark setup free of Functions/Blaze dependencies.
 
-## Upgrade direction
+## Safety and release status
 
-Build a matching client and Firestore rules model for Firebase Spark:
-- Email/password authentication.
-- Owner/admin membership established only for the configured owner UID; worker membership must be explicitly granted by the owner.
-- Separate Firestore documents/collections for worker-visible operational data and owner-only financial/private data. Never store the whole business database in one worker-readable document.
-- Workers may create only their own permitted operational records; they must not read buying costs, expenses, payroll, profit, private settings, or other workers' private records.
-- Admin-only writes for stock, staff, prices/costs, expenses, payroll, and corrections.
-- Offline local records remain on-device and are not silently uploaded into the new shared workspace.
-
-## Before merging
-
-Test rules with the Firebase Emulator or Rules Playground, verify owner and worker access separately, and confirm the legacy backup path remains readable by its owning account only. Do not deploy rules or replace the live app until those checks pass.
+- No live `main` branch files have been changed.
+- No Firestore rules or Hosting deployment has been performed from this branch.
+- No existing records or worker accounts have been migrated or deleted.
+- Rules still require Emulator/Rules Playground testing with separate Admin and Worker accounts.
+- Offline queued writes, deliberate legacy migration, and APK/device testing remain incomplete.
+- Do not merge or distribute until tests pass.
