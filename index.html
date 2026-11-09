@@ -64,13 +64,13 @@ function dashboard(s){let tx=[...records("transactions"),...records("spareSales"
 
 function stockScreen(s){s.innerHTML=`${isAdmin()?`<div class="card"><h3>Stock management</h3><div class="grid">${formField("stName","Product name")}${formField("stQty","Quantity","number")}${formField("stLow","Low-stock alert at","number")}${formField("stBuy","Buying price (MK)","number","","0.01")}${formField("stSell","Selling price (MK)","number","","0.01")}</div><button onclick="saveStock()">Save stock item</button></div>`:""}<div class="card"><h3>Stock list</h3>${listHtml("stock",p=>`<b>📦 ${esc(p.name)}</b><br><span class="muted">Available quantity: ${p.quantity} · Low-stock alert: ${Number(p.lowStockAt??5)}</span><br>${Number(p.quantity||0)<=Number(p.lowStockAt??5)?`<b style="color:#ffd18b">LOW STOCK</b><br>`:""}<b>Selling price: ${money(p.sellingPrice)}</b>${isAdmin()?`<br>Buying: ${money(p.buyingPrice)} · Profit/unit: ${money(Number(p.sellingPrice)-Number(p.buyingPrice))}<div class="actions"><button onclick="editItem('stock','${p.id}')">Edit</button><button class="danger" onclick="removeDoc('stock','${p.id}')">Delete</button></div>`:""}`)}</div>`}
 
-async function saveStock(){let name=val("stName"),quantity=num("stQty"),lowStockAt=val("stLow")===""?5:num("stLow"),buyingPrice=num("stBuy"),sellingPrice=num("stSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid stock details.");try{await db.doc(`${path("stock")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Stock item saved.");renderScreen()}catch(e){alert("Could not save stock: "+e.message)}}
+async function saveStock(){if(!isAdmin())return alert("Admin permission required.");let name=val("stName"),quantity=num("stQty"),lowStockAt=val("stLow")===""?5:num("stLow"),buyingPrice=num("stBuy"),sellingPrice=num("stSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid stock details.");try{await db.doc(`${path("stock")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,createdAt:stamp(),createdBy:user.uid,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Stock item saved.");renderScreen()}catch(e){alert("Could not save stock: "+e.message)}}
 
 async function editItem(c,id){if(!isAdmin())return alert("Admin only.");let x=records(c).find(v=>v.id===id);if(!x)return;let name=prompt("Name:",x.name);if(name===null)return;let q=Number(prompt("Quantity:",x.quantity)),b=Number(prompt("Buying price:",x.buyingPrice||0)),p=Number(prompt("Selling price:",x.sellingPrice||0));if(!name.trim()||!Number.isInteger(q)||q<0||!Number.isFinite(b)||b<0||!Number.isFinite(p)||p<0)return alert("Invalid details.");try{await updateDoc(c,id,{name:name.trim(),quantity:q,buyingPrice:b,sellingPrice:p});say("Item updated.");renderScreen()}catch(e){alert("Update failed: "+e.message)}}
 
 function spareScreen(s){s.innerHTML=`${isAdmin()?`<div class="card"><h3>Spare parts management</h3><div class="grid">${formField("spName","Spare part name")}${formField("spQty","Quantity","number")}${formField("spLow","Low-stock alert at","number")}${formField("spBuy","Buying price (MK)","number","","0.01")}${formField("spSell","Selling price (MK)","number","","0.01")}</div><button onclick="saveSpare()">Save spare part</button></div>`:""}<div class="card"><h3>Spare parts list</h3>${listHtml("spareParts",p=>`<b>🔧 ${esc(p.name)}</b><br>Qty: ${p.quantity} · ${Number(p.quantity||0)<=Number(p.lowStockAt??5)?`<b style="color:#ffd18b">LOW STOCK</b> · `:""}Selling: ${money(p.sellingPrice)}${isAdmin()?`<br>Buy: ${money(p.buyingPrice)} · Profit/unit: ${money(p.sellingPrice-p.buyingPrice)} · Potential profit: ${money((p.sellingPrice-p.buyingPrice)*p.quantity)}<div class="actions"><button onclick="editItem('spareParts','${p.id}')">Edit</button><button class="danger" onclick="removeDoc('spareParts','${p.id}')">Delete</button></div>`:""}`)}</div>`}
 
-async function saveSpare(){let name=val("spName"),quantity=num("spQty"),lowStockAt=val("spLow")===""?5:num("spLow"),buyingPrice=num("spBuy"),sellingPrice=num("spSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid spare part details.");try{await db.doc(`${path("spareParts")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Spare part saved.");renderScreen()}catch(e){alert("Could not save spare part: "+e.message)}}
+async function saveSpare(){if(!isAdmin())return alert("Admin permission required.");let name=val("spName"),quantity=num("spQty"),lowStockAt=val("spLow")===""?5:num("spLow"),buyingPrice=num("spBuy"),sellingPrice=num("spSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid spare part details.");try{await db.doc(`${path("spareParts")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,createdAt:stamp(),createdBy:user.uid,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Spare part saved.");renderScreen()}catch(e){alert("Could not save spare part: "+e.message)}}
 
 function salesScreen(s){let so=records("stock").map(x=>`<option value="${x.id}">${esc(x.name)} (${x.quantity} available)</option>`).join(""),po=records("spareParts").map(x=>`<option value="${x.id}">${esc(x.name)} (${x.quantity} available)</option>`).join("");s.innerHTML=`<div class="card"><h3>Record stock sale</h3><div class="grid">${selectField("saleStock","Stock item",so)}${formField("saleQty","Quantity","number")}${formField("saleCustomer","Customer name")}${formField("salePhone","Customer phone")}${formField("salePaid","Amount paid (MK)","number","","0.01")}</div><button onclick="sellItem('stock')">Record stock sale</button></div><div class="card"><h3>Record spare part sale</h3><div class="grid">${selectField("saleSpare","Spare part",po)}${formField("spareQtySale","Quantity","number")}${formField("spareCustomer","Customer name")}${formField("sparePhone","Customer phone")}${formField("sparePaid","Amount paid (MK)","number","","0.01")}</div><button onclick="sellItem('spareParts')">Record spare part sale</button></div><div class="card"><h3>Sales history</h3><h3>Stock sales</h3>${listHtml("transactions",x=>`<b>🧾 ${esc(x.itemName)}</b> × ${x.quantity} = <b>${money(x.total)}</b><br><span class="muted">${esc(x.customerName||"Walk-in")} · ${esc(x.workerName||"")} · ${dateText(x.createdAt)}</span>${isAdmin()?`<br>Profit: ${money(x.profit||0)}${adminDelete("transactions",x)}`:""}`)}<h3>Spare part sales</h3>${listHtml("spareSales",x=>`<b>🧾 ${esc(x.itemName)}</b> × ${x.quantity} = <b>${money(x.total)}</b><br><span class="muted">${esc(x.customerName||"Walk-in")} · ${esc(x.workerName||"")} · ${dateText(x.createdAt)}</span>${isAdmin()?`<br>Profit: ${money(x.profit||0)}${adminDelete("spareSales",x)}`:""}`)}</div>`}
 
@@ -244,7 +244,9 @@ lowStockAt:5,
 buyingPrice:unitCost,
 sellingPrice:unitCost,
 createdAt:stamp(),
-createdBy:user.uid
+createdBy:user.uid,
+updatedAt:stamp(),
+updatedBy:user.uid
 });
 }
 });
@@ -259,14 +261,8 @@ supplier,
 reference
 });
 
-await addDoc("expenses",{
-category:"Stock purchase",
-description:`Purchase of ${name}`,
-amount:totalCost,
-reference,
-supplier,
-purchase:true
-});
+// Purchases are recorded in the Purchases ledger and stock value.
+      // They are not operating expenses; cost of goods is reflected when items sell.
 
 say("Purchase recorded and stock quantity updated.");
 renderScreen();
@@ -560,7 +556,7 @@ return;
 }
 let stockValue=records("stock").reduce((a,x)=>a+Number(x.quantity||0)*Number(x.buyingPrice||0),0);
 let spareValue=records("spareParts").reduce((a,x)=>a+Number(x.quantity||0)*Number(x.buyingPrice||0),0);
-let expenses=records("expenses").reduce((a,x)=>a+Number(x.amount||0),0);
+let expenses=records("expenses").filter(x=>!x.purchase).reduce((a,x)=>a+Number(x.amount||0),0);
 let stockProfit=records("transactions").reduce((a,x)=>a+Number(x.profit||0),0);
 let spareProfit=records("spareSales").reduce((a,x)=>a+Number(x.profit||0),0);
 let printProfit=records("services").reduce((a,x)=>a+Number(x.amount||0)-Number(x.cost||0),0);
@@ -740,25 +736,15 @@ let collections=[
 "cashbook","invoices"
 ];
 
-for(let c of collections){
-listen(c,r=>r.where("createdBy","==",user.uid));
-}
+// All active members use the same business inventory and records.
+    // Access is controlled by Firestore Security Rules, not by client-side filters.
+    for(let c of collections){
+      listen(c);
+    }
 
-if(isAdmin()){
-listen("members");
-listen("stock");
-listen("spareParts");
-listen("transactions");
-listen("spareSales");
-listen("jobs");
-listen("services");
-listen("customers");
-listen("suppliers");
-listen("purchases");
-listen("expenses");
-listen("cashbook");
-listen("invoices");
-}
+    if(isAdmin()){
+      listen("members");
+    }
 }catch(e){
 say("Account setup error: "+e.message);
 }
