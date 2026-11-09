@@ -1,7 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
+    function signedIn() {
+      return request.auth != null;
+    }
     function memberPath(businessId, uid) {
       return /databases/$(database)/documents/businesses/$(businessId)/members/$(uid);
     }
@@ -20,39 +22,50 @@ service cloud.firestore {
     function worker(businessId) {
       return activeMember(businessId) && memberData(businessId).role == 'worker';
     }
-    function ownRecord() {
-      return request.resource.data.workerUid == request.auth.uid;
+
+    // A worker sale must be paired with a matching stock decrement in the same
+    // Firestore transaction. Price and cost-version are taken from the
+    // Admin-published worker catalogue, not supplied freely by the worker.
+    function validSale(businessId, saleId, sourceCollection) {
+      let itemId = request.resource.data.itemId;
+      let stockPath = /databases/$(database)/documents/businesses/$(businessId)/workerStock/$(itemId);
+      return itemId is string
+        && exists(stockPath)
+        && existsAfter(stockPath)
+        && get(stockPath).data.sourceCollection == sourceCollection
+        && getAfter(stockPath).data.lastSaleId == saleId
+        && getAfter(stockPath).data.quantity == get(stockPath).data.quantity - request.resource.data.quantity
+        && getAfter(stockPath).data.sourceId == request.resource.data.sourceId
+        && getAfter(stockPath).data.costVersion == request.resource.data.costVersion
+        && getAfter(stockPath).data.sellingPrice == request.resource.data.unitPrice
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity > 0
+        && request.resource.data.total == request.resource.data.quantity * request.resource.data.unitPrice;
     }
-    function validWorkerStockSale(businessId, stockId) {
+    function validWorkerStockSale(businessId, itemId) {
       let saleId = request.resource.data.lastSaleId;
       let saleCollection = resource.data.sourceCollection == 'spareParts' ? 'spareSales' : 'transactions';
       let salePath = /databases/$(database)/documents/businesses/$(businessId)/$(saleCollection)/$(saleId);
       return saleId is string
         && existsAfter(salePath)
         && getAfter(salePath).data.workerUid == request.auth.uid
-        && getAfter(salePath).data.itemId == stockId
+        && getAfter(salePath).data.itemId == itemId
         && getAfter(salePath).data.sourceId == resource.data.sourceId
         && getAfter(salePath).data.costVersion == resource.data.costVersion
         && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
         && request.resource.data.quantity >= 0
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleId','updatedAt']);
     }
-    function validSaleCreate(businessId, stockId, collectionName) {
-      let stockPath = /databases/$(database)/documents/businesses/$(businessId)/workerStock/$(stockId);
-      return exists(stockPath)
-        && existsAfter(stockPath)
-        && getAfter(stockPath).data.lastSaleId == stockId // replaced by the actual document check below
-        && false;
-    }
 
-    // Legacy backups remain private to the account that created them.
+    // Legacy owner backup is not shared with workers.
     match /users/{uid}/appData/{docId} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
     match /businesses/{businessId} {
       allow read: if admin(businessId);
-      allow create: if signedIn() && request.auth.uid == businessId
+      allow create: if signedIn()
+        && request.auth.uid == businessId
         && request.resource.data.ownerUid == request.auth.uid;
       allow update: if admin(businessId);
       allow delete: if false;
@@ -60,11 +73,14 @@ service cloud.firestore {
       match /members/{uid} {
         allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
         allow create: if admin(businessId)
+          && uid != request.auth.uid
           && request.resource.data.uid == uid
           && request.resource.data.role == 'worker'
           && request.resource.data.active == true
           && request.resource.data.createdBy == request.auth.uid
-          || signedIn() && request.auth.uid == businessId && uid == businessId
+          || signedIn()
+          && request.auth.uid == businessId
+          && uid == businessId
           && request.resource.data.uid == uid
           && request.resource.data.role == 'admin'
           && request.resource.data.active == true;
@@ -74,25 +90,34 @@ service cloud.firestore {
         allow delete: if admin(businessId) && resource.data.role == 'worker';
       }
 
+      // Full inventory, buying prices and cost data are Admin-only.
       match /stock/{itemId} {
         allow read, write: if admin(businessId);
       }
       match /spareParts/{itemId} {
         allow read, write: if admin(businessId);
       }
+      match /private/{document=**} {
+        allow read, write: if admin(businessId);
+      }
+      match /workerProfiles/{workerUid} {
+        allow read, write: if admin(businessId);
+      }
+
+      // Workers see only sellable fields in this separate catalogue.
       match /workerStock/{itemId} {
         allow read: if activeMember(businessId);
         allow create, delete: if admin(businessId);
         allow update: if admin(businessId) || worker(businessId) && validWorkerStockSale(businessId, itemId);
       }
+
       match /transactions/{transactionId} {
         allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
         allow create: if admin(businessId) || worker(businessId)
           && request.resource.data.workerUid == request.auth.uid
           && request.resource.data.keys().hasOnly(['itemId','sourceId','sourceCollection','costVersion','itemName','quantity','unitPrice','total','customerName','customerPhone','workerUid','workerName','type','createdAt'])
           && request.resource.data.sourceCollection == 'stock'
-          && existsAfter(/databases/$(database)/documents/businesses/$(businessId)/workerStock/$(request.resource.data.itemId))
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/workerStock/$(request.resource.data.itemId)).data.lastSaleId == transactionId;
+          && validSale(businessId, transactionId, 'stock');
         allow update, delete: if admin(businessId);
       }
       match /spareSales/{saleId} {
@@ -101,10 +126,10 @@ service cloud.firestore {
           && request.resource.data.workerUid == request.auth.uid
           && request.resource.data.keys().hasOnly(['itemId','sourceId','sourceCollection','costVersion','itemName','quantity','unitPrice','total','customerName','customerPhone','workerUid','workerName','type','createdAt'])
           && request.resource.data.sourceCollection == 'spareParts'
-          && existsAfter(/databases/$(database)/documents/businesses/$(businessId)/workerStock/$(request.resource.data.itemId))
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/workerStock/$(request.resource.data.itemId)).data.lastSaleId == saleId;
+          && validSale(businessId, saleId, 'spareParts');
         allow update, delete: if admin(businessId);
       }
+
       match /jobs/{jobId} {
         allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
         allow create: if admin(businessId) || worker(businessId)
@@ -120,7 +145,8 @@ service cloud.firestore {
         allow read: if admin(businessId) || worker(businessId) && resource.data.workerUid == request.auth.uid;
         allow create: if admin(businessId) || worker(businessId)
           && request.resource.data.workerUid == request.auth.uid
-          && request.resource.data.keys().hasOnly(['customerName','phone','serviceType','description','quantity','amount','workerUid','workerName','createdAt','createdBy']);
+          && request.resource.data.keys().hasOnly(['customerName','phone','serviceType','description','quantity','amount','cost','workerUid','workerName','createdAt','createdBy'])
+          && (!('cost' in request.resource.data) || admin(businessId));
         allow update, delete: if admin(businessId);
       }
       match /invoices/{invoiceId} {
@@ -147,12 +173,6 @@ service cloud.firestore {
         allow read, write: if admin(businessId);
       }
       match /cashbook/{entryId} {
-        allow read, write: if admin(businessId);
-      }
-      match /workerProfiles/{workerUid} {
-        allow read, write: if admin(businessId);
-      }
-      match /private/{document=**} {
         allow read, write: if admin(businessId);
       }
     }
