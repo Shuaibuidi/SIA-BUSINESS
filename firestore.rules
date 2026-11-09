@@ -92,18 +92,15 @@ service cloud.firestore {
 
       match /members/{uid} {
         allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
+        // Admin accounts are provisioned once by the project owner in the
+        // Firebase Console (Console writes bypass client security rules).
+        // Client-side account creation is Admin-only and limited to workers.
         allow create: if admin(businessId)
           && uid != request.auth.uid
           && request.resource.data.uid == uid
           && request.resource.data.role == 'worker'
           && request.resource.data.active == true
-          && request.resource.data.createdBy == request.auth.uid
-          || signedIn()
-          && request.auth.uid == businessId
-          && uid == businessId
-          && request.resource.data.uid == uid
-          && request.resource.data.role == 'admin'
-          && request.resource.data.active == true;
+          && request.resource.data.createdBy == request.auth.uid;
         allow update: if admin(businessId)
           && request.resource.data.uid == resource.data.uid
           && request.resource.data.role == resource.data.role;
