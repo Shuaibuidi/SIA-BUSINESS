@@ -132,6 +132,8 @@ async function sellItem(kind){
       let d=snap.data(),total=qty*Number(d.sellingPrice||0);
       saleData={invoiceNo:"SIA-"+Date.now().toString().slice(-8),customerName,phone,description:`${d.name} × ${qty}`,quantity:qty,unitPrice:Number(d.sellingPrice||0),total,paid:paid===null?total:paid,balance:total-(paid===null?total:paid),sourceType:spare?"spare_sale":"sale",sourceId:tx.id,recordedBy:invoiceRecorder(),recordedByUid:user.uid};
       t.update(ref,{quantity:Number(d.quantity)-qty,lastSaleId:tx.id,updatedAt:stamp()});
+      let sourceRef=db.doc(`${path(kind)}/${d.sourceId}`);
+      t.update(sourceRef,{quantity:firebase.firestore.FieldValue.increment(-qty),lastSaleTxId:tx.id,updatedAt:stamp(),updatedBy:user.uid});
       t.set(tx,{itemId:id,sourceId:d.sourceId,sourceCollection:kind,costVersion:d.costVersion||"",itemName:d.name,quantity:qty,unitPrice:Number(d.sellingPrice||0),total,customerName,customerPhone:phone,workerUid:user.uid,workerName:member.name||user.email,type:spare?"spare_sale":"sale",createdAt:stamp()});
     });
     let invRef=await addDoc("invoices",saleData);saleData.id=invRef.id;saleData.createdAt=new Date();
