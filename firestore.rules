@@ -29,15 +29,20 @@ service cloud.firestore {
     function validSale(businessId, saleId, sourceCollection) {
       let itemId = request.resource.data.itemId;
       let stockPath = /databases/$(database)/documents/businesses/$(businessId)/workerStock/$(itemId);
+      let sourcePath = /databases/$(database)/documents/businesses/$(businessId)/$(sourceCollection)/$(request.resource.data.sourceId);
       return itemId is string
         && exists(stockPath)
         && existsAfter(stockPath)
+        && exists(sourcePath)
+        && existsAfter(sourcePath)
         && get(stockPath).data.sourceCollection == sourceCollection
         && getAfter(stockPath).data.lastSaleId == saleId
         && getAfter(stockPath).data.quantity == get(stockPath).data.quantity - request.resource.data.quantity
         && getAfter(stockPath).data.sourceId == request.resource.data.sourceId
         && getAfter(stockPath).data.costVersion == request.resource.data.costVersion
         && getAfter(stockPath).data.sellingPrice == request.resource.data.unitPrice
+        && getAfter(sourcePath).data.lastSaleTxId == saleId
+        && getAfter(sourcePath).data.quantity == get(sourcePath).data.quantity - request.resource.data.quantity
         && request.resource.data.quantity is int
         && request.resource.data.quantity > 0
         && request.resource.data.total == request.resource.data.quantity * request.resource.data.unitPrice;
@@ -55,6 +60,19 @@ service cloud.firestore {
         && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
         && request.resource.data.quantity >= 0
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleId','updatedAt']);
+    }
+    function validPrivateStockSale(businessId, sourceId, sourceCollection) {
+      let saleId = request.resource.data.lastSaleTxId;
+      let saleCollection = sourceCollection == 'spareParts' ? 'spareSales' : 'transactions';
+      let salePath = /databases/$(database)/documents/businesses/$(businessId)/$(saleCollection)/$(saleId);
+      return saleId is string
+        && existsAfter(salePath)
+        && getAfter(salePath).data.workerUid == request.auth.uid
+        && getAfter(salePath).data.sourceId == sourceId
+        && getAfter(salePath).data.sourceCollection == sourceCollection
+        && getAfter(salePath).data.quantity == resource.data.quantity - request.resource.data.quantity
+        && request.resource.data.quantity >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastSaleTxId','updatedAt','updatedBy']);
     }
 
     // Legacy owner backup is not shared with workers.
@@ -92,10 +110,12 @@ service cloud.firestore {
 
       // Full inventory, buying prices and cost data are Admin-only.
       match /stock/{itemId} {
-        allow read, write: if admin(businessId);
+        allow read, create, delete: if admin(businessId);
+        allow update: if admin(businessId) || worker(businessId) && validPrivateStockSale(businessId, itemId, 'stock');
       }
       match /spareParts/{itemId} {
-        allow read, write: if admin(businessId);
+        allow read, create, delete: if admin(businessId);
+        allow update: if admin(businessId) || worker(businessId) && validPrivateStockSale(businessId, itemId, 'spareParts');
       }
       match /private/{document=**} {
         allow read, write: if admin(businessId);
