@@ -105,9 +105,9 @@ async function editItem(c,id){
   if(!isAdmin())return alert("Admin only.");
   let x=records(c).find(v=>v.id===id);if(!x)return;
   let name=prompt("Name:",x.name);if(name===null)return;
-  let q=Number(prompt("Quantity:",x.quantity)),b=Number(prompt("Buying price:",x.buyingPrice||0)),p=Number(prompt("Selling price:",x.sellingPrice||0));
-  if(!name.trim()||!Number.isInteger(q)||q<0||!Number.isFinite(b)||b<0||!Number.isFinite(p)||p<0)return alert("Invalid details.");
-  try{await updateDoc(c,id,{name:name.trim(),quantity:q,buyingPrice:b,sellingPrice:p});await publishWorkerCatalog();say("Item updated and worker catalogue refreshed.");renderScreen()}
+  let q=Number(prompt("Quantity:",x.quantity)),m=Number(prompt("Low-stock alert at quantity:",x.minStock??5)),b=Number(prompt("Buying price:",x.buyingPrice||0)),p=Number(prompt("Selling price:",x.sellingPrice||0));
+  if(!name.trim()||!Number.isInteger(q)||q<0||!Number.isInteger(m)||m<0||!Number.isFinite(b)||b<0||!Number.isFinite(p)||p<0)return alert("Invalid details.");
+  try{await updateDoc(c,id,{name:name.trim(),quantity:q,minStock:m,buyingPrice:b,sellingPrice:p});await publishWorkerCatalog();say("Item updated and worker catalogue refreshed.");renderScreen()}
   catch(e){alert("Update failed: "+e.message)}
 }
 function spareScreen(s){
