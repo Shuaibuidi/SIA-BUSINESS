@@ -101,8 +101,9 @@ jobs:
                   scopes: ['https://www.googleapis.com/auth/drive.file']
                 }
               });
-              const token = response?.result?.accessToken;
-              if (!token) throw new Error('Google did not return a Drive access token. Please try connecting again.');
+              const accessToken = response?.result?.accessToken;
+              const token = typeof accessToken === 'string' ? accessToken : accessToken?.token;
+              if (!token || typeof token !== 'string') throw new Error('Google did not return a valid Drive access token. Please connect again.');
               return token;
             }
           };
