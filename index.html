@@ -842,8 +842,8 @@ s.innerHTML=`
 <div class="card">
 <h3>Account Information</h3>
 <p>Email: ${esc(user.email)}</p>
-<p>Name: ${esc(member.name||"Not set")}</p>
-<p>Role: ${esc(role)}</p>
+<p>Name: ${esc(role==="admin"?(member.name||"Shuaibu Idi"):(member.name||"Not set"))}</p>
+<p>Role: ${esc(role==="admin"?"CEO":role)}</p>
 </div>
 <div class="card">
 <h3>Data Connection</h3>
@@ -939,8 +939,8 @@ role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logoutBtn").classList.remove("hidden");
-$("welcome").textContent=role==="admin"?"Welcome: The Manager":"Welcome, "+(member.name||user.email);
-$("roleTag").textContent="Role: "+role;
+$("welcome").textContent=role==="admin"?"Welcome Shuaibu Idi":"Welcome, "+(member.name||user.email);
+$("roleTag").textContent="Role: "+(role==="admin"?"CEO":role);
 renderNav();
 go("dashboard");
 
