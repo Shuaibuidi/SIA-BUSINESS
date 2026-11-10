@@ -46,7 +46,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 </head>
 <body><div class="wrap">
 <header id="appHeader" class="row"><div><h1>S I A BUSINESS</h1></div></header>
-<section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><button class="secondary" onclick="register()">Create worker account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
+<section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
 <section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
@@ -66,7 +66,7 @@ const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`
 function invoiceRecorder(){return isAdmin()?"Managing Director":(String(member?.name||user?.email||"Worker").trim())}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Workers"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
+function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
 function renderNav(){$("nav").innerHTML=navItems().map(([id,label])=>`<button class="${current===id?"active":""}" onclick="go('${id}')">${label}</button>`).join("")}
 function go(id){current=id;renderNav();renderScreen();say("")}
 function formField(id,label,type="text",placeholder="",step=""){return `<div><label>${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}" ${step?`step="${step}"`:""}></div>`}
@@ -532,29 +532,29 @@ return;
 }
 s.innerHTML=`
 <div class="card">
-<h3>Worker Management</h3>
-<p class="muted">Workers must first create accounts using the sign-in screen. Their accounts can then be activated here.</p>
-<h3>Registered Workers</h3>
+<h3>Member Management</h3>
+<p class="muted">Members must first create accounts using the sign-in screen. Their accounts can then be activated here.</p>
+<h3>Registered Members</h3>
 ${records("members").filter(w=>w.active!==false).map(w=>`<div class="item">
-<b>👤 ${esc(w.name||w.email||w.id)}</b><br>
-Email: ${esc(w.email||"")}<br>
+<b>👤 ${esc(w.name||"Name Not Set")}</b><br>
+Email: ${esc(w.email||"Email Not Set")}<br>
 Role: ${esc(w.role||"worker")}<br>
 Status: ${w.active===false?"Inactive":"Active"}<br>
 <div class="actions">
-<button onclick="editWorkerName('${w.id}')">Edit Worker Name</button>
+<button onclick="editWorkerName('${w.id}')">Edit Member Name</button>
 <button onclick="changeWorker('${w.id}')">Change Role / Status</button>
 </div>
 </div>
-`).join("")||"<p class='muted'>No active workers found.</p>"}
+`).join("")||"<p class='muted'>No active members found.</p>"}
 </div>`;
 }
 
 async function editWorkerName(id){
 if(!isAdmin())return alert("Business Owner permission required.");
 let w=records("members").find(x=>x.id===id);
-if(!w)return alert("Worker record not found.");
-if(w.role!=="worker")return alert("You can edit names for worker accounts only.");
-let newName=prompt("Enter the worker's new name:",w.name||"");
+if(!w)return alert("Member record not found.");
+if(w.role!=="worker")return alert("You can edit names for member accounts only.");
+let newName=prompt("Enter the member's new name:",w.name||"");
 if(newName===null)return;
 newName=newName.trim();
 if(!newName)return alert("Worker name cannot be empty.");
@@ -563,7 +563,7 @@ await db.doc(`${path("members")}/${id}`).update({
 name:newName,
 updatedAt:stamp()
 });
-say("Worker name updated successfully.");
+say("Member name updated successfully.");
 renderScreen();
 }catch(e){alert("Could not update worker name: "+e.message)}
 }
@@ -583,7 +583,7 @@ role:roleChoice,
 active:activeChoice,
 updatedAt:stamp()
 });
-say("Worker updated.");
+say("Member updated.");
 renderScreen();
 }catch(e){alert(e.message)}
 }
@@ -875,8 +875,39 @@ ${isAdmin()?`<div class="card">
 </div>`: ""}
 <div class="card">
 <h3>Security</h3>
+${isAdmin()?`<h4>Change Business Owner Password</h4>
+<p class="muted">Enter your current password, then choose a new password. You will remain signed in if the change succeeds.</p>
+<label>Current Password</label><input id="adminCurrentPassword" type="password" autocomplete="current-password">
+<label>New Password</label><input id="adminNewPassword" type="password" autocomplete="new-password">
+<label>Confirm New Password</label><input id="adminConfirmPassword" type="password" autocomplete="new-password">
+<button onclick="changeAdminPassword()">Change Password</button>`:""}
 <button class="secondary" onclick="logout()">Sign Out</button>
 </div>`;
+}
+
+async function changeAdminPassword(){
+if(!isAdmin())return alert("Only the Business Owner can change this password here.");
+const currentPassword=val("adminCurrentPassword");
+const newPassword=val("adminNewPassword");
+const confirmPassword=val("adminConfirmPassword");
+if(!currentPassword||!newPassword||!confirmPassword)return alert("Complete all three password fields.");
+if(newPassword.length<6)return alert("The new password must contain at least 6 characters.");
+if(newPassword!==confirmPassword)return alert("The new passwords do not match.");
+if(currentPassword===newPassword)return alert("Choose a different password from your current one.");
+try{
+const currentUser=auth.currentUser;
+if(!currentUser||!currentUser.email)throw new Error("Please sign in again before changing your password.");
+const credential=firebase.auth.EmailAuthProvider.credential(currentUser.email,currentPassword);
+await currentUser.reauthenticateWithCredential(credential);
+await currentUser.updatePassword(newPassword);
+$("adminCurrentPassword").value="";
+$("adminNewPassword").value="";
+$("adminConfirmPassword").value="";
+alert("Your Business Owner password has been changed successfully.");
+}catch(e){
+let message=e.code==="auth/wrong-password"||e.code==="auth/invalid-credential"?"The current password is incorrect.":e.code==="auth/requires-recent-login"?"Please sign out, sign in again, and retry.":e.message;
+alert("Password change failed: "+message);
+}
 }
 
 async function login(){
@@ -894,7 +925,7 @@ let email=val("email"),password=val("password");
 if(!email||password.length<6)return alert("Enter a valid email and a password of at least six characters.");
 try{
 await auth.createUserWithEmailAndPassword(email,password);
-alert("Account created. Ask the Admin to activate your account.");
+alert("Account created. Ask the Business Owner to activate your account.");
 }catch(e){
 $("msg").textContent=e.message;
 }
@@ -938,13 +969,13 @@ let memberRef=db.doc(`${path("members")}/${user.uid}`);
 let memberSnap=await memberRef.get();
 if(!memberSnap.exists){
 await auth.signOut();
-$("msg").textContent="Your account is not registered as a business member. Contact the Admin.";
+$("msg").textContent="Your account is not registered as a business member. Contact the Business Owner.";
 return;
 }
 member=memberSnap.data();
 if(member.active===false){
 await auth.signOut();
-$("msg").textContent="Your account is inactive. Contact the Admin.";
+$("msg").textContent="Your account is inactive. Contact the Business Owner.";
 return;
 }
 role=member.role||"worker";
