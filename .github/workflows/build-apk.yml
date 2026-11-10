@@ -39,6 +39,7 @@ jobs:
           npm install @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
           npm install @aparajita/capacitor-biometric-auth@^9.1.2
           npm install @capgo/capacitor-printer@^7
+          npm install @capgo/capacitor-social-login@^7
           npm install --save-dev @capacitor/assets sharp esbuild
 
           mkdir -p www resources
@@ -74,8 +75,82 @@ jobs:
           EOF
           npx esbuild printer.js --bundle --platform=browser --format=iife --outfile=www/printer.js
 
+          # Bundle native Google sign-in with the Google Drive file scope.
+          cat > social-login.js <<'EOF'
+          import { SocialLogin } from '@capgo/capacitor-social-login';
+
+          let googleInitPromise;
+          async function initializeGoogle() {
+            if (!googleInitPromise) {
+              googleInitPromise = SocialLogin.initialize({
+                google: {
+                  webClientId: '716400037263-5f89dmj3bacm7b7ksfi9u6buc3d0ssml.apps.googleusercontent.com',
+                  mode: 'online'
+                }
+              });
+            }
+            return googleInitPromise;
+          }
+
+          window.SIAGoogleDriveAuth = {
+            getAccessToken: async () => {
+              await initializeGoogle();
+              const response = await SocialLogin.login({
+                provider: 'google',
+                options: {
+                  scopes: ['https://www.googleapis.com/auth/drive.file']
+                }
+              });
+              const token = response?.result?.accessToken;
+              if (!token) throw new Error('Google did not return a Drive access token. Please try connecting again.');
+              return token;
+            }
+          };
+          EOF
+          npx esbuild social-login.js --bundle --platform=browser --format=iife --outfile=www/social-login.js
+
           npx cap init "Smart Business Manager" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
+
+          # Forward Google Drive authorization results to the native sign-in plugin.
+          mkdir -p android/app/src/main/java/com/siatech/businessmanager
+          cat > android/app/src/main/java/com/siatech/businessmanager/MainActivity.java <<'EOF'
+          package com.siatech.businessmanager;
+
+          import android.content.Intent;
+          import android.util.Log;
+          import com.getcapacitor.BridgeActivity;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginHandle;
+          import ee.forgr.capacitor.social.login.GoogleProvider;
+          import ee.forgr.capacitor.social.login.ModifiedMainActivityForSocialLoginPlugin;
+          import ee.forgr.capacitor.social.login.SocialLoginPlugin;
+
+          public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
+              @Override
+              public void onActivityResult(int requestCode, int resultCode, Intent data) {
+                  super.onActivityResult(requestCode, resultCode, data);
+                  if (requestCode >= GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MIN
+                          && requestCode < GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MAX) {
+                      PluginHandle pluginHandle = getBridge().getPlugin("SocialLogin");
+                      if (pluginHandle == null) {
+                          Log.i("Google Activity Result", "SocialLogin plugin handle is null");
+                          return;
+                      }
+                      Plugin plugin = pluginHandle.getInstance();
+                      if (!(plugin instanceof SocialLoginPlugin)) {
+                          Log.i("Google Activity Result", "SocialLogin plugin instance is invalid");
+                          return;
+                      }
+                      ((SocialLoginPlugin) plugin).handleGoogleLoginIntent(requestCode, data);
+                  }
+              }
+
+              @Override
+              public void IHaveModifiedTheMainActivityForTheUseWithSocialLoginPlugin() {}
+          }
+          EOF
+
           npx cap sync android
 
       - name: Set Android application name
