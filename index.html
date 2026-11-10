@@ -843,7 +843,7 @@ s.innerHTML=`
 <h3>Account Information</h3>
 <p>Email: ${esc(user.email)}</p>
 <p>Name: ${esc(role==="admin"?(member.name||"Shuaibu Idi"):(member.name||"Not set"))}</p>
-<p>Role: ${esc(role==="admin"?"CEO":role)}</p>
+<p>Role: ${esc(role==="admin"?"Business Owner":role)}</p>
 </div>
 <div class="card">
 <h3>Data Connection</h3>
@@ -940,7 +940,7 @@ $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logoutBtn").classList.remove("hidden");
 $("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
-$("roleTag").textContent="Role: "+(role==="admin"?"Shop Owner":role==="worker"?"Shop Manager":role);
+$("roleTag").textContent="Role: "+(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role);
 renderNav();
 go("dashboard");
 
