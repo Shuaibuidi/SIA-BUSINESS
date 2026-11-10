@@ -842,7 +842,11 @@ async function maybeRunDailyAutoBackup(){
   try{
     await backupToGoogleDrive(null,{automatic:true});
   }finally{
-    autoBackupRunning=falfunction settingsScreen(s){
+    autoBackupRunning=false;
+  }
+}
+
+function settingsScreen(s){
 s.innerHTML=`
 ${isAdmin()?`<div class="card">
 <h3>Business Information</h3>
