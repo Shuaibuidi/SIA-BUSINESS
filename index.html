@@ -652,6 +652,146 @@ a.click();
 URL.revokeObjectURL(url);
 }
 
+
+function backupEncode(value){
+  if(value && typeof value.toDate==="function" && typeof value.seconds==="number"){
+    return {__siaType:"timestamp",seconds:value.seconds,nanoseconds:value.nanoseconds||0};
+  }
+  if(Array.isArray(value))return value.map(backupEncode);
+  if(value&&typeof value==="object"){
+    let out={};
+    for(let [k,v] of Object.entries(value))out[k]=backupEncode(v);
+    return out;
+  }
+  return value;
+}
+function backupDecode(value){
+  if(Array.isArray(value))return value.map(backupDecode);
+  if(value&&typeof value==="object"){
+    if(value.__siaType==="timestamp"&&Number.isFinite(value.seconds)){
+      return new firebase.firestore.Timestamp(value.seconds,Number(value.nanoseconds||0));
+    }
+    let out={};
+    for(let [k,v] of Object.entries(value))out[k]=backupDecode(v);
+    return out;
+  }
+  return value;
+}
+async function driveAccessToken(){
+  if(!window.SIAGoogleDriveAuth||typeof window.SIAGoogleDriveAuth.getAccessToken!=="function"){
+    throw new Error("Google Drive sign-in is not available in this APK. Build and install the latest APK first.");
+  }
+  return window.SIAGoogleDriveAuth.getAccessToken();
+}
+async function driveRequest(url,token,options={}){
+  let response=await fetch(url,{...options,headers:{...(options.headers||{}),Authorization:"Bearer "+token}});
+  if(!response.ok){
+    let detail="";
+    try{let j=await response.json();detail=j.error?.message||JSON.stringify(j)}catch(e){try{detail=await response.text()}catch(x){}}
+    throw new Error("Google Drive error ("+response.status+"): "+(detail||response.statusText));
+  }
+  return response;
+}
+async function backupToGoogleDrive(){
+  if(!isAdmin())return alert("Admin permission required.");
+  let button=event?.currentTarget;
+  if(button){button.disabled=true;button.textContent="Preparing Backup...";}
+  try{
+    say("Reading business records for backup...");
+    let names=[...COLLECTIONS],exported={},denied=[];
+    for(let c of names){
+      try{
+        let snap=await db.collection(path(c)).get();
+        exported[c]=snap.docs.map(d=>({id:d.id,data:backupEncode(d.data())}));
+      }catch(e){
+        denied.push({collection:c,error:e.code||e.message||"Read denied"});
+        exported[c]=null;
+      }
+    }
+    let readable=Object.keys(exported).filter(c=>Array.isArray(exported[c]));
+    if(!readable.length)throw new Error("Firestore did not allow reading any business collections. No backup file was created.");
+    let backup={
+      app:"SIA BUSINESS",
+      formatVersion:1,
+      businessId:BUSINESS_ID,
+      exportedAt:new Date().toISOString(),
+      backupType:denied.length?"PARTIAL":"COMPLETE",
+      collections:exported,
+      inaccessibleCollections:denied
+    };
+    let token=await driveAccessToken();
+    let stampName=new Date().toISOString().replace(/[:.]/g,"-");
+    let filename="SIA-Business-Backup-"+stampName+".json";
+    let boundary="sia_backup_"+Date.now();
+    let metadata={name:filename,mimeType:"application/json",description:"S I A BUSINESS Firestore backup. "+(denied.length?"Partial backup":"Complete backup")};
+    let body="--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(metadata)+"\r\n--"+boundary+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+JSON.stringify(backup)+"\r\n--"+boundary+"--";
+    let response=await driveRequest("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,createdTime",token,{
+      method:"POST",
+      headers:{"Content-Type":"multipart/related; boundary="+boundary},
+      body
+    });
+    let file=await response.json();
+    let count=readable.reduce((n,c)=>n+exported[c].length,0);
+    let message=(denied.length?"PARTIAL BACKUP SAVED":"BACKUP SAVED")+" to Google Drive. "+count+" records from "+readable.length+" collections. "+(denied.length?"Blocked collections: "+denied.map(x=>x.collection).join(", ")+".":"All app collections were readable.");
+    say(message);
+    alert(message);
+  }catch(e){
+    console.error(e);
+    say("Backup failed: "+e.message);
+    alert("Backup failed: "+e.message);
+  }finally{
+    if(button){button.disabled=false;button.textContent="Back Up Business Records To Google Drive";}
+  }
+}
+async function restoreLatestFromGoogleDrive(){
+  if(!isAdmin())return alert("Admin permission required.");
+  if(!confirm("Restore the latest S I A BUSINESS backup? Existing records will NEVER be overwritten. Only missing records that Firestore rules allow will be added."))return;
+  let button=event?.currentTarget;
+  if(button){button.disabled=true;button.textContent="Checking Google Drive...";}
+  try{
+    let token=await driveAccessToken();
+    let q=encodeURIComponent("trashed=false and name contains 'SIA-Business-Backup-'");
+    let listResponse=await driveRequest("https://www.googleapis.com/drive/v3/files?q="+q+"&pageSize=20&orderBy=createdTime desc&fields=files(id,name,createdTime)",token);
+    let files=(await listResponse.json()).files||[];
+    if(!files.length)throw new Error("No S I A BUSINESS backup file was found in the Google account you connected.");
+    let chosen=files[0];
+    if(!confirm("Use this backup?\n"+chosen.name+"\n\nThe restore adds missing records only. It does not replace or delete existing records."))return;
+    say("Downloading backup "+chosen.name+"...");
+    let download=await driveRequest("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(chosen.id)+"?alt=media",token);
+    let backup=await download.json();
+    if(backup.app!=="SIA BUSINESS"||backup.businessId!==BUSINESS_ID||!backup.collections||typeof backup.collections!=="object"){
+      throw new Error("This file is not a valid backup for this S I A BUSINESS account.");
+    }
+    let added=0,existing=0,blocked=[],invalid=0;
+    for(let c of COLLECTIONS){
+      let docs=backup.collections[c];
+      if(!Array.isArray(docs))continue;
+      for(let item of docs){
+        if(!item||typeof item.id!=="string"||!item.id||!item.data||typeof item.data!=="object"){invalid++;continue;}
+        try{
+          let ref=db.doc(path(c)+"/"+item.id);
+          let currentDoc=await ref.get();
+          if(currentDoc.exists){existing++;continue;}
+          await ref.set(backupDecode(item.data));
+          added++;
+        }catch(e){
+          blocked.push(c);
+        }
+      }
+    }
+    let uniqueBlocked=[...new Set(blocked)];
+    let message="Restore finished. Added "+added+" missing records. Left "+existing+" existing records unchanged. "+(uniqueBlocked.length?"Firestore blocked writes in: "+uniqueBlocked.join(", ")+". ":"")+(invalid?"Skipped "+invalid+" invalid entries.":"");
+    say(message);
+    alert(message);
+  }catch(e){
+    console.error(e);
+    say("Restore failed: "+e.message);
+    alert("Restore failed: "+e.message);
+  }finally{
+    if(button){button.disabled=false;button.textContent="Restore Latest Backup (Add Missing Records Only)";}
+  }
+}
+
 function settingsScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
@@ -676,6 +816,13 @@ s.innerHTML=`
 <p class="muted">Business records are stored in Firebase Firestore.</p>
 <p id="connectionStatus">Connected account: ${esc(user.email)}</p>
 <button onclick="refreshData()">Refresh Business Records</button>
+</div>
+<div class="card">
+<h3>Google Drive Backup & Restore</h3>
+<p class="muted">Connect the Google account you added as a test user. Backups are saved as JSON files in Google Drive. A partial backup will clearly list collections that Firestore does not allow the app to read.</p>
+<button onclick="backupToGoogleDrive()">Back Up Business Records To Google Drive</button>
+<button class="secondary" onclick="restoreLatestFromGoogleDrive()">Restore Latest Backup (Add Missing Records Only)</button>
+<p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze.</p>
 </div>
 <div class="card">
 <h3>Security</h3>
