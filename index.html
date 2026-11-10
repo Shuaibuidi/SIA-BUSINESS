@@ -844,20 +844,20 @@ async function maybeRunDailyAutoBackup(){
   }finally{
     autoBackupRunning=falfunction settingsScreen(s){
 s.innerHTML=`
-${isAdmin()?\`<div class="card">
+${isAdmin()?`<div class="card">
 <h3>Business Information</h3>
 <p><b>S I A TECH PRINT MEDIA</b></p>
 <p class="muted">Business Management System</p>
 <p>Matindi Trading Centre, Blantyre, Malawi</p>
 <p>Phone: 0999 290 495 / 0888 290 495</p>
-</div>\`: ""}
+</div>`: ""}
 <div class="card">
 <h3>Account Information</h3>
 <p>Email: ${esc(user.email)}</p>
 <p>Name: ${esc(role==="admin"?(member.name||"Shuaibu Idi"):(member.name||"Not set"))}</p>
 <p>Role: ${esc(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role)}</p>
 </div>
-${isAdmin()?\`<div class="card">
+${isAdmin()?`<div class="card">
 <h3>Data Connection</h3>
 <p class="muted">Business records are stored in Firebase Firestore.</p>
 <p id="connectionStatus">Connected account: ${esc(user.email)}</p>
@@ -872,7 +872,7 @@ ${isAdmin()?\`<div class="card">
 <button onclick="backupToGoogleDrive(this)">Back Up Business Records To Google Drive</button>
 <button class="secondary" onclick="restoreLatestFromGoogleDrive(this)">Restore Latest Backup (Add Missing Records Only)</button>
 <p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze. Automatic backup runs when the app is opened, not while it is closed.</p>
-</div>\`: ""}
+</div>`: ""}
 <div class="card">
 <h3>Security</h3>
 <button class="secondary" onclick="logout()">Sign Out</button>
