@@ -70,7 +70,7 @@ const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`
 function invoiceRecorder(){return isAdmin()?"Managing Director":(String(member?.name||user?.email||"Worker").trim())}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Workers"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"],["settings","Settings"]);return a}
+function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"],["settings","Account Information"]];if(isAdmin())a.push(["workers","Workers"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);return a}
 function renderNav(){$("nav").innerHTML=navItems().map(([id,label])=>`<button class="${current===id?"active":""}" onclick="go('${id}')">${label}</button>`).join("")}
 function go(id){current=id;renderNav();renderScreen();say("")}
 function formField(id,label,type="text",placeholder="",step=""){return `<div><label>${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}" ${step?`step="${step}"`:""}></div>`}
@@ -842,30 +842,22 @@ async function maybeRunDailyAutoBackup(){
   try{
     await backupToGoogleDrive(null,{automatic:true});
   }finally{
-    autoBackupRunning=false;
-  }
-}
-
-function settingsScreen(s){
-if(!isAdmin()){
-s.innerHTML="<div class='card'>Admin permission required.</div>";
-return;
-}
+    autoBackupRunning=falfunction settingsScreen(s){
 s.innerHTML=`
-<div class="card">
+${isAdmin()?\`<div class="card">
 <h3>Business Information</h3>
 <p><b>S I A TECH PRINT MEDIA</b></p>
 <p class="muted">Business Management System</p>
 <p>Matindi Trading Centre, Blantyre, Malawi</p>
 <p>Phone: 0999 290 495 / 0888 290 495</p>
-</div>
+</div>\`: ""}
 <div class="card">
 <h3>Account Information</h3>
 <p>Email: ${esc(user.email)}</p>
 <p>Name: ${esc(role==="admin"?(member.name||"Shuaibu Idi"):(member.name||"Not set"))}</p>
-<p>Role: ${esc(role==="admin"?"Business Owner":role)}</p>
+<p>Role: ${esc(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role)}</p>
 </div>
-<div class="card">
+${isAdmin()?\`<div class="card">
 <h3>Data Connection</h3>
 <p class="muted">Business records are stored in Firebase Firestore.</p>
 <p id="connectionStatus">Connected account: ${esc(user.email)}</p>
@@ -880,7 +872,7 @@ s.innerHTML=`
 <button onclick="backupToGoogleDrive(this)">Back Up Business Records To Google Drive</button>
 <button class="secondary" onclick="restoreLatestFromGoogleDrive(this)">Restore Latest Backup (Add Missing Records Only)</button>
 <p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze. Automatic backup runs when the app is opened, not while it is closed.</p>
-</div>
+</div>\`: ""}
 <div class="card">
 <h3>Security</h3>
 <button class="secondary" onclick="logout()">Sign Out</button>
