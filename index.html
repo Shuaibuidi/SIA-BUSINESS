@@ -45,13 +45,9 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader" class="row"><div><h1>S I A BUSINESS</h1>
-<div class="muted">S I A TECH PRINT MEDIA · HOME OF PRINTING & COMPUTING</div>
-<div class="muted">Matindi Trading Centre, Blantyre · Malawi</div>
-<div class="muted">0999 290 495 · 0888 290 495</div></div>
-<button id="logoutBtn" class="secondary hidden no-print" onclick="logout()">Sign out</button></header>
+<header id="appHeader" class="row"><div><h1>S I A BUSINESS</h1></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><button class="secondary" onclick="register()">Create worker account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
-<section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
+<section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
 <section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
  <div class="invoice-controls no-print">
@@ -70,7 +66,7 @@ const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`
 function invoiceRecorder(){return isAdmin()?"Managing Director":(String(member?.name||user?.email||"Worker").trim())}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"],["settings","Account Information"]];if(isAdmin())a.push(["workers","Workers"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);return a}
+function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Workers"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
 function renderNav(){$("nav").innerHTML=navItems().map(([id,label])=>`<button class="${current===id?"active":""}" onclick="go('${id}')">${label}</button>`).join("")}
 function go(id){current=id;renderNav();renderScreen();say("")}
 function formField(id,label,type="text",placeholder="",step=""){return `<div><label>${label}</label><input id="${id}" type="${type}" placeholder="${placeholder}" ${step?`step="${step}"`:""}></div>`}
@@ -442,7 +438,7 @@ function showInvoice(x){
   if(!preview||!paper)return alert("Invoice preview is unavailable.");
   paper.innerHTML=`
     <h1>S I A TECH PRINT MEDIA</h1>
-    <p style="text-align:center">S I A BUSINESS · Malawi</p>
+    <p style="text-align:center"><b>Home Of Printing & Computing</b><br>Matindi Trading Centre, Malawi<br>0999 290 495 &nbsp; 0888 290 495</p>
     <hr>
     <h2>INVOICE</h2>
     <p><b>Invoice number:</b> ${esc(x.invoiceNo||x.id||"")}</p>
@@ -539,7 +535,7 @@ s.innerHTML=`
 <h3>Worker Management</h3>
 <p class="muted">Workers must first create accounts using the sign-in screen. Their accounts can then be activated here.</p>
 <h3>Registered Workers</h3>
-${listHtml("members",w=>`
+${records("members").filter(w=>w.active!==false).map(w=>`<div class="item">
 <b>👤 ${esc(w.name||w.email||w.id)}</b><br>
 Email: ${esc(w.email||"")}<br>
 Role: ${esc(w.role||"worker")}<br>
@@ -548,7 +544,7 @@ Status: ${w.active===false?"Inactive":"Active"}<br>
 <button onclick="editWorkerName('${w.id}')">Edit Worker Name</button>
 <button onclick="changeWorker('${w.id}')">Change Role / Status</button>
 </div>
-`)}
+`).join("")||"<p class='muted'>No active workers found.</p>"}
 </div>`;
 }
 
@@ -848,15 +844,14 @@ async function maybeRunDailyAutoBackup(){
 
 function settingsScreen(s){
 s.innerHTML=`
-${isAdmin()?`<div class="card">
-<h3>Business Information</h3>
-<p><b>S I A TECH PRINT MEDIA</b></p>
-<p class="muted">Business Management System</p>
-<p>Matindi Trading Centre, Blantyre, Malawi</p>
-<p>Phone: 0999 290 495 / 0888 290 495</p>
-</div>`: ""}
 <div class="card">
 <h3>Account Information</h3>
+<div class="item">
+<b>S I A Tech Print Media</b><br>
+Home Of Printing & Computing<br>
+Matindi Trading Centre, Malawi<br>
+0999 290 495 &nbsp; 0888 290 495
+</div>
 <p>Email: ${esc(user.email)}</p>
 <p>Name: ${esc(role==="admin"?(member.name||"Shuaibu Idi"):(member.name||"Not set"))}</p>
 <p>Role: ${esc(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role)}</p>
@@ -954,7 +949,7 @@ return;
 role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
-$("logoutBtn").classList.remove("hidden");
+if($("adminSalesSummary"))$("adminSalesSummary").classList.toggle("hidden",!isAdmin());
 $("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
 $("roleTag").textContent="Role: "+(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role);
 renderNav();
@@ -997,7 +992,7 @@ member=null;
 role=null;
 $("login").classList.remove("hidden");
 $("app").classList.add("hidden");
-$("logoutBtn").classList.add("hidden");
+if($("adminSalesSummary"))$("adminSalesSummary").classList.add("hidden");
 return;
 }
 await startData();
