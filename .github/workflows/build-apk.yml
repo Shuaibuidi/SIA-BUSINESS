@@ -38,6 +38,7 @@ jobs:
           npm init -y
           npm install @capacitor/core@^7 @capacitor/cli@^7 @capacitor/android@^7
           npm install @aparajita/capacitor-biometric-auth@^9.1.2
+          npm install @capgo/capacitor-printer@^7
           npm install --save-dev @capacitor/assets sharp esbuild
 
           mkdir -p www resources
@@ -62,6 +63,16 @@ jobs:
           };
           EOF
           npx esbuild biometric-auth.js --bundle --platform=browser --format=iife --outfile=www/biometric-auth.js
+
+          # Bundle native Android/iOS printing support for invoice HTML.
+          cat > printer.js <<'EOF'
+          import { Printer } from '@capgo/capacitor-printer';
+
+          window.SIAPrinter = {
+            printHtml: (html) => Printer.printHtml({ html })
+          };
+          EOF
+          npx esbuild printer.js --bundle --platform=browser --format=iife --outfile=www/printer.js
 
           npx cap init "Smart Business Manager" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
