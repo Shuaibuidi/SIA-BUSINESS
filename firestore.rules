@@ -25,7 +25,13 @@ service cloud.firestore {
 
       match /members/{uid} {
         allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
-        allow write: if false; // Never let a client promote itself or create accounts.
+        // Only an active admin may change a member's display name. Clients cannot
+        // create/delete members or change role, active status, email, or UID.
+        allow update: if admin(businessId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0;
+        allow create, delete: if false;
       }
       match /stock/{itemId} {
         allow read: if activeMember(businessId);
