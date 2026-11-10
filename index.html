@@ -692,9 +692,8 @@ async function driveRequest(url,token,options={}){
   }
   return response;
 }
-async function backupToGoogleDrive(){
+async function backupToGoogleDrive(button){
   if(!isAdmin())return alert("Admin permission required.");
-  let button=event?.currentTarget;
   if(button){button.disabled=true;button.textContent="Preparing Backup...";}
   try{
     say("Reading business records for backup...");
@@ -743,10 +742,9 @@ async function backupToGoogleDrive(){
     if(button){button.disabled=false;button.textContent="Back Up Business Records To Google Drive";}
   }
 }
-async function restoreLatestFromGoogleDrive(){
+async function restoreLatestFromGoogleDrive(button){
   if(!isAdmin())return alert("Admin permission required.");
   if(!confirm("Restore the latest S I A BUSINESS backup? Existing records will NEVER be overwritten. Only missing records that Firestore rules allow will be added."))return;
-  let button=event?.currentTarget;
   if(button){button.disabled=true;button.textContent="Checking Google Drive...";}
   try{
     let token=await driveAccessToken();
@@ -820,8 +818,8 @@ s.innerHTML=`
 <div class="card">
 <h3>Google Drive Backup & Restore</h3>
 <p class="muted">Connect the Google account you added as a test user. Backups are saved as JSON files in Google Drive. A partial backup will clearly list collections that Firestore does not allow the app to read.</p>
-<button onclick="backupToGoogleDrive()">Back Up Business Records To Google Drive</button>
-<button class="secondary" onclick="restoreLatestFromGoogleDrive()">Restore Latest Backup (Add Missing Records Only)</button>
+<button onclick="backupToGoogleDrive(this)">Back Up Business Records To Google Drive</button>
+<button class="secondary" onclick="restoreLatestFromGoogleDrive(this)">Restore Latest Backup (Add Missing Records Only)</button>
 <p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze.</p>
 </div>
 <div class="card">
