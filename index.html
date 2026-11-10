@@ -545,10 +545,30 @@ Email: ${esc(w.email||"")}<br>
 Role: ${esc(w.role||"worker")}<br>
 Status: ${w.active===false?"Inactive":"Active"}<br>
 <div class="actions">
+<button onclick="editWorkerName('${w.id}')">Edit Worker Name</button>
 <button onclick="changeWorker('${w.id}')">Change Role / Status</button>
 </div>
 `)}
 </div>`;
+}
+
+async function editWorkerName(id){
+if(!isAdmin())return alert("Business Owner permission required.");
+let w=records("members").find(x=>x.id===id);
+if(!w)return alert("Worker record not found.");
+if(w.role!=="worker")return alert("You can edit names for worker accounts only.");
+let newName=prompt("Enter the worker's new name:",w.name||"");
+if(newName===null)return;
+newName=newName.trim();
+if(!newName)return alert("Worker name cannot be empty.");
+try{
+await db.doc(`${path("members")}/${id}`).update({
+name:newName,
+updatedAt:stamp()
+});
+say("Worker name updated successfully.");
+renderScreen();
+}catch(e){alert("Could not update worker name: "+e.message)}
 }
 
 async function changeWorker(id){
