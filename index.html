@@ -939,8 +939,8 @@ role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logoutBtn").classList.remove("hidden");
-$("welcome").textContent=role==="admin"?"Welcome Shuaibu Idi":"Welcome, "+(member.name||user.email);
-$("roleTag").textContent="Role: "+(role==="admin"?"CEO":role);
+$("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
+$("roleTag").textContent="Role: "+(role==="admin"?"CEO":role==="worker"?"Shop Manager":role);
 renderNav();
 go("dashboard");
 
