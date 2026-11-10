@@ -433,27 +433,79 @@ ${isAdmin()?adminDelete("invoices",x):""}
 }
 
 function showInvoice(x){
-  // Keep invoice preview inside this app; avoid opening a new Android WebView window.
   const preview=$("invoicePreview"),paper=$("invoicePaper");
   if(!preview||!paper)return alert("Invoice preview is unavailable.");
-  paper.innerHTML=`
-    <h1>S I A TECH PRINT MEDIA</h1>
-    <p style="text-align:center"><b>Home Of Printing & Computing</b><br>Matindi Trading Centre, Malawi<br>0999 290 495 &nbsp; 0888 290 495</p>
-    <hr>
-    <h2>INVOICE</h2>
-    <p><b>Invoice number:</b> ${esc(x.invoiceNo||x.id||"")}</p>
-    <p><b>Date:</b> ${esc(dateText(x.createdAt)||new Date().toLocaleString())}</p>
-    <p><b>Customer:</b> ${esc(x.customerName||"Walk-in")}</p>
-    <p><b>Phone:</b> ${esc(x.phone||"Not provided")}</p>
-    <table>
-      <tr><th>Description</th><th>Qty</th><th>Amount</th></tr>
-      <tr><td>${esc(x.description||"Business service")}</td><td>${Number(x.quantity||1)}</td><td>${money(x.total)}</td></tr>
+  const invoiceDate=esc(dateText(x.createdAt)||new Date().toLocaleString());
+  const invoiceNumber=esc(x.invoiceNo||x.id||"");
+  const customer=esc(x.customerName||"Walk-in");
+  const phone=esc(x.phone||x.customerPhone||"Not provided");
+  const description=esc(x.description||"Business service");
+  const qty=Number(x.quantity||1);
+  const total=money(x.total),paid=money(x.paid),balance=money(x.balance);
+  const recorded=esc(x.recordedBy||invoiceRecorder());
+  paper.innerHTML=\`
+  <style>
+    .sia-invoice{font-family:Arial,Helvetica,sans-serif;color:#071a2c;background:#fff;width:100%;max-width:760px;margin:0 auto;overflow:hidden}
+    .sia-head{display:grid;grid-template-columns:180px 1fr;gap:16px;align-items:center;padding:8px 8px 15px;border-bottom:5px solid #11b9c9}
+    .sia-logo{width:100%;max-width:180px;height:140px;object-fit:contain}
+    .sia-brand{border-left:4px solid #071a2c;padding-left:18px}
+    .sia-brandname{font-size:clamp(20px,3.5vw,30px);font-weight:900;line-height:1.15;color:#071a2c}
+    .sia-brandname span{color:#087fca}
+    .sia-tagline{font-family:Georgia,serif;font-style:italic;font-weight:bold;font-size:18px;margin-top:7px}
+    .sia-motto{font-weight:bold;color:#087fca;font-size:14px;margin-top:6px;letter-spacing:1px}
+    .sia-contact{display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap;background:#d9f6fb;padding:12px 6px;color:#071a2c;font-size:12px;font-weight:bold}
+    .sia-title{display:inline-block;margin:22px 0 12px;padding:8px 32px;border-radius:13px 24px 13px 13px;background:linear-gradient(110deg,#12c4ce,#006b89);color:#fff;font-size:38px;font-weight:900}
+    .sia-meta{padding:0 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:9px 16px;font-size:14px}
+    .sia-meta b{display:inline-block;min-width:108px}
+    .sia-table{width:100%;border-collapse:separate;border-spacing:0;margin:6px 0 18px;font-size:14px}
+    .sia-table th{background:linear-gradient(100deg,#11b9c9,#07516e);color:#fff;padding:13px 11px;text-align:left;font-size:16px}
+    .sia-table th:first-child{border-radius:12px 0 0 0}
+    .sia-table th:last-child{text-align:right;border-radius:0 12px 0 0}
+    .sia-table td{background:#e2f8fb;padding:15px 11px;border-right:1px solid #fff;border-bottom:1px solid #fff}
+    .sia-table td:last-child{text-align:right;font-weight:bold}
+    .sia-totals{margin:0 8px 16px;max-width:460px}
+    .sia-total{background:#bceef5;border-radius:16px;padding:9px 16px;font-size:27px;font-weight:900;color:#071a2c}
+    .sia-payment{padding:7px 18px;font-size:16px;line-height:1.55}
+    .sia-rule{height:5px;background:#08aebe;border-radius:50%;margin:20px 0 28px}
+    .sia-footer{background:#071a2c;color:#fff;padding:22px 12px 18px;border-top:12px solid #09b8c7;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+    .sia-service{font-size:13px;font-weight:bold;line-height:1.35;padding:5px;border-right:1px solid #55d9e2}
+    .sia-service:last-child{border:0}
+    .sia-symbol{display:block;font-size:25px;margin-bottom:5px;color:#45e0e8}
+    .sia-slogan{grid-column:1/-1;margin-top:12px;color:#8cecf2;font-family:Georgia,serif;font-style:italic;font-weight:bold;font-size:17px}
+    @media(max-width:520px){.sia-head{grid-template-columns:110px 1fr;gap:9px}.sia-logo{height:105px}.sia-brand{padding-left:9px}.sia-brandname{font-size:17px}.sia-tagline{font-size:12px}.sia-motto{font-size:10px}.sia-contact{font-size:10px}.sia-title{font-size:30px}.sia-meta{grid-template-columns:1fr;font-size:13px}.sia-total{font-size:23px}}
+    @media print{.sia-invoice{max-width:none}.sia-head,.sia-contact,.sia-title,.sia-table th,.sia-table td,.sia-total,.sia-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style>
+  <div class="sia-invoice">
+    <header class="sia-head">
+      <img class="sia-logo" src="logo.png" alt="S I A Tech Print Media Logo">
+      <div class="sia-brand">
+        <div class="sia-brandname">S I A TECH PRINT <span>MEDIA</span></div>
+        <div class="sia-tagline">Home Of Printing &amp; Computing</div>
+        <div class="sia-motto">INNOVATE &nbsp;•&nbsp; PRINT &nbsp;•&nbsp; GROW</div>
+      </div>
+    </header>
+    <div class="sia-contact"><span>⌖ &nbsp; Blantyre, Malawi</span><span>☎ &nbsp; +265 999 123 456</span><span>✉ &nbsp; siatechprintmedia@gmail.com</span></div>
+    <div style="padding:0 8px"><div class="sia-title">INVOICE</div></div>
+    <div class="sia-meta">
+      <div><b>Invoice Number:</b> \${invoiceNumber}</div>
+      <div><b>Date:</b> \${invoiceDate}</div>
+      <div><b>Customer:</b> \${customer}</div>
+      <div><b>Phone:</b> \${phone}</div>
+    </div>
+    <table class="sia-table">
+      <thead><tr><th>Description</th><th style="text-align:center;width:18%">Qty</th><th>Amount</th></tr></thead>
+      <tbody><tr><td>\${description}</td><td style="text-align:center">\${qty}</td><td>\${total}</td></tr></tbody>
     </table>
-    <p style="font-size:20px;font-weight:bold">Total: ${money(x.total)}</p>
-    <p>Paid: ${money(x.paid)}</p>
-    <p>Balance: ${money(x.balance)}</p>
-    <p>Recorded by: ${esc(x.recordedBy||"")}</p>
-    <hr><p style="text-align:center">Thank you for doing business with us.</p>`;
+    <div class="sia-totals"><div class="sia-total">Total: \${total}</div></div>
+    <div class="sia-payment"><div><b>Paid:</b> \${paid}</div><div><b>Balance Due:</b> \${balance}</div><div><b>Recorded By:</b> \${recorded}</div></div>
+    <div class="sia-rule"></div>
+    <footer class="sia-footer">
+      <div class="sia-service"><span class="sia-symbol">▣</span>Printing<br>Services</div>
+      <div class="sia-service"><span class="sia-symbol">⚒</span>Repairing<br>Services</div>
+      <div class="sia-service"><span class="sia-symbol">▯</span>Accessories<br>Sales</div>
+      <div class="sia-slogan">Your Business Partner<br>In Printing &amp; Technology</div>
+    </footer>
+  </div>\`;
   preview.style.display="block";
   preview.scrollTop=0;
 }
