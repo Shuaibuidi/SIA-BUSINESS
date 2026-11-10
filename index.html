@@ -692,11 +692,12 @@ async function driveRequest(url,token,options={}){
   }
   return response;
 }
-async function backupToGoogleDrive(button){
-  if(!isAdmin())return alert("Admin permission required.");
+async function backupToGoogleDrive(button,options={}){
+  const automatic=options.automatic===true;
+  if(!isAdmin())return automatic?false:alert("Admin permission required.");
   if(button){button.disabled=true;button.textContent="Preparing Backup...";}
   try{
-    say("Reading business records for backup...");
+    say(automatic?"Daily automatic backup: reading business records...":"Reading business records for backup...");
     let names=[...COLLECTIONS],exported={},denied=[];
     for(let c of names){
       try{
@@ -732,12 +733,21 @@ async function backupToGoogleDrive(button){
     let file=await response.json();
     let count=readable.reduce((n,c)=>n+exported[c].length,0);
     let message=(denied.length?"PARTIAL BACKUP SAVED":"BACKUP SAVED")+" to Google Drive. "+count+" records from "+readable.length+" collections. "+(denied.length?"Blocked collections: "+denied.map(x=>x.collection).join(", ")+".":"All app collections were readable.");
-    say(message);
-    alert(message);
+    if(automatic){
+      const day=localBackupDay();
+      localStorage.setItem("sia_business_last_auto_backup_"+user.uid,day);
+      say("Daily automatic backup completed. "+count+" records saved to Google Drive.");
+    }else{
+      say(message);
+      alert(message);
+    }
+    return true;
   }catch(e){
     console.error(e);
-    say("Backup failed: "+e.message);
-    alert("Backup failed: "+e.message);
+    const failure="Backup failed: "+e.message;
+    say(automatic?"Daily automatic backup could not complete: "+e.message:failure);
+    if(!automatic)alert(failure);
+    return false;
   }finally{
     if(button){button.disabled=false;button.textContent="Back Up Business Records To Google Drive";}
   }
@@ -790,6 +800,32 @@ async function restoreLatestFromGoogleDrive(button){
   }
 }
 
+const AUTO_BACKUP_ENABLED_KEY="sia_business_daily_auto_backup_enabled";
+let autoBackupRunning=false;
+function localBackupDay(){
+  const d=new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function dailyAutoBackupEnabled(){
+  return localStorage.getItem(AUTO_BACKUP_ENABLED_KEY)!=="false";
+}
+function toggleDailyAutoBackup(){
+  localStorage.setItem(AUTO_BACKUP_ENABLED_KEY,dailyAutoBackupEnabled()?"false":"true");
+  renderScreen();
+}
+async function maybeRunDailyAutoBackup(){
+  if(!user||!isAdmin()||!dailyAutoBackupEnabled()||autoBackupRunning)return;
+  const day=localBackupDay();
+  const last=localStorage.getItem("sia_business_last_auto_backup_"+user.uid);
+  if(last===day)return;
+  autoBackupRunning=true;
+  try{
+    await backupToGoogleDrive(null,{automatic:true});
+  }finally{
+    autoBackupRunning=false;
+  }
+}
+
 function settingsScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
@@ -817,10 +853,13 @@ s.innerHTML=`
 </div>
 <div class="card">
 <h3>Google Drive Backup & Restore</h3>
-<p class="muted">Connect the Google account you added as a test user. Backups are saved as JSON files in Google Drive. A partial backup will clearly list collections that Firestore does not allow the app to read.</p>
+<p class="muted">Backups are saved as JSON files in your connected Google Drive account.</p>
+<p><b>Daily Automatic Backup: ${dailyAutoBackupEnabled() ? 'Enabled' : 'Disabled'}</b></p>
+<p class="muted">When enabled, the app backs up once per local calendar day the first time an Admin opens the app and signs in. Google may ask you to confirm the account if sign-in is required.</p>
+<button class="secondary" onclick="toggleDailyAutoBackup()">${dailyAutoBackupEnabled() ? 'Turn Off Daily Automatic Backup' : 'Turn On Daily Automatic Backup'}</button>
 <button onclick="backupToGoogleDrive(this)">Back Up Business Records To Google Drive</button>
 <button class="secondary" onclick="restoreLatestFromGoogleDrive(this)">Restore Latest Backup (Add Missing Records Only)</button>
-<p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze.</p>
+<p class="muted">Restore never replaces or deletes existing records. Firestore security rules still control which missing records can be restored. This feature does not require Firebase Blaze. Automatic backup runs when the app is opened, not while it is closed.</p>
 </div>
 <div class="card">
 <h3>Security</h3>
@@ -919,6 +958,9 @@ let collections=[
 
     if(isAdmin()){
       listen("members");
+      // Run at most one successful automatic backup per local calendar day.
+      // A failed or cancelled attempt remains eligible for retry next time the app opens.
+      maybeRunDailyAutoBackup();
     }
 }catch(e){
 say("Account setup error: "+e.message);
