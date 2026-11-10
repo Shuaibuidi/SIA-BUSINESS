@@ -24,6 +24,19 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 .service-catalog{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:10px 0}
 .service-chip{background:#0a2033;border:1px solid #365a75;border-radius:10px;padding:10px;color:#dceeff;font-size:13px}
 @media print{body{background:white;color:black}.no-print,#appHeader,#nav{display:none!important}.card{background:white;color:black;border:0}input,select,textarea{border:0;color:black}}
+.invoice-overlay{position:fixed;inset:0;z-index:9999;background:#071a2c;overflow:auto;padding:14px;display:none}
+.invoice-paper{max-width:760px;margin:10px auto;background:#fff;color:#111;padding:24px;border-radius:10px}
+.invoice-paper h1{text-align:center;color:#111}
+.invoice-paper table{color:#111}
+.invoice-controls{max-width:760px;margin:0 auto 12px;display:flex;gap:8px;flex-wrap:wrap}
+@media print{
+ body{padding:0!important;background:#fff!important}
+ body>*{visibility:hidden!important}
+ #invoicePreview,#invoicePreview *{visibility:visible!important}
+ #invoicePreview{display:block!important;position:absolute;inset:0;background:#fff;padding:0;margin:0;overflow:visible}
+ .invoice-controls{display:none!important}
+ .invoice-paper{max-width:none;margin:0;padding:12mm;border-radius:0}
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -38,6 +51,13 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="login()">Sign in</button><button class="secondary" onclick="register()">Create worker account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
+<section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
+ <div class="invoice-controls no-print">
+  <button type="button" onclick="printCurrentInvoice()">Print Invoice</button>
+  <button type="button" class="secondary" onclick="closeInvoicePreview()">Back To App</button>
+ </div>
+ <div id="invoicePaper" class="invoice-paper"></div>
+</section>
 <script>
 const firebaseConfig={apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",authDomain:"smart-business-manager-f319f.firebaseapp.com",projectId:"smart-business-manager-f319f",storageBucket:"smart-business-manager-f319f.firebasestorage.app",messagingSenderId:"716400037263",appId:"1:716400037263:web:42a1e961b1597d0d280ffa"};
 firebase.initializeApp(firebaseConfig);
@@ -415,48 +435,38 @@ ${isAdmin()?adminDelete("invoices",x):""}
 }
 
 function showInvoice(x){
-let w=window.open("","_blank");
-if(!w){
-alert("Allow pop-ups to print the invoice.");
-return;
+  // Keep invoice preview inside this app; avoid opening a new Android WebView window.
+  const preview=$("invoicePreview"),paper=$("invoicePaper");
+  if(!preview||!paper)return alert("Invoice preview is unavailable.");
+  paper.innerHTML=`
+    <h1>S I A TECH PRINT MEDIA</h1>
+    <p style="text-align:center">S I A BUSINESS · Malawi</p>
+    <hr>
+    <h2>INVOICE</h2>
+    <p><b>Invoice number:</b> ${esc(x.invoiceNo||x.id||"")}</p>
+    <p><b>Date:</b> ${esc(dateText(x.createdAt)||new Date().toLocaleString())}</p>
+    <p><b>Customer:</b> ${esc(x.customerName||"Walk-in")}</p>
+    <p><b>Phone:</b> ${esc(x.phone||"Not provided")}</p>
+    <table>
+      <tr><th>Description</th><th>Qty</th><th>Amount</th></tr>
+      <tr><td>${esc(x.description||"Business service")}</td><td>${Number(x.quantity||1)}</td><td>${money(x.total)}</td></tr>
+    </table>
+    <p style="font-size:20px;font-weight:bold">Total: ${money(x.total)}</p>
+    <p>Paid: ${money(x.paid)}</p>
+    <p>Balance: ${money(x.balance)}</p>
+    <p>Recorded by: ${esc(x.recordedBy||"")}</p>
+    <hr><p style="text-align:center">Thank you for doing business with us.</p>`;
+  preview.style.display="block";
+  preview.scrollTop=0;
 }
-let html=`
-<!doctype html>
-<html><head><title>Invoice ${esc(x.invoiceNo||"")}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:Arial,sans-serif;padding:25px;color:#111}
-h1{text-align:center}
-hr{border:1px solid #333}
-table{width:100%;border-collapse:collapse;margin-top:20px}
-td,th{padding:10px;border-bottom:1px solid #ccc;text-align:left}
-.total{font-size:20px;font-weight:bold}
-@media print{button{display:none}}
-</style></head><body>
-<h1>S I A TECH PRINT MEDIA</h1>
-<p style="text-align:center">S I A BUSINESS · Malawi</p>
-<hr>
-<h2>INVOICE</h2>
-<p><b>Invoice number:</b> ${esc(x.invoiceNo||x.id||"")}</p>
-<p><b>Date:</b> ${esc(dateText(x.createdAt)||new Date().toLocaleString())}</p>
-<p><b>Customer:</b> ${esc(x.customerName||"Walk-in")}</p>
-<p><b>Phone:</b> ${esc(x.phone||"Not provided")}</p>
-<table>
-<tr><th>Description</th><th>Qty</th><th>Amount</th></tr>
-<tr><td>${esc(x.description||"Business service")}</td><td>${Number(x.quantity||1)}</td><td>${money(x.total)}</td></tr>
-</table>
-<p class="total">Total: ${money(x.total)}</p>
-<p>Paid: ${money(x.paid)}</p>
-<p>Balance: ${money(x.balance)}</p>
-<p>Recorded by: ${esc(x.recordedBy||"")}</p>
-<hr><p style="text-align:center">Thank you for doing business with us.</p>
-<button onclick="window.print()">Print Invoice</button>
-</body></html>`;
-w.document.open();
-w.document.write(html);
-w.document.close();
+function printCurrentInvoice(){
+  if(!$("invoicePaper")?.innerHTML.trim())return alert("Open an invoice first.");
+  try{window.print();}
+  catch(e){alert("Printing is not available in this app version. Please open the app in Chrome and print from there.");}
 }
-
+function closeInvoicePreview(){
+  $("invoicePreview").style.display="none";
+}
 function showInvoiceById(id){
 let x=records("invoices").find(v=>v.id===id);
 if(x)showInvoice(x);
