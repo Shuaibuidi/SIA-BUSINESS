@@ -246,6 +246,9 @@ jobs:
                       if (requested.group == 'org.jetbrains.kotlin') {
                           useVersion '1.8.22'
                       }
+                      if (requested.group == 'androidx.browser' && requested.name == 'browser') {
+                          useVersion '1.8.0'
+                      }
                   }
               }
           }
