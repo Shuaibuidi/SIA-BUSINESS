@@ -989,9 +989,11 @@ go("dashboard");
 
 let collections=[
 "stock","spareParts","transactions","spareSales","jobs",
-"services","customers","suppliers","purchases","expenses",
-"cashbook","invoices"
+"services","customers","invoices"
 ];
+// Financial and purchasing records are private to the Business Owner.
+// Do not attach listeners for these collections to Shop Manager accounts.
+if(isAdmin()) collections.push("suppliers","purchases","expenses","cashbook");
 
 // All active members use the same business inventory and records.
     // Access is controlled by Firestore Security Rules, not by client-side filters.
