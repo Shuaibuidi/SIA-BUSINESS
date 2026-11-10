@@ -41,6 +41,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="printer.js"></script>
 </head>
 <body><div class="wrap">
 <header id="appHeader" class="row"><div><h1>S I A BUSINESS</h1>
@@ -459,10 +460,28 @@ function showInvoice(x){
   preview.style.display="block";
   preview.scrollTop=0;
 }
-function printCurrentInvoice(){
-  if(!$("invoicePaper")?.innerHTML.trim())return alert("Open an invoice first.");
-  try{window.print();}
-  catch(e){alert("Printing is not available in this app version. Please open the app in Chrome and print from there.");}
+async function printCurrentInvoice(){
+  const paper=$("invoicePaper");
+  if(!paper?.innerHTML.trim())return alert("Open an invoice first.");
+  const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>S I A BUSINESS Invoice</title><style>
+    body{font-family:Arial,sans-serif;color:#111;background:#fff;margin:0;padding:18px}
+    h1{text-align:center;font-size:28px;margin:12px 0;color:#111}
+    h2{font-size:22px;margin:18px 0;color:#111}
+    p{font-size:15px;line-height:1.5;margin:12px 0}
+    table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}
+    th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #999;color:#111}
+    hr{border:0;border-top:1px solid #999;margin:18px 0}
+    @page{size:auto;margin:12mm}
+  </style></head><body>${paper.innerHTML}</body></html>`;
+  try{
+    if(window.SIAPrinter?.printHtml){
+      await window.SIAPrinter.printHtml(html);
+    }else{
+      window.print();
+    }
+  }catch(e){
+    alert("Could not open the phone's print service: "+(e?.message||e));
+  }
 }
 function closeInvoicePreview(){
   $("invoicePreview").style.display="none";
