@@ -135,6 +135,9 @@ jobs:
 
           echo "Keystore decoded successfully"
 
+          echo "Signing certificate SHA-1 fingerprint:"
+          keytool -list -v -keystore app-build/android/app/sia-business-release.jks -alias "$ANDROID_KEY_ALIAS" -storepass "$ANDROID_KEYSTORE_PASSWORD" -keypass "$ANDROID_KEY_PASSWORD" | grep -i "SHA1:"
+
           cat >> app-build/android/app/build.gradle <<'EOF'
 
           android {
