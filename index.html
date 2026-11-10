@@ -940,7 +940,7 @@ $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logoutBtn").classList.remove("hidden");
 $("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
-$("roleTag").textContent="Role: "+(role==="admin"?"CEO":role==="worker"?"Shop Manager":role);
+$("roleTag").textContent="Role: "+(role==="admin"?"Shop Owner":role==="worker"?"Shop Manager":role);
 renderNav();
 go("dashboard");
 
