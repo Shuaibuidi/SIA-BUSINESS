@@ -939,7 +939,7 @@ role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 $("logoutBtn").classList.remove("hidden");
-$("welcome").textContent="Welcome, "+(member.name||user.email);
+$("welcome").textContent=role==="admin"?"Welcome: The Manager":"Welcome, "+(member.name||user.email);
 $("roleTag").textContent="Role: "+role;
 renderNav();
 go("dashboard");
