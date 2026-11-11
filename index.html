@@ -465,6 +465,12 @@ body{
 .performance-empty span{font-size:13px;color:#aeb8c2;line-height:1.5}
 @media(min-width:650px){.performance-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+
+/* Keep the login form tappable and visibly responsive on mobile */
+#login{position:relative!important;z-index:30!important;pointer-events:auto!important}
+#login button{position:relative!important;z-index:31!important;pointer-events:auto!important;touch-action:manipulation!important}
+#signInButton:disabled{opacity:.72;cursor:wait}
+#msg{display:block;min-height:1.4em;overflow-wrap:anywhere}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -474,7 +480,7 @@ body{
 </head>
 <body><div class="wrap">
 <header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2></div></header>
-<section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
+<section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button id="signInButton" type="button" onclick="window.handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
 <section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
@@ -1544,13 +1550,34 @@ alert("Password change failed: "+message);
 }
 }
 
-async function handleSignIn(){
-let email=val("email"),password=val("password");
-if(!email||!password)return alert("Enter your email and password.");
+window.handleSignIn=async function handleSignIn(){
+const button=$("signInButton"),message=$("msg");
+const email=val("email"),password=val("password");
+if(!email||!password){
+ message.textContent="Please enter both your email and password.";
+ return;
+}
+if(!auth||!auth.signInWithEmailAndPassword){
+ message.textContent="Sign-in service is not ready. Check your internet connection and reload the app.";
+ return;
+}
+if(button){button.disabled=true;button.textContent="Signing in...";}
+message.textContent="Connecting securely...";
 try{
-await auth.signInWithEmailAndPassword(email,password);
+ await auth.signInWithEmailAndPassword(email,password);
+ message.textContent="Sign-in successful. Opening your business...";
 }catch(e){
-$("msg").textContent=e.message;
+ const messages={
+  "auth/invalid-email":"Please check your email address.",
+  "auth/user-not-found":"No account was found for this email.",
+  "auth/wrong-password":"The password is incorrect.",
+  "auth/invalid-credential":"Email or password is incorrect.",
+  "auth/network-request-failed":"Connection failed. Check your internet and try again.",
+  "auth/too-many-requests":"Too many attempts. Please wait and try again."
+ };
+ message.textContent=messages[e.code]||("Sign-in failed: "+(e.message||"Please try again."));
+}finally{
+ if(button){button.disabled=false;button.textContent="Sign in";}
 }
 }
 
