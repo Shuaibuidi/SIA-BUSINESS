@@ -216,6 +216,37 @@ button.secondary{background:#29323a;color:#f5f6f8}
   margin:0 0 5px!important;
   font-size:21px!important;
 }
+
+/* Compact fixed app header with welcome details on the same header */
+#appHeader{
+ position:fixed!important;top:8px!important;left:0!important;right:0!important;
+ width:100%!important;box-sizing:border-box!important;z-index:1000!important;
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:8px!important;margin:0!important;padding:12px 16px 11px!important;
+ background:#080b0e!important;border:0!important;
+}
+#appHeader .app-brand{min-width:0!important}
+#appHeader h1{font-size:clamp(23px,4.8vw,32px)!important;line-height:1.12!important;letter-spacing:-.5px!important;white-space:normal!important}
+#appHeader .brand-subtitle{font-size:clamp(13px,2.7vw,16px)!important;margin-top:4px!important}
+#appHeader .welcome-panel{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex-wrap:wrap!important;gap:5px 12px!important;margin:0!important;padding:8px 11px!important;
+ background:#111519!important;border:1px solid #262c32!important;border-radius:12px!important;
+}
+#appHeader .welcome-panel.hidden{display:none!important}
+#appHeader #welcome{display:inline!important;margin:0!important;font-size:16px!important;line-height:1.2!important}
+#appHeader #roleTag{font-size:13px!important;color:#b9c0c8!important}
+.wrap{padding-top:150px!important}
+@media(max-width:520px){
+ #appHeader{top:5px!important;padding:10px 12px 9px!important;gap:7px!important}
+ #appHeader h1{font-size:clamp(21px,5.4vw,27px)!important}
+ #appHeader .brand-subtitle{font-size:13px!important}
+ #appHeader .welcome-panel{padding:7px 9px!important}
+ #appHeader #welcome{font-size:15px!important}
+ #appHeader #roleTag{font-size:12px!important}
+ .wrap{padding-top:135px!important}
+}
+@media print{#appHeader{display:none!important}.wrap{padding-top:0!important}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -224,9 +255,9 @@ button.secondary{background:#29323a;color:#f5f6f8}
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader" class="row"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div></header>
+<header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
-<section id="app" class="hidden"><div class="card row welcome-panel"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
+<section id="app" class="hidden"><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
 <section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
  <div class="invoice-controls no-print">
@@ -1267,7 +1298,7 @@ return;
 role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
-if($("adminSalesSummary"))$("adminSalesSummary").classList.toggle("hidden",!isAdmin());
+if($("welcomePanel"))$("welcomePanel").classList.remove("hidden");
 $("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
 $("roleTag").textContent="Role: "+(role==="admin"?"Business Owner":role==="worker"?"Shop Manager":role);
 renderNav();
