@@ -167,12 +167,39 @@ button.secondary{background:#29323a;color:#f5f6f8}
 .dashboard-note{margin:13px 2px 0}
 @media(max-width:520px){.dashboard-metrics{gap:9px}.metric-card{gap:9px;padding:12px 9px;min-height:94px;border-radius:19px}.metric-icon{width:49px;height:49px;flex-basis:49px;font-size:27px}.metric-label{font-size:13px}.metric-value{font-size:clamp(16px,4vw,20px)}.dashboard-panel{padding:15px;border-radius:21px}.panel-heading h3{font-size:19px!important}.text-action{font-size:12px}.today-stat{gap:6px}.today-stat+.today-stat{padding-left:8px}.today-icon{width:34px;height:34px;flex-basis:34px;font-size:24px}.profit-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}.profit-grid>div:nth-child(3){border-left:0}.profit-grid>div:nth-child(3),.profit-grid>div:nth-child(4){border-top:1px solid #41464c;padding-top:12px}.profit-grid b{font-size:12px}.profit-grid strong{font-size:14px}}
 
-/* Keep the Smart Business Manager header visible while scrolling */
+/* Fixed branding header: slightly lower and larger on screen */
 #appHeader{
-  position:sticky!important;
-  top:0!important;
+  position:fixed!important;
+  top:12px!important;
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+  margin:0!important;
+  padding:18px 20px 17px!important;
+  min-height:0!important;
   z-index:1000!important;
   background:#080b0e!important;
+  border:0!important;
+  box-sizing:border-box!important;
+}
+#appHeader h1{
+  font-size:clamp(30px,5.5vw,42px)!important;
+  line-height:1.16!important;
+}
+#appHeader .brand-subtitle{
+  font-size:clamp(16px,2.7vw,21px)!important;
+  margin-top:7px!important;
+}
+.wrap{padding-top:118px!important}
+@media(max-width:520px){
+  #appHeader{top:10px!important;padding:17px 13px 15px!important}
+  #appHeader h1{font-size:clamp(27px,6vw,34px)!important}
+  #appHeader .brand-subtitle{font-size:16px!important}
+  .wrap{padding-top:108px!important}
+}
+@media print{
+  #appHeader{display:none!important}
+  .wrap{padding-top:0!important}
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
