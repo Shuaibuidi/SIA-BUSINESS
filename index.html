@@ -576,7 +576,7 @@ function dashboard(s){
  '<div class="today-stat"><span class="today-icon blue">▦</span><div><div class="metric-label">Today’s Sales</div><div class="metric-value">'+money(todaySales)+'</div></div></div>'+
  (isAdmin()?'<div class="today-stat"><span class="today-icon green">↗</span><div><div class="metric-label">Today’s Sales Profits</div><div class="metric-value">'+money(todaySalesProfit)+'</div></div></div>':'')+
  '<div class="today-stat"><span class="today-icon purple">▤</span><div><div class="metric-label">Today’s Services</div><div class="metric-value">'+money(todayServicesTotal)+'</div></div></div>'+
- (isAdmin()?'<div class="today-stat"><span class="today-icon orange">◆</span><div><div class="metric-label">Today’s Service Profits</div><div class="metric-value">'+money(todayServicesProfit)+'</div></div></div>':'')+'</div></section>';
+ (isAdmin()?'<div class="today-stat"><span class="today-icon orange">◆</span><div><div class="metric-label">Today’s Service Profits</div><div class="metric-value">'+money(todayServicesProfit)+'</div></div></div>':'')+'</div></section>'+inventoryValueTables("stock","Accessories Stock")+inventoryValueTables("spareParts","Spare Parts Stock");
 }
 function inventoryValueTables(collection,title){
 const items=records(collection);
