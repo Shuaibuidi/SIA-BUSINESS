@@ -45,7 +45,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader" class="row"><div><h1>S I A BUSINESS</h1></div></header>
+<header id="appHeader" class="row"><div><h1>Smart Business Manager</h1></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
@@ -485,7 +485,7 @@ function showInvoice(x){
         <div class="sia-motto">INNOVATE &nbsp;•&nbsp; PRINT &nbsp;•&nbsp; GROW</div>
       </div>
     </header>
-    <div class="sia-contact"><span>⌖ &nbsp; Lunzu Matindi (Blantyre)</span><span>☎ &nbsp; 0888 290 495 / 0999 290 495</span></div>
+    <div class="sia-contact"><span>⌖ &nbsp; Lunzu Matindi (Blantyre)</span><span>☎ &nbsp; 0888 290 495 / 0999 290 495</span><span>✉ &nbsp; siatechprintmedia.mw@gmail.com</span></div>
     <div style="padding:0 8px"><div class="sia-title">INVOICE</div></div>
     <div class="sia-meta">
       <div><b>Invoice Number:</b> ${invoiceNumber}</div>
@@ -509,7 +509,7 @@ function showInvoice(x){
 async function printCurrentInvoice(){
   const paper=$("invoicePaper");
   if(!paper?.innerHTML.trim())return alert("Open an invoice first.");
-  const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>S I A BUSINESS Invoice</title><style>
+  const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smart Business Manager Invoice</title><style>
     body{font-family:Arial,sans-serif;color:#111;background:#fff;margin:0;padding:18px}
     h1{text-align:center;font-size:28px;margin:12px 0;color:#111}
     h2{font-size:22px;margin:18px 0;color:#111}
