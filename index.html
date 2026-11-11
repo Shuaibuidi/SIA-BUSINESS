@@ -200,7 +200,7 @@ function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares"
 function renderNav(){
  const icons={dashboard:'⌂',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
  const p=navItems();
- $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\\''+x[0]+'\\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
+ $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
 function go(id){current=id;renderNav();renderDrawerNav();renderScreen();say("")}
 
