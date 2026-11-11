@@ -140,6 +140,32 @@ button.secondary{background:#29323a;color:#f5f6f8}
 .invoice-overlay{background:#080b0e}
 @media(max-width:520px){body{padding:15px 9px 108px}#appHeader{margin:0 -9px 20px;padding:7px 13px 15px}.grid{gap:9px}.grid>.card{min-height:94px;padding:13px 11px;border-radius:19px}.grid>.card .muted{font-size:13px}.stat{font-size:clamp(17px,4.2vw,22px)}#screen>.card{padding:15px;border-radius:21px}#screen h3{font-size:19px}#nav{padding:8px 5px max(10px,env(safe-area-inset-bottom))}#nav button{font-size:13px}#nav button .nav-icon{font-size:28px}}
 @media print{#nav{display:none!important}body{padding:0!important}}
+/* Dashboard cards and sections matching the approved reference */
+.dashboard-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0 18px}
+.metric-card{display:flex;align-items:center;gap:13px;min-width:0;min-height:108px;padding:15px 13px;background:#111519;border:1px solid #262c32;border-radius:22px}
+.metric-icon{width:60px;height:60px;flex:0 0 60px;display:grid;place-items:center;border-radius:50%;font-size:34px;font-weight:800;color:#fff}
+.metric-blue{background:#087ee8}.metric-green{background:#08c66b}.metric-orange{background:#ff9200}.metric-purple{background:#7838ed}
+.metric-label{font-size:15px;color:#d7dce2;line-height:1.25;margin-bottom:5px}
+.metric-value{font-size:clamp(18px,3vw,25px);font-weight:800;color:#fff;letter-spacing:-.4px;overflow-wrap:anywhere}
+.dashboard-panel{padding:18px;margin:16px 0;background:#111519;border:1px solid #262c32;border-radius:23px}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.panel-heading h3{font-size:21px!important;margin:0;color:#fff}
+.text-action{background:transparent!important;color:#299cff!important;padding:4px!important;margin:0!important;border-radius:0!important;box-shadow:none!important;font-size:14px;white-space:nowrap}
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.today-stat{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 2px}
+.today-stat+.today-stat{border-left:1px solid #41464c;padding-left:14px}
+.today-icon{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;font-size:29px;font-weight:800}
+.today-icon.blue,.profit-icon.blue{color:#168df4}.today-icon.green,.profit-icon.green{color:#12d477}.profit-icon.purple{color:#a46aff}.profit-icon.orange{color:#ffb21a}
+.profit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.profit-grid>div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;padding:4px 7px;min-width:0}
+.profit-grid>div+div{border-left:1px solid #41464c}
+.profit-icon{font-size:32px;font-weight:800;line-height:1.2}
+.profit-grid b{font-size:13px;color:#f4f5f7;line-height:1.25}.profit-grid strong{font-size:16px;color:#fff;overflow-wrap:anywhere}
+.tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tool-link{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;margin:0;padding:12px 14px;background:#191f25!important;border:1px solid #2a323a;color:#f5f6f8!important;border-radius:15px;box-shadow:none!important}
+.tool-link b{font-size:14px}.tool-link span{font-size:12px;color:#aeb8c2;font-weight:400}
+.dashboard-note{margin:13px 2px 0}
+@media(max-width:520px){.dashboard-metrics{gap:9px}.metric-card{gap:9px;padding:12px 9px;min-height:94px;border-radius:19px}.metric-icon{width:49px;height:49px;flex-basis:49px;font-size:27px}.metric-label{font-size:13px}.metric-value{font-size:clamp(16px,4vw,20px)}.dashboard-panel{padding:15px;border-radius:21px}.panel-heading h3{font-size:19px!important}.text-action{font-size:12px}.today-stat{gap:6px}.today-stat+.today-stat{padding-left:8px}.today-icon{width:34px;height:34px;flex-basis:34px;font-size:24px}.profit-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}.profit-grid>div:nth-child(3){border-left:0}.profit-grid>div:nth-child(3),.profit-grid>div:nth-child(4){border-top:1px solid #41464c;padding-top:12px}.profit-grid b{font-size:12px}.profit-grid strong{font-size:14px}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -212,8 +238,32 @@ function listHtml(c,render){return records(c).map(x=>`<div class="item">${render
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
 function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
-function dashboard(s){let tx=[...records("transactions"),...records("spareSales")],sales=tx.reduce((a,x)=>a+Number(x.total||0),0)+records("services").reduce((a,x)=>a+Number(x.amount||0),0),exp=records("expenses").reduce((a,x)=>a+Number(x.amount||0),0),low=[...records("stock"),...records("spareParts")].filter(x=>Number(x.quantity||0)<=Number(x.lowStockAt??5));s.innerHTML=`<div class="grid"><div class="card"><div class="muted">Sales / services</div><div class="stat">${money(isAdmin()?sales:tx.filter(x=>x.workerUid===user.uid).reduce((a,x)=>a+Number(x.total||0),0))}</div></div><div class="card"><div class="muted">Stock items</div><div class="stat">${records("stock").length}</div></div><div class="card"><div class="muted">Spare parts</div><div class="stat">${records("spareParts").length}</div></div><div class="card"><div class="muted">Repair jobs</div><div class="stat">${records("jobs").length}</div></div>${isAdmin()?`<div class="card"><div class="muted">Expenses</div><div class="stat">${money(exp)}</div></div><div class="card"><div class="muted">Estimated gross profit</div><div class="stat">${money(grossProfit())}</div></div><div class="card"><div class="muted">Low-stock alerts</div><div class="stat">${low.length}</div></div><div class="card"><div class="muted">Customer balances</div><div class="stat">${money(records("invoices").reduce((a,x)=>a+Math.max(0,Number(x.balance||0)),0))}</div></div>`:""}</div>${isAdmin()?`<div class="card"><h3>Low-stock alerts</h3>${low.map(x=>`<div class="item"><b>${esc(x.name)}</b> · Available: ${Number(x.quantity||0)} · Alert level: ${Number(x.lowStockAt??5)}</div>`).join("")||`<p class="muted">No items at or below their alert level.</p>`}</div>`:""}<div class="card"><h3>Your Business At A Glance</h3><p class="muted">Manage stock, spare parts, sales, repairs and printing services from one place.</p></div>`}
-
+function dashboard(s){
+ const tx=[...records("transactions"),...records("spareSales")];
+ const accessoryProfit=tx.reduce((n,x)=>n+Number(x.profit||0),0);
+ const repairProfit=records("jobs").reduce((n,x)=>n+Number(x.fee||0)-Number(x.partsCost||0),0);
+ const printingProfit=records("services").reduce((n,x)=>n+Number(x.amount||0)-Number(x.cost||0),0);
+ const expenses=records("expenses").reduce((n,x)=>n+Number(x.amount||0),0);
+ const totalSales=tx.reduce((n,x)=>n+Number(x.total||0),0)+records("services").reduce((n,x)=>n+Number(x.amount||0),0);
+ const stockValue=[...records("stock"),...records("spareParts")].reduce((n,x)=>n+Number(x.quantity||0)*Number(x.buyingPrice||0),0);
+ const today=new Date().toDateString();
+ const todayRecord=x=>{const d=x?.createdAt?.toDate?x.createdAt.toDate():x?.createdAt?new Date(x.createdAt):null;return !!d&&!Number.isNaN(d.getTime())&&d.toDateString()===today};
+ const todaySales=tx.filter(todayRecord).reduce((n,x)=>n+Number(x.total||0),0)+records("services").filter(todayRecord).reduce((n,x)=>n+Number(x.amount||0),0);
+ const todayProfit=tx.filter(todayRecord).reduce((n,x)=>n+Number(x.profit||0),0)+records("services").filter(todayRecord).reduce((n,x)=>n+Number(x.amount||0)-Number(x.cost||0),0)+records("jobs").filter(todayRecord).reduce((n,x)=>n+Number(x.fee||0)-Number(x.partsCost||0),0);
+ const low=[...records("stock"),...records("spareParts")].filter(x=>Number(x.quantity||0)<=Number(x.lowStockAt??5));
+ const visibleSales=isAdmin()?totalSales:tx.filter(x=>x.workerUid===user.uid).reduce((n,x)=>n+Number(x.total||0),0);
+ const tools=[["spares","Spare Parts"],["services","Printing Services"],["invoices","Invoices"],["customers","Customers"]];
+ if(isAdmin())tools.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"],["workers","Members"],["settings","Account Information"]);
+ const toolHtml=tools.map(x=>'<button type="button" class="tool-link" onclick="go(\\\''+x[0]+'\\\')"><b>'+x[1]+'</b><span>Open section</span></button>').join("");
+ s.innerHTML='<section class="dashboard-metrics">'+
+ '<div class="metric-card"><span class="metric-icon metric-blue">▥</span><div><div class="metric-label">Total Sales</div><div class="metric-value">'+money(visibleSales)+'</div></div></div>'+
+ '<div class="metric-card"><span class="metric-icon metric-green">↗</span><div><div class="metric-label">Total Profit</div><div class="metric-value">'+money(isAdmin()?accessoryProfit+repairProfit+printingProfit:accessoryProfit+repairProfit+printingProfit)+'</div></div></div>'+
+ '<div class="metric-card"><span class="metric-icon metric-orange">▣</span><div><div class="metric-label">Expenses</div><div class="metric-value">'+money(isAdmin()?expenses:0)+'</div></div></div>'+
+ '<div class="metric-card"><span class="metric-icon metric-purple">⬡</span><div><div class="metric-label">Stock Value</div><div class="metric-value">'+money(isAdmin()?stockValue:0)+'</div></div></div></section>'+
+ '<section class="dashboard-panel"><div class="panel-heading"><h3>Today’s Overview</h3><button type="button" class="text-action" onclick="go(\\\'reports\\\')">View All →</button></div><div class="today-grid"><div class="today-stat"><span class="today-icon blue">▦</span><div><div class="metric-label">Today’s Sales</div><div class="metric-value">'+money(todaySales)+'</div></div></div><div class="today-stat"><span class="today-icon green">$</span><div><div class="metric-label">Today’s Profit</div><div class="metric-value">'+money(todayProfit)+'</div></div></div></div></section>'+
+ '<section class="dashboard-panel"><div class="panel-heading"><h3>Key Profits</h3><button type="button" class="text-action" onclick="go(\\\'reports\\\')">View Report →</button></div><div class="profit-grid"><div><span class="profit-icon blue">☎</span><b>Accessories</b><strong>'+money(accessoryProfit)+'</strong></div><div><span class="profit-icon green">🔧</span><b>Repairs</b><strong>'+money(repairProfit)+'</strong></div><div><span class="profit-icon purple">▤</span><b>Printing</b><strong>'+money(printingProfit)+'</strong></div><div><span class="profit-icon orange">▮</span><b>Operating Expenses</b><strong>'+money(expenses)+'</strong></div></div></section>'+
+ '<section class="dashboard-panel"><div class="panel-heading"><h3>Business Tools</h3><span class="muted">More sections</span></div><div class="tools-grid">'+toolHtml+'</div><p class="muted dashboard-note">Low-stock alerts: <b>'+low.length+'</b> · Outstanding customer balances: <b>'+money(records("invoices").reduce((n,x)=>n+Math.max(0,Number(x.balance||0)),0))+'</b></p></section>';
+}
 function stockScreen(s){s.innerHTML=`${isAdmin()?`<div class="card"><h3>Stock management</h3><div class="grid">${formField("stName","Product name")}${formField("stQty","Quantity","number")}${formField("stLow","Low-stock alert at","number")}${formField("stBuy","Buying price (MK)","number","","0.01")}${formField("stSell","Selling price (MK)","number","","0.01")}</div><button onclick="saveStock()">Save stock item</button></div>`:""}<div class="card"><h3>Stock list</h3>${listHtml("stock",p=>`<b>📦 ${esc(p.name)}</b><br><span class="muted">Available quantity: ${p.quantity} · Low-stock alert: ${Number(p.lowStockAt??5)}</span><br>${Number(p.quantity||0)<=Number(p.lowStockAt??5)?`<b style="color:#ffd18b">LOW STOCK</b><br>`:""}<b>Selling price: ${money(p.sellingPrice)}</b>${isAdmin()?`<br>Buying: ${money(p.buyingPrice)} · Profit/unit: ${money(Number(p.sellingPrice)-Number(p.buyingPrice))}<div class="actions"><button onclick="editItem('stock','${p.id}')">Edit</button><button class="danger" onclick="removeDoc('stock','${p.id}')">Delete</button></div>`:""}`)}</div>`}
 
 async function saveStock(){if(!isAdmin())return alert("Admin permission required.");let name=val("stName"),quantity=num("stQty"),lowStockAt=val("stLow")===""?5:num("stLow"),buyingPrice=num("stBuy"),sellingPrice=num("stSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid stock details.");try{await db.doc(`${path("stock")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,createdAt:stamp(),createdBy:user.uid,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Stock item saved.");renderScreen()}catch(e){alert("Could not save stock: "+e.message)}}
