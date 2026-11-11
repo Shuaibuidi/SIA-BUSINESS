@@ -494,6 +494,9 @@ body{
 const firebaseConfig={apiKey:"AIzaSyAf8Sg2eDDQtKTXPT913E32IUUdLvIde-I",authDomain:"smart-business-manager-f319f.firebaseapp.com",projectId:"smart-business-manager-f319f",storageBucket:"smart-business-manager-f319f.firebasestorage.app",messagingSenderId:"716400037263",appId:"1:716400037263:web:42a1e961b1597d0d280ffa"};
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(),db=firebase.firestore(),BUSINESS_ID="7RqIYO3IDSVCYex1LsDo6rDw5V33";
+// Keep Firebase Authentication signed in across app closes and phone restarts.
+// The user is signed out only by the explicit Sign Out action or account security checks.
+const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices"];
 let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`,isAdmin=()=>role==="admin",money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2}),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),stamp=()=>firebase.firestore.FieldValue.serverTimestamp(),val=id=>$(id)?.value?.trim()||"",num=id=>Number($(id)?.value||0),records=c=>cache[c]||[];
@@ -1564,6 +1567,7 @@ if(!auth||!auth.signInWithEmailAndPassword){
 if(button){button.disabled=true;button.textContent="Signing in...";}
 message.textContent="Connecting securely...";
 try{
+ await authPersistenceReady;
  await auth.signInWithEmailAndPassword(email,password);
  message.textContent="Sign-in successful. Opening your business...";
 }catch(e){
