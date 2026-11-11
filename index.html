@@ -440,6 +440,31 @@ body{
   #app,#screen{display:block!important;overflow:visible!important;height:auto!important}
 }
 
+
+/* Business Performance tab */
+.performance-period{margin:10px 0 16px}
+.performance-period button{flex:1 1 0;min-width:0;text-align:center}
+.performance-period button.active{background:#ffd33d;color:#17130a}
+.performance-overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.performance-overview>div{display:flex;flex-direction:column;gap:6px;min-width:0;padding:13px;background:#171d23;border:1px solid #29323a;border-radius:15px}
+.performance-overview strong{font-size:clamp(17px,4vw,23px);overflow-wrap:anywhere;color:#fff}
+.performance-list{display:grid;grid-template-columns:1fr;gap:11px}
+.performance-card{padding:14px;background:#151b20;border:1px solid #29323a;border-radius:17px}
+.performance-card-head{display:flex;align-items:center;gap:9px;font-size:15px}
+.performance-icon{font-size:22px}
+.performance-percent{font-size:27px;font-weight:800;margin:9px 0 7px;color:#fff}
+.performance-track{height:9px;border-radius:20px;background:#303840;overflow:hidden;margin-bottom:12px}
+.performance-track span{display:block;height:100%;border-radius:20px;background:#18bd83}
+.performance-detail{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px;border-top:1px solid #29323a}
+.performance-detail span{color:#aeb8c2}
+.performance-detail b{color:#f5f6f8;text-align:right}
+.performance-up{color:#32d28b!important}
+.performance-down{color:#ff9b87!important}
+.performance-explain{margin:13px 1px 0;line-height:1.5}
+.performance-empty{display:flex;flex-direction:column;gap:8px;padding:18px;text-align:center;color:#fff}
+.performance-empty span{font-size:13px;color:#aeb8c2;line-height:1.5}
+@media(min-width:650px){.performance-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -470,9 +495,9 @@ function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
 function invoiceRecordedLabel(x){if(x?.recordedByUid===BUSINESS_ID||x?.recordedBy==="Managing Director")return "Business Owner";if(x?.recordedByUid)return "Shop Manager";return x?.recordedBy||invoiceRecorder()}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
+function navItems(){let a=[["dashboard","Dashboard"],["performance","Performance"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
 function renderNav(){
- const icons={dashboard:'⌂',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
+ const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
  const p=navItems();
  $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
@@ -511,7 +536,7 @@ async function updateDoc(c,id,data){return db.doc(`${path(c)}/${id}`).update({..
 async function removeDoc(c,id){if(!isAdmin())return alert("Admin permission required.");if(!confirm("Delete this record permanently?"))return;try{await db.doc(`${path(c)}/${id}`).delete();say("Record deleted.")}catch(e){alert("Delete failed: "+e.message)}}
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -1106,6 +1131,105 @@ let repairs=records("jobs").reduce((a,x)=>a+Number(x.fee||0)-Number(x.partsCost|
 return sales+spares+services+repairs;
 }
 
+
+let performancePeriod="Daily";
+function performanceDate(x){
+ const v=x&&x.createdAt;
+ if(!v)return null;
+ const d=v.toDate?v.toDate():new Date(v);
+ return Number.isNaN(d.getTime())?null:d;
+}
+function performanceRanges(period){
+ const now=new Date(),start=new Date(now);
+ start.setHours(0,0,0,0);
+ if(period==="Weekly"){
+   const day=(start.getDay()+6)%7;
+   start.setDate(start.getDate()-day);
+ }else if(period==="Monthly"){
+   start.setDate(1);
+ }
+ const elapsed=now.getTime()-start.getTime();
+ const previousStart=new Date(start);
+ if(period==="Weekly")previousStart.setDate(previousStart.getDate()-7);
+ else if(period==="Monthly")previousStart.setMonth(previousStart.getMonth()-1);
+ else previousStart.setDate(previousStart.getDate()-1);
+ const previousEnd=new Date(previousStart.getTime()+elapsed);
+ return {start,end:now,previousStart,previousEnd};
+}
+function performancePercent(value,total){
+ if(!total)return 0;
+ return Math.max(0,Math.min(100,(value/total)*100));
+}
+function performanceChange(current,previous){
+ if(previous===0)return current>0?"New":"0%";
+ const n=((current-previous)/Math.abs(previous))*100;
+ return (n>0?"+":"")+n.toFixed(1)+"%";
+}
+function performanceScreen(s){
+ const ranges=performanceRanges(performancePeriod);
+ const sources=[
+  {key:"transactions",label:"Stock Sales",revenue:x=>Number(x.total||0),profit:x=>Number(x.profit||0),icon:"📦"},
+  {key:"spareSales",label:"Spare Parts Sales",revenue:x=>Number(x.total||0),profit:x=>Number(x.profit||0),icon:"🔩"},
+  {key:"jobs",label:"Repairing Services",revenue:x=>Number(x.fee||0),profit:x=>Number(x.fee||0)-Number(x.partsCost||0),icon:"🔧"},
+  {key:"services",label:"Printing Services",revenue:x=>Number(x.amount||0),profit:x=>Number(x.amount||0)-Number(x.cost||0),icon:"🖨️"}
+ ];
+ const summary=sources.map(source=>{
+  const rows=records(source.key);
+  const current=rows.filter(x=>{const d=performanceDate(x);return d&&d>=ranges.start&&d<=ranges.end;});
+  const previous=rows.filter(x=>{const d=performanceDate(x);return d&&d>=ranges.previousStart&&d<ranges.previousEnd;});
+  return {
+   ...source,
+   revenue:current.reduce((a,x)=>a+source.revenue(x),0),
+   profit:current.reduce((a,x)=>a+source.profit(x),0),
+   previousRevenue:previous.reduce((a,x)=>a+source.revenue(x),0),
+   count:current.length
+  };
+ });
+ const revenue=summary.reduce((a,x)=>a+x.revenue,0);
+ const profit=summary.reduce((a,x)=>a+x.profit,0);
+ const previousRevenue=summary.reduce((a,x)=>a+x.previousRevenue,0);
+ const margin=revenue>0?(profit/revenue)*100:0;
+ const periodButtons=["Daily","Weekly","Monthly"].map(p=>'<button type="button" class="'+(performancePeriod===p?'active':'')+'" onclick="setPerformancePeriod(\''+p+'\')">'+p+'</button>').join("");
+ const cards=summary.map(item=>{
+  const share=performancePercent(item.revenue,revenue);
+  const change=performanceChange(item.revenue,item.previousRevenue);
+  const positive=change==="New"||change.startsWith("+");
+  return '<div class="performance-card">'+
+   '<div class="performance-card-head"><span class="performance-icon">'+item.icon+'</span><b>'+item.label+'</b></div>'+
+   '<div class="performance-percent">'+share.toFixed(1)+'%</div>'+
+   '<div class="performance-track"><span style="width:'+share.toFixed(2)+'%"></span></div>'+
+   '<div class="performance-detail"><span>Revenue</span><b>'+money(item.revenue)+'</b></div>'+
+   '<div class="performance-detail"><span>Profit</span><b>'+money(item.profit)+'</b></div>'+
+   '<div class="performance-detail"><span>Records</span><b>'+item.count+'</b></div>'+
+   '<div class="performance-detail"><span>Vs Previous Period</span><b class="'+(positive?'performance-up':'performance-down')+'">'+change+'</b></div>'+
+  '</div>';
+ }).join("");
+ const periodLabel=performancePeriod==="Daily"?"Today":performancePeriod==="Weekly"?"This Week":"This Month";
+ s.innerHTML=
+ '<section class="dashboard-panel performance-panel">'+
+  '<div class="panel-heading"><div><h3>Business Performance</h3><div class="muted">Based on your recorded sales and services</div></div></div>'+
+  '<div class="tabs performance-period">'+periodButtons+'</div>'+
+  '<div class="performance-overview">'+
+   '<div><span class="muted">'+periodLabel+' Revenue</span><strong>'+money(revenue)+'</strong></div>'+
+   '<div><span class="muted">Gross Profit</span><strong>'+money(profit)+'</strong></div>'+
+   '<div><span class="muted">Profit Margin</span><strong>'+margin.toFixed(1)+'%</strong></div>'+
+   '<div><span class="muted">Revenue Change</span><strong class="'+(performanceChange(revenue,previousRevenue)==="New"||performanceChange(revenue,previousRevenue).startsWith("+")?'performance-up':'performance-down')+'">'+performanceChange(revenue,previousRevenue)+'</strong></div>'+
+  '</div>'+
+  '<p class="muted performance-explain">Category percentages show each activity’s share of your total recorded revenue for this period. Changes compare the same elapsed part of the previous period.</p>'+
+ '</section>'+
+ '<section class="dashboard-panel"><div class="panel-heading"><h3>Performance By Activity</h3></div>'+
+ (revenue>0?'<div class="performance-list">'+cards+'</div>':'<div class="performance-empty"><b>No activity recorded for this period yet.</b><span>Record a stock sale, spare parts sale, repair or printing service to see your percentages here.</span></div>')+
+ '</section>'+
+ '<section class="dashboard-panel"><h3>How To Read These Percentages</h3>'+
+ '<p class="muted">Activity Share = that activity’s revenue divided by all stock and service revenue. Profit Margin = gross profit divided by revenue. Period Change compares revenue with the matching previous period. These figures use saved records only; they are not targets or estimated scores.</p>'+
+ '</section>';
+}
+function setPerformancePeriod(period){
+ if(!["Daily","Weekly","Monthly"].includes(period))return;
+ performancePeriod=period;
+ renderScreen();
+}
+
 function reportsScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
@@ -1457,7 +1581,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"){
 renderScreen();
 }
 if($("salesTotal")){
