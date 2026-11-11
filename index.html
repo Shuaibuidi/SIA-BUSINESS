@@ -86,6 +86,26 @@ th{color:#d7c9b2}
 }
 
 body{padding-top:22px}#appHeader{margin:0 -12px 18px;padding:18px 16px 14px;min-height:88px;top:0}.header-icon{border:0;cursor:pointer;display:grid;place-items:center;margin:0;box-shadow:none}.brand-menu{display:none!important}.brand-avatar{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#0b84d6;color:#fff;font-size:22px;font-weight:500;padding:0}.brand-avatar:hover{background:#0875bd}.drawer-backdrop{position:fixed;inset:0;z-index:200;background:#0009}.app-drawer{position:absolute;inset:0 auto 0 0;width:min(82vw,320px);overflow:auto;background:#29251d;border-radius:0 20px 20px 0;padding:24px 12px;box-shadow:8px 0 30px #0007}.drawer-heading{font-size:19px;font-weight:700;padding:8px 14px 3px;color:#f0e9dc}.drawer-caption{font-size:12px;color:#b9ad98;padding:0 14px 18px;border-bottom:1px solid #494032}.drawer-nav{display:grid;gap:4px;padding-top:12px}.drawer-nav button{width:100%;text-align:left;margin:0;padding:13px 16px;border-radius:0 24px 24px 0;background:transparent;color:#e8e0d2;font-weight:500}.drawer-nav button.active{background:#594b30;color:#ffdf9a}.drawer-nav button:active{transform:none}.account-menu{position:fixed;z-index:210;right:12px;top:82px;width:min(310px,calc(100vw - 24px));padding:18px;background:#302b22;border:1px solid #554a38;border-radius:22px;box-shadow:0 12px 36px #0009}.account-menu-name{font-size:18px;font-weight:700;color:#f4ecde}.account-menu-email,.account-menu-role{font-size:13px;color:#c4b9a6;margin-top:5px;overflow-wrap:anywhere}.account-menu-action{display:block;width:100%;text-align:left;margin:12px 0 0;padding:12px 14px;background:#453c2c;color:#f3e7d2;border-radius:14px}.account-menu-action:last-child{background:#5a352b;color:#ffe5d8}@media(max-width:600px){body{padding:18px 9px 9px}#appHeader{margin:0 -9px 14px;padding:17px 13px 13px;min-height:86px}.brand-menu{display:none!important}.brand-avatar{width:40px;height:40px;flex-basis:40px}.account-menu{top:80px;right:9px}}
+
+/* Slightly larger, more comfortable app typography */
+body{font-size:17px}
+#appHeader h1{font-size:22px}
+.brand-subtitle{font-size:13px}
+h2{font-size:22px}
+h3{font-size:18px}
+.muted{font-size:14px}
+label{font-size:14px}
+.small{font-size:13px}
+table{font-size:14px}
+.actions button{font-size:13px}
+@media(max-width:600px){
+ body{font-size:16.5px}
+ #appHeader h1{font-size:20px}
+ h2{font-size:21px}
+ .muted{font-size:14px}
+ .small{font-size:13px}
+}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -94,7 +114,7 @@ body{padding-top:22px}#appHeader{margin:0 -12px 18px;padding:18px 16px 14px;min-
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader" class="row"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Business Management</div></div></div><button type="button" class="header-icon brand-avatar" aria-label="Open account menu" onclick="toggleAccountMenu()" aria-expanded="false">S</button></header><div id="appDrawerBackdrop" class="drawer-backdrop hidden" onclick="closeAppDrawer()"><aside id="appDrawer" class="app-drawer" onclick="event.stopPropagation()"><div class="drawer-heading">Smart Business Manager</div><div class="drawer-caption">Business Management</div><nav id="drawerNav" class="drawer-nav"></nav></aside></div><div id="accountMenu" class="account-menu hidden"><div class="account-menu-name" id="accountMenuName">Account</div><div class="account-menu-email" id="accountMenuEmail"></div><div class="account-menu-role" id="accountMenuRole"></div><button type="button" class="account-menu-action" onclick="openAccountInformation()">Account Information</button><button type="button" class="account-menu-action" onclick="logout()">Sign Out</button></div>
+<header id="appHeader" class="row"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Business Management</div></div></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
