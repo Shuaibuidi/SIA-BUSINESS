@@ -44,6 +44,7 @@ jobs:
 
           mkdir -p www resources
           cp ../index.html www/index.html
+          cp ../logo.png www/logo.png
           cp ../icon.png resources/icon.png
 
           # Bundle the native biometric plugin for this app's plain HTML interface.
