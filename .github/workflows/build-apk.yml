@@ -111,7 +111,7 @@ jobs:
           EOF
           npx esbuild social-login.js --bundle --platform=browser --format=iife --outfile=www/social-login.js
 
-          npx cap init "SIA BUSINESS" "com.siatech.businessmanager" --web-dir=www
+          npx cap init "Smart Business Manager" "com.siatech.businessmanager" --web-dir=www
           npx cap add android
 
           # Forward Google Drive authorization results to the native sign-in plugin.
@@ -167,7 +167,7 @@ jobs:
             exit 1
           fi
 
-          sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">SIA BUSINESS</string>#' "$STRINGS_FILE"
+          sed -i 's#<string name="app_name">[^<]*</string>#<string name="app_name">Smart Business Manager</string>#' "$STRINGS_FILE"
 
           grep "app_name" "$STRINGS_FILE"
 
