@@ -576,8 +576,18 @@ function dashboard(s){
  '<div class="today-stat"><span class="today-icon blue">▦</span><div><div class="metric-label">Today’s Sales</div><div class="metric-value">'+money(todaySales)+'</div></div></div>'+
  (isAdmin()?'<div class="today-stat"><span class="today-icon green">↗</span><div><div class="metric-label">Today’s Sales Profits</div><div class="metric-value">'+money(todaySalesProfit)+'</div></div></div>':'')+
  '<div class="today-stat"><span class="today-icon purple">▤</span><div><div class="metric-label">Today’s Services</div><div class="metric-value">'+money(todayServicesTotal)+'</div></div></div>'+
- (isAdmin()?'<div class="today-stat"><span class="today-icon orange">◆</span><div><div class="metric-label">Today’s Service Profits</div><div class="metric-value">'+money(todayServicesProfit)+'</div></div></div>':'')+'</div></section>'+inventoryValueTables("stock","Accessories Stock")+inventoryValueTables("spareParts","Spare Parts Stock");
+ (isAdmin()?'<div class="today-stat"><span class="today-icon orange">◆</span><div><div class="metric-label">Today’s Service Profits</div><div class="metric-value">'+money(todayServicesProfit)+'</div></div></div>':'')+'</div></section>'+inventoryValueSummary("stock","Accessories Stock")+inventoryValueSummary("spareParts","Spare Parts Stock");
 }
+function inventoryValueSummary(collection,title){
+const items=records(collection);
+const totalCost=items.reduce((sum,x)=>sum+Math.max(0,Number(x.quantity)||0)*Math.max(0,Number(x.buyingPrice)||0),0);
+const totalSelling=items.reduce((sum,x)=>sum+Math.max(0,Number(x.quantity)||0)*Math.max(0,Number(x.sellingPrice)||0),0);
+return '<section class="dashboard-panel"><div class="panel-heading"><h3>'+title+'</h3></div><div class="dashboard-metrics">'+
+(isAdmin()?'<div class="metric-card"><div><div class="metric-label">Total Stock Cost</div><div class="metric-value">'+money(totalCost)+'</div></div></div>':'')+
+'<div class="metric-card"><div><div class="metric-label">Total Selling Value</div><div class="metric-value">'+money(totalSelling)+'</div></div></div>'+
+'</div></section>';
+}
+
 function inventoryValueTables(collection,title){
 const items=records(collection);
 const qty=x=>Math.max(0,Number(x.quantity)||0);
