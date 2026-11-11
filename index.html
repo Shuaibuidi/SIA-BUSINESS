@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#071a2c">
+<meta name="theme-color" content="#211e17">
 <title>Smart Business Manager</title>
 <style>
 :root{font-family:Arial,sans-serif;color:#edf6ff;background:#071a2c}
@@ -37,6 +37,54 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
  .invoice-controls{display:none!important}
  .invoice-paper{max-width:none;margin:0;padding:12mm;border-radius:0}
 }
+
+/* Gmail-inspired dark interface refresh */
+:root{font-family:Roboto,Arial,sans-serif;color:#e8e2d6;background:#211e17;color-scheme:dark}
+html{background:#211e17}
+body{margin:0;padding:12px;background:#211e17;color:#e8e2d6}
+.wrap{max-width:1120px;margin:auto}
+#appHeader{position:sticky;top:0;z-index:50;padding:12px 16px;margin:-12px -12px 18px;background:#211e17;border-bottom:1px solid #393329;min-height:76px}
+.app-brand{display:flex;align-items:center;gap:18px;min-width:0}
+.brand-menu{font-size:25px;line-height:1;color:#d7cdbb;padding:0 4px}
+#appHeader h1{font-size:21px;letter-spacing:-.35px;margin:0;color:#f0e9dc;font-weight:650}
+.brand-subtitle{font-size:12px;color:#b9ad98;margin-top:3px;letter-spacing:.2px}
+.brand-avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;display:grid;place-items:center;background:#0b84d6;color:white;font-size:21px}
+.card{background:#17140e;border:1px solid #302a20;border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 2px 8px #0002}
+h1,h2,h3,h4{color:#f0e9dc;letter-spacing:-.25px}
+h2{font-size:21px}h3{font-size:17px}
+.muted,.small{color:#b8b1a5}
+label{color:#cfc4b1}
+input,select,textarea{background:#302b22;color:#f1eadf;border:1px solid #4a4032;border-radius:13px;padding:13px}
+input::placeholder,textarea::placeholder{color:#aaa08f}
+button{background:#f2c66d;color:#2a2110;border-radius:22px;padding:11px 17px;font-weight:700;box-shadow:none}
+button.secondary{background:#403a2e;color:#eee4d1}
+button.danger{background:#9d3e35;color:#fff}
+button:active{transform:scale(.98)}
+.tabs{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:9px 2px 13px;scrollbar-width:thin;scrollbar-color:#5a4d38 transparent}
+.tabs button{white-space:nowrap;border-radius:22px;background:#302b22;color:#e2d8c7;border:1px solid #40382c;padding:10px 16px;margin:0}
+.tabs button.active{background:#f4ce7b;color:#2a2110;border-color:#f4ce7b}
+.item{padding:15px;margin:9px 0;border:1px solid #342d22;border-radius:16px;background:#211d15;line-height:1.65;box-shadow:none}
+.item strong,.item b{color:#f2eadb}
+.stat{font-size:24px;font-weight:750;color:#f5d18a;letter-spacing:-.4px}
+.grid{gap:11px}
+table{color:#e9e1d3}
+td,th{border-bottom:1px solid #3a3328;padding:10px}
+th{color:#d7c9b2}
+.service-chip{background:#29241b;border:1px solid #49402f;border-radius:14px;color:#eee2cc}
+#msg,#status{color:#f3c779}
+.invoice-overlay{background:#211e17}
+@media(max-width:600px){
+ body{padding:9px}
+ #appHeader{margin:-9px -9px 14px;padding:11px 13px;min-height:68px}
+ #appHeader h1{font-size:18px}
+ .brand-menu{font-size:22px}
+ .brand-avatar{width:38px;height:38px;flex-basis:38px}
+ .card{padding:14px;border-radius:17px}
+ .tabs{margin:0 -2px}
+ .tabs button{padding:9px 14px;font-size:13px}
+ .stat{font-size:22px}
+}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -45,7 +93,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;p
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader" class="row"><div><h1>Smart Business Manager</h1></div></header>
+<header id="appHeader" class="row"><div class="app-brand"><span class="brand-menu" aria-hidden="true">☰</span><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Business Management</div></div></div><div class="brand-avatar" aria-hidden="true">S</div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button onclick="handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><div class="card row"><div><h2 id="welcome">Welcome</h2><span id="roleTag" class="muted"></span></div><div id="adminSalesSummary"><div class="stat" id="salesTotal">MK 0</div><div class="small">Sales recorded (admin view)</div></div></div><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
