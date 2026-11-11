@@ -471,7 +471,14 @@ body{
 #login button{position:relative!important;z-index:31!important;pointer-events:auto!important;touch-action:manipulation!important}
 #signInButton:disabled{opacity:.72;cursor:wait}
 #msg{display:block;min-height:1.4em;overflow-wrap:anywhere}
-\n/* Inventory price calculation tables */\n.inventory-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}\n.inventory-table-wrap table{min-width:560px;font-variant-numeric:tabular-nums}\n.inventory-table-wrap th,.inventory-table-wrap td{white-space:nowrap}\n.inventory-table-wrap th:first-child,.inventory-table-wrap td:first-child{white-space:normal;min-width:135px}\n</style>
+\n/* Inventory price calculation tables */\n.inventory-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}\n.inventory-table-wrap table{min-width:560px;font-variant-numeric:tabular-nums}\n.inventory-table-wrap th,.inventory-table-wrap td{white-space:nowrap}\n.inventory-table-wrap th:first-child,.inventory-table-wrap td:first-child{white-space:normal;min-width:135px}\n
+/* Compact refresh action in the fixed app header */
+#appHeader .app-brand{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important}
+#appHeader .header-refresh{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;margin:0;padding:9px 13px;background:#202830;color:#f5f6f8;border:1px solid #39434d;border-radius:22px;box-shadow:none;font-size:14px;font-weight:650}
+#appHeader .header-refresh span:first-child{font-size:22px;line-height:1}
+#appHeader .header-refresh:disabled{opacity:.65}
+@media(max-width:520px){#appHeader .header-refresh{padding:8px 10px;font-size:12px}#appHeader .header-refresh span:first-child{font-size:20px}}
+</style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -479,7 +486,7 @@ body{
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2></div></header>
+<header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div><button id="headerRefreshButton" class="header-refresh hidden" type="button" onclick="refreshData(this)" aria-label="Refresh business records" title="Refresh business records"><span aria-hidden="true">↻</span><span>Refresh</span></button></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button id="signInButton" type="button" onclick="window.handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
@@ -1672,6 +1679,7 @@ if($("welcomePanel"))$("welcomePanel").classList.remove("hidden");
 $("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
 
 renderNav();
+if($("headerRefreshButton"))$("headerRefreshButton").classList.remove("hidden");
 go("dashboard");
 
 let collections=[
@@ -1699,15 +1707,26 @@ say("Account setup error: "+e.message);
 }
 }
 
-async function refreshData(){
+async function refreshData(button){
 if(!user)return;
+const refreshButton=button||$("headerRefreshButton");
+const previousPage=current||"dashboard";
+if(refreshButton){refreshButton.disabled=true;refreshButton.innerHTML="<span aria-hidden=\"true\">↻</span><span>Refreshing...</span>";}
+try{
 await startData();
+if(user&&member)go(previousPage);
 say("Business records refreshed.");
+}catch(e){
+say("Refresh failed: "+(e.message||"Please try again."));
+}finally{
+if(refreshButton){refreshButton.disabled=false;refreshButton.innerHTML="<span aria-hidden=\"true\">↻</span><span>Refresh</span>";}
+}
 }
 
 auth.onAuthStateChanged(async u=>{
 user=u;
 if(!u){
+if($("headerRefreshButton"))$("headerRefreshButton").classList.add("hidden");
 clearListeners();
 member=null;
 role=null;
