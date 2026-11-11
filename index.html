@@ -63,7 +63,8 @@ const auth=firebase.auth(),db=firebase.firestore(),BUSINESS_ID="7RqIYO3IDSVCYex1
 const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices"];
 let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`,isAdmin=()=>role==="admin",money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2}),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),stamp=()=>firebase.firestore.FieldValue.serverTimestamp(),val=id=>$(id)?.value?.trim()||"",num=id=>Number($(id)?.value||0),records=c=>cache[c]||[];
-function invoiceRecorder(){return isAdmin()?"Managing Director":(String(member?.name||user?.email||"Shop Manager").trim())}
+function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
+function invoiceRecordedLabel(x){if(x?.recordedByUid===BUSINESS_ID||x?.recordedBy==="Managing Director")return "Business Owner";if(x?.recordedByUid)return "Shop Manager";return x?.recordedBy||invoiceRecorder()}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
 function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs / Jobs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
@@ -442,7 +443,7 @@ function showInvoice(x){
   const description=esc(x.description||"Business service");
   const qty=Number(x.quantity||1);
   const total=money(x.total),paid=money(x.paid),balance=money(x.balance);
-  const recorded=esc(x.recordedBy||invoiceRecorder());
+  const recorded=esc(invoiceRecordedLabel(x));
   paper.innerHTML=`
   <style>
     .sia-invoice{font-family:Arial,Helvetica,sans-serif;color:#071a2c;background:#fff;width:100%;max-width:760px;margin:0 auto;overflow:hidden}
@@ -484,13 +485,13 @@ function showInvoice(x){
         <div class="sia-motto">INNOVATE &nbsp;•&nbsp; PRINT &nbsp;•&nbsp; GROW</div>
       </div>
     </header>
-    <div class="sia-contact"><span>⌖ &nbsp; Blantyre, Malawi</span><span>☎ &nbsp; +265 999 123 456</span><span>✉ &nbsp; siatechprintmedia@gmail.com</span></div>
+    <div class="sia-contact"><span>⌖ &nbsp; Lunzu Matindi (Blantyre)</span><span>☎ &nbsp; 0888 290 495 / 0999 290 495</span></div>
     <div style="padding:0 8px"><div class="sia-title">INVOICE</div></div>
     <div class="sia-meta">
       <div><b>Invoice Number:</b> ${invoiceNumber}</div>
       <div><b>Date:</b> ${invoiceDate}</div>
-      <div><b>Customer:</b> ${customer}</div>
-      <div><b>Customer Phone Number:</b> ${phone}</div>
+      <div><b>Customer :</b> ${customer}</div>
+      <div><b>Phone Number :</b> ${phone}</div>
     </div>
     <table class="sia-table">
       <thead><tr><th>Description</th><th style="text-align:center;width:18%">Qty</th><th>Amount</th></tr></thead>
