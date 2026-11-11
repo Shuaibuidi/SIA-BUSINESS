@@ -253,8 +253,9 @@ function dashboard(s){
  const low=[...records("stock"),...records("spareParts")].filter(x=>Number(x.quantity||0)<=Number(x.lowStockAt??5));
  const visibleSales=isAdmin()?totalSales:tx.filter(x=>x.workerUid===user.uid).reduce((n,x)=>n+Number(x.total||0),0);
  const tools=[["spares","Spare Parts"],["services","Printing Services"],["invoices","Invoices"],["customers","Customers"]];
- if(isAdmin())tools.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"],["workers","Members"]);\n tools.push(["settings","Account Information"]);
- const toolHtml=tools.map(x=>'<button type="button" class="tool-link" onclick="go(\\\''+x[0]+'\\\')"><b>'+x[1]+'</b><span>Open section</span></button>').join("");
+ if(isAdmin())tools.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"],["workers","Members"]);
+ tools.push(["settings","Account Information"]);
+ const toolHtml=tools.map(function(x){return '<button type="button" class="tool-link" onclick="go(&quot;'+x[0]+'&quot;)"><b>'+x[1]+'</b><span>Open section</span></button>';}).join("");
  s.innerHTML='<section class="dashboard-metrics">'+
  '<div class="metric-card"><span class="metric-icon metric-blue">▥</span><div><div class="metric-label">Total Sales</div><div class="metric-value">'+money(visibleSales)+'</div></div></div>'+
  '<div class="metric-card"><span class="metric-icon metric-green">↗</span><div><div class="metric-label">Total Profit</div><div class="metric-value">'+money(isAdmin()?accessoryProfit+repairProfit+printingProfit:accessoryProfit+repairProfit+printingProfit)+'</div></div></div>'+
