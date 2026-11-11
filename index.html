@@ -115,9 +115,9 @@ body{padding:18px 12px 110px;font-size:16px}
 #appHeader h1{font-size:clamp(25px,5vw,38px);font-weight:750;letter-spacing:-.8px;color:#fff}
 .brand-subtitle{font-size:clamp(14px,2.5vw,19px);color:#aeb4bd;margin-top:5px;letter-spacing:0}
 .welcome-panel{display:none!important}
-#nav{position:fixed;z-index:500;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin:0;padding:7px 6px max(9px,env(safe-area-inset-bottom));background:rgba(8,11,14,.98);border:1px solid #252a30;border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -8px 28px #0007;overflow-y:auto;max-height:190px;align-content:center}
-#nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;min-height:48px;margin:0;padding:4px 1px;background:transparent;color:#f5f6f8;border-radius:10px;box-shadow:none;font-size:10px;line-height:1.15;font-weight:600;white-space:normal;text-align:center}
-#nav button .nav-icon{font-size:21px;line-height:1.05}
+#nav{position:fixed;z-index:500;left:0;right:0;bottom:0;display:flex;flex-wrap:nowrap;align-items:stretch;gap:8px;margin:0;padding:8px 10px max(10px,env(safe-area-inset-bottom));background:rgba(8,11,14,.98);border:1px solid #252a30;border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -8px 28px #0007;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:thin;scrollbar-color:#555 #111}
+#nav button{display:flex;flex:0 0 94px;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:94px;min-height:66px;margin:0;padding:6px 4px;background:transparent;color:#f5f6f8;border-radius:12px;box-shadow:none;font-size:11px;line-height:1.15;font-weight:600;white-space:normal;text-align:center}
+#nav button .nav-icon{font-size:25px;line-height:1.05}
 #nav button.active{color:#fff;position:relative;background:#20262c}
 #nav button.active:after{content:'';position:absolute;bottom:1px;left:25%;right:25%;height:3px;border-radius:4px;background:#ffd33d}
 #screen{padding-bottom:18px}
@@ -138,7 +138,7 @@ button.secondary{background:#29323a;color:#f5f6f8}
 .service-chip{background:#171d23;border-color:#343e48;color:#f5f6f8}
 #msg,#status{color:#ffd36b}
 .invoice-overlay{background:#080b0e}
-@media(max-width:520px){body{padding:15px 9px 108px}#appHeader{margin:0 -9px 20px;padding:7px 13px 15px}.grid{gap:9px}.grid>.card{min-height:94px;padding:13px 11px;border-radius:19px}.grid>.card .muted{font-size:13px}.stat{font-size:clamp(17px,4.2vw,22px)}#screen>.card{padding:15px;border-radius:21px}#screen h3{font-size:19px}#nav{grid-template-columns:repeat(5,minmax(0,1fr));padding:7px 5px max(9px,env(safe-area-inset-bottom));max-height:190px}#nav button{font-size:10px;min-height:48px}#nav button .nav-icon{font-size:21px}}
+@media(max-width:520px){body{padding:15px 9px 108px}#appHeader{margin:0 -9px 20px;padding:7px 13px 15px}.grid{gap:9px}.grid>.card{min-height:94px;padding:13px 11px;border-radius:19px}.grid>.card .muted{font-size:13px}.stat{font-size:clamp(17px,4.2vw,22px)}#screen>.card{padding:15px;border-radius:21px}#screen h3{font-size:19px}#nav{display:flex;flex-wrap:nowrap;gap:7px;padding:7px 8px max(9px,env(safe-area-inset-bottom));}#nav button{flex:0 0 88px;min-width:88px;min-height:62px;font-size:10px}#nav button .nav-icon{font-size:23px}}
 @media print{#nav{display:none!important}body{padding:0!important}}
 /* Dashboard cards and sections matching the approved reference */
 .dashboard-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0 18px}
