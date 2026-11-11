@@ -501,7 +501,7 @@ function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
 function invoiceRecordedLabel(x){if(x?.recordedByUid===BUSINESS_ID||x?.recordedBy==="Managing Director")return "Business Owner";if(x?.recordedByUid)return "Shop Manager";return x?.recordedBy||invoiceRecorder()}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["performance","Performance"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["settings","Account Information"]);return a}
+function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);a.push(["performance","Performance"],["settings","Account Information"]);return a}
 function renderNav(){
  const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
  const p=navItems();
