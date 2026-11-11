@@ -1371,3 +1371,25 @@ window.addEventListener("beforeunload",clearListeners);
 </script>
 </body>
 </html>
+
+
+/* Keep all scrolling page content underneath the fixed header */
+#appHeader{
+  position:fixed!important;
+  z-index:10000!important;
+  isolation:isolate!important;
+  background:#080b0e!important;
+  opacity:1!important;
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+  box-shadow:0 10px 22px rgba(0,0,0,.38)!important;
+  pointer-events:auto!important;
+}
+#app,#screen,.wrap>section,.wrap>main{
+  position:relative;
+  z-index:0;
+}
+#screen>*{
+  position:relative;
+  z-index:0;
+}
