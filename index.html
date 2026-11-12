@@ -534,12 +534,12 @@ function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowe
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
 function navItems(){
  let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare Parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];
- if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
+ if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["banking","Bank Records"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
  a.push(["settings","Account Information"]);
  return a;
 }
 function renderNav(){
- const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
+ const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',banking:'🏦',reports:'📊',settings:'⚙️'};
  const p=navItems();
  $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
@@ -588,7 +588,7 @@ async function removeDoc(c,id){
 }
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,banking:bankRecordsScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -1191,6 +1191,25 @@ async function deletePrivateRecord(id,type){
   say("Record deleted.");renderScreen();
  }catch(e){alert("Could not delete record: "+e.message);}
 }
+function bankRecordsScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const rows=privateRecords("banking").sort((a,b)=>String(b.bankDate||"").localeCompare(String(a.bankDate||""))||String(b.bankTime||"").localeCompare(String(a.bankTime||"")));
+ const total=rows.reduce((n,x)=>n+Number(x.amount||0),0);
+ s.innerHTML=`<div class="card"><h3>Record Bank Deposit</h3><p class="muted">Record money deposited into your business bank account. This is a record only; it does not transfer money.</p><div class="grid">
+ ${formField("bankName","Bank Name")}${formField("bankAccountName","Account Name")}${formField("bankAccountNumber","Account Number")}
+ ${selectField("bankAccountType","Account Type",'<option value="Business">Business</option><option value="Current">Current</option><option value="Savings">Savings</option><option value="Other">Other</option>')}
+ ${formField("bankDate","Date of Banking","date")}${formField("bankTime","Time of Banking","time")}${formField("bankAmount","Banking Amount (MK)","number","","0.01")}
+ ${formField("bankReference","Transaction / Deposit Reference")}${formField("bankNotes","Notes / Description")}
+ </div><button onclick="saveBankRecord()">Save Banking Record</button></div>
+ <div class="card"><h3>Banking Summary</h3><p><b>Total recorded deposits: ${money(total)}</b></p><p class="muted">Number of records: ${rows.length}</p></div>
+ <div class="card"><h3>Banking History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.bankName||"Bank")}</b> — ${esc(x.accountName)}<br>Account Number: ${esc(x.accountNumber)} · Type: ${esc(x.accountType)}<br>Date: ${esc(x.bankDate)} · Time: ${esc(x.bankTime)}<br><b>Amount: ${money(x.amount)}</b><br>Reference: ${esc(x.reference||"—")}<br>${esc(x.notes||"")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','banking')">Delete</button></div></div>`).join("")||"<p class='muted'>No banking records yet.</p>"}</div>`;
+}
+async function saveBankRecord(){
+ const amount=num("bankAmount");
+ if(!val("bankAccountName")||!val("bankAccountNumber")||!val("bankDate")||!val("bankTime")||!(amount>0)||!Number.isFinite(amount))return alert("Enter the account name, account number, banking date, time and a valid amount.");
+ try{await savePrivateRecord("banking",{bankName:val("bankName"),accountName:val("bankAccountName"),accountNumber:val("bankAccountNumber"),accountType:val("bankAccountType"),bankDate:val("bankDate"),bankTime:val("bankTime"),amount,reference:val("bankReference"),notes:val("bankNotes")} ,"Recorded bank deposit");say("Banking record saved successfully.");renderScreen();}catch(e){alert("Could not save banking record: "+e.message);}
+}
+
 function businessAssetsScreen(s){
  if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
  const rows=privateRecords("asset");
