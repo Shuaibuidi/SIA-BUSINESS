@@ -1306,6 +1306,16 @@ s.innerHTML=`
 </div>
 
 <div class="card">
+<h3>Expense Breakdown</h3>
+<div class="stat">${money(expenses)}</div>
+<table>
+<tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr>
+${records("expenses").filter(x=>!x.purchase).map(x=>`<tr><td>${dateText(x.createdAt)}</td><td>${esc(x.category||"")}</td><td>${esc(x.description||"")}</td><td>${money(x.amount)}</td></tr>`).join("")||"<tr><td colspan=\"4\">No expenses recorded.</td></tr>"}
+<tr><th colspan="3">TOTAL EXPENSES</th><th>${money(expenses)}</th></tr>
+</table>
+</div>
+
+<div class="card">
 <h3>Outstanding Customer Balances</h3>
 <div class="stat">${money(records("invoices").reduce((a,x)=>a+Math.max(0,Number(x.balance||0)),0))}</div>
 </div>
@@ -1313,7 +1323,7 @@ s.innerHTML=`
 <div class="card">
 <h3>Export Reports</h3>
 <button onclick="exportReport()">Download CSV Report</button>
-<button onclick="window.print()">Print Report</button>
+<button onclick="window.print()">Print Full Report</button>
 </div>`;
 }
 
