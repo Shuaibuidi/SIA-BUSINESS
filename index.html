@@ -525,7 +525,7 @@ const auth=firebase.auth(),db=firebase.firestore(),BUSINESS_ID="7RqIYO3IDSVCYex1
 // Keep Firebase Authentication signed in across app closes and phone restarts.
 // The user is signed out only by the explicit Sign Out action or account security checks.
 const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices"];
+const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices","private"];
 let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`,isAdmin=()=>role==="admin",money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2}),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),stamp=()=>firebase.firestore.FieldValue.serverTimestamp(),val=id=>$(id)?.value?.trim()||"",num=id=>Number($(id)?.value||0),records=c=>cache[c]||[];
 function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
@@ -538,7 +538,12 @@ function navItems(){
  a.push(["settings","Account Information"]);
  return a;
 }
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);if(isAdmin())a.push(["performance","Performance"]);a.push(["settings","Account Information"]);return a}
+function navItems(){
+ let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare Parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];
+ if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["profitloss","Profit & Loss"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"],["audit","Audit Trail"]);
+ a.push(["settings","Account Information"]);
+ return a;
+}
 function renderNav(){
  const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
  const p=navItems();
@@ -579,7 +584,7 @@ async function updateDoc(c,id,data){return db.doc(`${path(c)}/${id}`).update({..
 async function removeDoc(c,id){if(!isAdmin())return alert("Admin permission required.");if(!confirm("Delete this record permanently?"))return;try{await db.doc(`${path(c)}/${id}`).delete();say("Record deleted.")}catch(e){alert("Delete failed: "+e.message)}}
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,profitloss:profitLossScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,audit:auditTrailScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -1162,6 +1167,101 @@ say("Payment recorded successfully.");
 renderScreen();
 }catch(e){alert("Payment failed: "+e.message)}
 }
+
+function privateRecords(type){
+ return records("private").filter(x=>x.recordType===type);
+}
+async function savePrivateRecord(type,data,actionLabel){
+ if(!isAdmin())throw new Error("Business Owner permission required.");
+ const ref=await db.collection(path("private")).add({...data,recordType:type,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
+ try{
+  await db.collection(path("private")).add({recordType:"audit",action:actionLabel||"Created "+type,recordTypeLabel:type,recordId:ref.id,details:data.description||data.name||data.staffName||"",createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
+ }catch(e){console.warn("Audit entry could not be saved:",e);}
+ return ref;
+}
+async function deletePrivateRecord(id,type){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ if(!confirm("Delete this record?"))return;
+ try{
+  await db.doc(path("private")+"/"+id).delete();
+  try{await db.collection(path("private")).add({recordType:"audit",action:"Deleted "+type,recordTypeLabel:type,recordId:id,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});}catch(e){}
+  say("Record deleted.");renderScreen();
+ }catch(e){alert("Could not delete record: "+e.message);}
+}
+function profitLossScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const stock=records("transactions").reduce((a,x)=>a+Number(x.profit||0),0);
+ const spares=records("spareSales").reduce((a,x)=>a+Number(x.profit||0),0);
+ const printing=records("services").reduce((a,x)=>a+Number(x.amount||0)-Number(x.cost||0),0);
+ const repairs=records("jobs").reduce((a,x)=>a+Number(x.fee||0)-Number(x.partsCost||0),0);
+ const gross=stock+spares+printing+repairs;
+ const expenses=records("expenses").filter(x=>!x.purchase).reduce((a,x)=>a+Number(x.amount||0),0);
+ const payroll=privateRecords("payroll").reduce((a,x)=>a+Number(x.netPay||0),0);
+ const net=gross-expenses-payroll;
+ s.innerHTML=`<div class="card"><h3>Profit & Loss Statement</h3><p class="muted">Calculated from saved sales, repair, printing, expense and payroll records.</p>
+ <table><tr><th>Income / Profit</th><th>Amount</th></tr>
+ <tr><td>Accessories Sales Profit</td><td>${money(stock)}</td></tr><tr><td>Spare Parts Sales Profit</td><td>${money(spares)}</td></tr><tr><td>Printing Services Profit</td><td>${money(printing)}</td></tr><tr><td>Repair Services Profit</td><td>${money(repairs)}</td></tr>
+ <tr><th>Gross Profit</th><th>${money(gross)}</th></tr><tr><td>Operating Expenses</td><td>${money(expenses)}</td></tr><tr><td>Salaries & Payroll</td><td>${money(payroll)}</td></tr><tr><th>NET PROFIT</th><th>${money(net)}</th></tr></table>
+ <button onclick="printFullReport()">Print Profit & Loss</button></div>`;
+}
+function businessAssetsScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const rows=privateRecords("asset");
+ const total=rows.reduce((a,x)=>a+Number(x.purchaseValue||0),0);
+ s.innerHTML=`<div class="card"><h3>Register Business Asset</h3><div class="grid">
+ ${formField("assetName","Asset Name")}${selectField("assetCategory","Asset Category",'<option>Equipment</option><option>Furniture</option><option>Computer & Electronics</option><option>Vehicle</option><option>Tools</option><option>Other</option>')}
+ ${formField("assetQty","Quantity","number")}${formField("assetValue","Purchase Value (MK)","number","","0.01")}
+ ${formField("assetDate","Purchase Date","date")}${formField("assetCondition","Condition / Location")}
+ </div><button onclick="saveBusinessAsset()">Save Asset</button></div>
+ <div class="card"><h3>Business Asset Register</h3><div class="stat">${money(total)}</div><p class="muted">Total recorded purchase value</p>
+ ${rows.map(x=>`<div class="item"><b>${esc(x.name)}</b><br>Category: ${esc(x.category)}<br>Quantity: ${esc(x.quantity)}<br>Purchase Value: <b>${money(x.purchaseValue)}</b><br>Purchase Date: ${esc(x.purchaseDate||"Not recorded")}<br>Condition / Location: ${esc(x.condition||"—")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','asset')">Delete</button></div></div>`).join("")||"<p class='muted'>No business assets recorded yet.</p>"}</div>`;
+}
+async function saveBusinessAsset(){
+ const name=val("assetName"),quantity=num("assetQty"),purchaseValue=num("assetValue");
+ if(!name||quantity<=0||purchaseValue<0||!Number.isFinite(purchaseValue))return alert("Enter an asset name, valid quantity and purchase value.");
+ try{await savePrivateRecord("asset",{name,category:val("assetCategory"),quantity,purchaseValue,purchaseDate:val("assetDate"),condition:val("assetCondition")},"Registered business asset");say("Business asset saved.");renderScreen();}catch(e){alert(e.message);}
+}
+function staffAttendanceScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const staff=records("members").filter(x=>x.role==="worker");
+ const rows=privateRecords("attendance").sort((a,b)=>String(b.workDate||"").localeCompare(String(a.workDate||"")));
+ s.innerHTML=`<div class="card"><h3>Staff Attendance</h3><div class="grid">
+ ${selectField("attendanceStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name||x.email||x.id)+'</option>').join("")||'<option value="">No staff accounts found</option>')}
+ ${formField("attendanceDate","Attendance Date","date")}${selectField("attendanceStatus","Status",'<option>Present</option><option>Late</option><option>Absent</option><option>Leave</option>')}
+ ${formField("attendanceIn","Time In","time")}${formField("attendanceOut","Time Out","time")}${formField("attendanceNote","Notes")}
+ </div><button onclick="saveAttendance()">Save Attendance</button></div>
+ <div class="card"><h3>Attendance History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.staffName)}</b> — ${esc(x.status)}<br>Date: ${esc(x.workDate)} · In: ${esc(x.timeIn||"—")} · Out: ${esc(x.timeOut||"—")}<br>${esc(x.note||"")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','attendance')">Delete</button></div></div>`).join("")||"<p class='muted'>No attendance records yet.</p>"}</div>`;
+}
+async function saveAttendance(){
+ const staff=records("members").find(x=>x.id===val("attendanceStaff"));
+ const workDate=val("attendanceDate");
+ if(!staff||!workDate)return alert("Select a staff member and attendance date.");
+ try{await savePrivateRecord("attendance",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",workDate,status:val("attendanceStatus"),timeIn:val("attendanceIn"),timeOut:val("attendanceOut"),note:val("attendanceNote")},"Recorded staff attendance");say("Attendance saved.");renderScreen();}catch(e){alert(e.message);}
+}
+function payrollScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const staff=records("members").filter(x=>x.role==="worker");
+ const rows=privateRecords("payroll").sort((a,b)=>String(b.payPeriod||"").localeCompare(String(a.payPeriod||"")));
+ s.innerHTML=`<div class="card"><h3>Salaries & Payroll</h3><p class="muted">Record salary payments. This section records payroll entries; it does not automatically transfer money.</p><div class="grid">
+ ${selectField("payrollStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name||x.email||x.id)+'</option>').join("")||'<option value="">No staff accounts found</option>')}
+ ${formField("payPeriod","Pay Period (YYYY-MM)","month")}${formField("basicSalary","Basic Salary (MK)","number","","0.01")}${formField("salaryAllowance","Allowances (MK)","number","","0.01")}${formField("salaryDeduction","Deductions (MK)","number","","0.01")}${formField("salaryDate","Payment Date","date")}${selectField("salaryStatus","Payment Status",'<option>Paid</option><option>Pending</option>')}
+ </div><button onclick="savePayroll()">Save Payroll Record</button></div>
+ <div class="card"><h3>Payroll History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.staffName)}</b><br>Period: ${esc(x.payPeriod)} · Status: ${esc(x.status)}<br>Basic: ${money(x.basicSalary)} · Allowances: ${money(x.allowances)} · Deductions: ${money(x.deductions)}<br><b>Net Pay: ${money(x.netPay)}</b><br>Payment Date: ${esc(x.paymentDate||"Not paid")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','payroll')">Delete</button></div></div>`).join("")||"<p class='muted'>No payroll records yet.</p>"}</div>`;
+}
+async function savePayroll(){
+ const staff=records("members").find(x=>x.id===val("payrollStaff"));
+ const basicSalary=num("basicSalary"),allowances=num("salaryAllowance"),deductions=num("salaryDeduction");
+ if(!staff||!val("payPeriod")||basicSalary<0||allowances<0||deductions<0||!Number.isFinite(basicSalary+allowances+deductions)||basicSalary+allowances<deductions)return alert("Enter a staff member, pay period and valid salary amounts.");
+ const netPay=basicSalary+allowances-deductions;
+ try{await savePrivateRecord("payroll",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",payPeriod:val("payPeriod"),basicSalary,allowances,deductions,netPay,paymentDate:val("salaryDate"),status:val("salaryStatus")},"Saved staff payroll");say("Payroll record saved.");renderScreen();}catch(e){alert(e.message);}
+}
+function auditTrailScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const rows=privateRecords("audit").sort((a,b)=>{const da=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);const db=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);return db-da;});
+ s.innerHTML=`<div class="card"><h3>Audit Trail</h3><p class="muted">This log records activity performed through the new asset, attendance and payroll sections. It will expand as additional app actions are connected.</p>
+ ${rows.map(x=>`<div class="item"><b>${esc(x.action||"Activity")}</b><br>${esc(x.details||x.recordTypeLabel||"")}<br>By: ${esc(x.createdByEmail||x.createdBy||"")}<br><span class="muted">${dateText(x.createdAt)}</span></div>`).join("")||"<p class='muted'>No audit events recorded yet.</p>"}</div>`;
+}
+
 function workersScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
@@ -1724,7 +1824,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="profitloss"||current==="assets"||current==="attendance"||current==="payroll"||current==="audit"){
 renderScreen();
 }
 if($("salesTotal")){
@@ -1770,7 +1870,7 @@ let collections=[
 ];
 // Financial and purchasing records are private to the Business Owner.
 // Do not attach listeners for these collections to Shop Manager accounts.
-if(isAdmin()) collections.push("suppliers","purchases","expenses","cashbook");
+if(isAdmin()) collections.push("suppliers","purchases","expenses","cashbook","private");
 
 // All active members use the same business inventory and records.
     // Access is controlled by Firestore Security Rules, not by client-side filters.
