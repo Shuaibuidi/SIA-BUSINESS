@@ -633,7 +633,7 @@ function dashboard(s){
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">−</span><div><div class="metric-label">Total Expenses</div><div class="metric-value">'+money(totalExpenses)+'</div></div></div>':'')+
  '<div class="metric-card"><span class="metric-icon metric-purple">▤</span><div><div class="metric-label">Total Services</div><div class="metric-value">'+money(serviceTotal)+'</div></div></div>'+
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">◆</span><div><div class="metric-label">Service Profits</div><div class="metric-value">'+money(serviceProfit)+'</div></div></div>':'')+'</div></section>'+
- '<section class="dashboard-panel"><div class="panel-heading"><h3>Today’s Overview</h3><button type="button" class="text-action" onclick="go(\\'reports\\')">View All →</button></div><div class="today-grid">'+
+ '<section class="dashboard-panel"><div class="panel-heading"><h3>Today’s Overview</h3><button type="button" class="text-action" onclick="go(\\\'reports\\\')">View All →</button></div><div class="today-grid">'+
  '<div class="today-stat"><span class="today-icon blue">▦</span><div><div class="metric-label">Today’s Sales</div><div class="metric-value">'+money(todaySales)+'</div></div></div>'+
  (isAdmin()?'<div class="today-stat"><span class="today-icon green">↗</span><div><div class="metric-label">Today’s Sales Profits</div><div class="metric-value">'+money(todaySalesProfit)+'</div></div></div>':'')+
  '<div class="today-stat"><span class="today-icon purple">▤</span><div><div class="metric-label">Today’s Services</div><div class="metric-value">'+money(todayServicesTotal)+'</div></div></div>'+
