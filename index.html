@@ -1208,62 +1208,86 @@ async function saveBusinessAsset(){
  if(!name||quantity<=0||purchaseValue<0||!Number.isFinite(purchaseValue))return alert("Enter an asset name, valid quantity and purchase value.");
  try{await savePrivateRecord("asset",{name,category:val("assetCategory"),quantity,purchaseValue,purchaseDate:val("assetDate"),condition:val("assetCondition")},"Registered business asset");say("Business asset saved.");renderScreen();}catch(e){alert(e.message);}
 }
+function shopStaffPeople(includeOwner=false){
+ const appWorkers=records("members").filter(x=>x.role==="worker"&&x.active!==false).map(x=>({...x,personType:"app_member"}));
+ const manualStaff=privateRecords("staff").filter(x=>x.active!==false).map(x=>({...x,personType:"manual_staff",id:x.id}));
+ const people=[...manualStaff,...appWorkers];
+ if(includeOwner&&user&&member){
+  people.unshift({id:"owner:"+user.uid,name:member.name||member.displayName||"Business Owner (You)",email:user.email||"",role:"owner",personType:"owner",active:true});
+ }
+ return people;
+}
+function staffName(p){return p.name||p.displayName||p.fullName||p.email||"Staff member";}
+function workersScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ const rows=privateRecords("staff").sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+ const appMembers=records("members").filter(w=>w.role==="worker");
+ s.innerHTML=`<div class="card"><h3>Add Shop Employee (No App Login)</h3>
+ <p class="muted">Add a technician or other employee here. This creates a staff/payroll record only. It does not create an app account or give the employee access to your business data.</p>
+ <div class="grid">${formField("newStaffName","Full Name")}${formField("newStaffPhone","Phone Number","tel")}${formField("newStaffPosition","Job Title / Position")}${formField("newStaffAddress","Address")}${formField("newStaffStart","Employment Start Date","date")}${formField("newStaffSalary","Agreed Basic Salary (MK)","number","","0.01")}</div>
+ <button onclick="addShopStaff()">Add Employee</button></div>
+ <div class="card"><h3>Shop Employees</h3>${rows.map(w=>`<div class="item"><b>👤 ${esc(staffName(w))}</b><br>Position: ${esc(w.position||"Not set")}<br>Phone: ${esc(w.phone||"Not set")}<br>Address: ${esc(w.address||"Not set")}<br>Started: ${esc(w.startDate||"Not set")}<br>Basic Salary: ${money(w.basicSalary||0)}<br>Status: <b>${w.active===false?"Terminated / Inactive":"Active"}</b><div class="actions"><button onclick="editShopStaff('${w.id}')">Edit Details</button><button onclick="toggleShopStaff('${w.id}')">${w.active===false?"Reactivate":"Terminate Employment"}</button></div></div>`).join("")||"<p class='muted'>No manually registered employees yet.</p>"}</div>
+ <div class="card"><h3>App Login Members</h3><p class="muted">These are existing accounts that can sign in. A manually registered employee above does not receive app access.</p>${appMembers.map(w=>`<div class="item"><b>${esc(staffName(w))}</b><br>${esc(w.email||"")} · ${w.active===false?"Inactive":"Active"}</div>`).join("")||"<p class='muted'>No worker app accounts.</p>"}</div>`;
+}
+async function addShopStaff(){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ const name=val("newStaffName").trim(),phone=val("newStaffPhone").trim(),position=val("newStaffPosition").trim(),address=val("newStaffAddress").trim(),startDate=val("newStaffStart"),basicSalary=num("newStaffSalary");
+ if(!name||!position||!Number.isFinite(basicSalary)||basicSalary<0)return alert("Enter the employee name, job title and a valid basic salary.");
+ try{await savePrivateRecord("staff",{name,phone,position,address,startDate,basicSalary,active:true,employmentStatus:"Active"},"Added shop employee");say("Employee added. No app login has been created.");renderScreen();}catch(e){alert("Could not add employee: "+e.message);}
+}
+async function editShopStaff(id){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ const w=privateRecords("staff").find(x=>x.id===id);if(!w)return alert("Employee record not found.");
+ const name=prompt("Employee full name:",w.name||"");if(name===null)return;
+ const phone=prompt("Phone number:",w.phone||"");if(phone===null)return;
+ const position=prompt("Job title / position:",w.position||"");if(position===null)return;
+ const address=prompt("Address:",w.address||"");if(address===null)return;
+ const startDate=prompt("Employment start date (YYYY-MM-DD):",w.startDate||"");if(startDate===null)return;
+ const salary=prompt("Agreed basic salary (MK):",String(w.basicSalary||0));if(salary===null)return;
+ const basicSalary=Number(salary);if(!name.trim()||!position.trim()||!Number.isFinite(basicSalary)||basicSalary<0)return alert("Enter valid employee details and salary.");
+ try{await db.doc(path("private")+"/"+id).update({name:name.trim(),phone:phone.trim(),position:position.trim(),address:address.trim(),startDate:startDate.trim(),basicSalary,updatedAt:stamp(),updatedBy:user.uid});say("Employee details updated.");renderScreen();}catch(e){alert("Could not update employee: "+e.message);}
+}
+async function toggleShopStaff(id){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ const w=privateRecords("staff").find(x=>x.id===id);if(!w)return alert("Employee record not found.");
+ const active=w.active===false;
+ if(!active&&!confirm("Terminate this employee's active employment? Their past payroll history will be kept."))return;
+ try{await db.doc(path("private")+"/"+id).update({active,employmentStatus:active?"Active":"Terminated",statusChangedAt:stamp(),updatedBy:user.uid});say(active?"Employee reactivated.":"Employment marked as terminated. Payroll history has been kept.");renderScreen();}catch(e){alert("Could not update employment status: "+e.message);}
+}
+
 function staffAttendanceScreen(s){
  if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
- const staff=records("members").filter(x=>x.role==="worker");
+ const staff=shopStaffPeople(false);
  const rows=privateRecords("attendance").sort((a,b)=>String(b.workDate||"").localeCompare(String(a.workDate||"")));
  s.innerHTML=`<div class="card"><h3>Staff Attendance</h3><div class="grid">
- ${selectField("attendanceStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name||x.email||x.id)+'</option>').join("")||'<option value="">No staff accounts found</option>')}
+ ${selectField("attendanceStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(staffName(x))+'</option>').join("")||'<option value="">No staff found</option>')}
  ${formField("attendanceDate","Attendance Date","date")}${selectField("attendanceStatus","Status",'<option>Present</option><option>Late</option><option>Absent</option><option>Leave</option>')}
  ${formField("attendanceIn","Time In","time")}${formField("attendanceOut","Time Out","time")}${formField("attendanceNote","Notes")}
  </div><button onclick="saveAttendance()">Save Attendance</button></div>
  <div class="card"><h3>Attendance History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.staffName)}</b> — ${esc(x.status)}<br>Date: ${esc(x.workDate)} · In: ${esc(x.timeIn||"—")} · Out: ${esc(x.timeOut||"—")}<br>${esc(x.note||"")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','attendance')">Delete</button></div></div>`).join("")||"<p class='muted'>No attendance records yet.</p>"}</div>`;
 }
 async function saveAttendance(){
- const staff=records("members").find(x=>x.id===val("attendanceStaff"));
+ const staff=shopStaffPeople(false).find(x=>x.id===val("attendanceStaff"));
  const workDate=val("attendanceDate");
  if(!staff||!workDate)return alert("Select a staff member and attendance date.");
- try{await savePrivateRecord("attendance",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",workDate,status:val("attendanceStatus"),timeIn:val("attendanceIn"),timeOut:val("attendanceOut"),note:val("attendanceNote")},"Recorded staff attendance");say("Attendance saved.");renderScreen();}catch(e){alert(e.message);}
+ try{await savePrivateRecord("attendance",{staffUid:staff.id,staffName:staffName(staff),workDate,status:val("attendanceStatus"),timeIn:val("attendanceIn"),timeOut:val("attendanceOut"),note:val("attendanceNote")},"Recorded staff attendance");say("Attendance saved.");renderScreen();}catch(e){alert(e.message);}
 }
 function payrollScreen(s){
  if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
- const staff=records("members").filter(x=>x.role==="worker");
+ const staff=shopStaffPeople(true);
  const rows=privateRecords("payroll").sort((a,b)=>String(b.payPeriod||"").localeCompare(String(a.payPeriod||"")));
- s.innerHTML=`<div class="card"><h3>Salaries & Payroll</h3><p class="muted">Record salary payments. This section records payroll entries; it does not automatically transfer money.</p><div class="grid">
- ${selectField("payrollStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name||x.email||x.id)+'</option>').join("")||'<option value="">No staff accounts found</option>')}
+ s.innerHTML=`<div class="card"><h3>Salaries & Payroll</h3><p class="muted">Record salary, allowances, deductions and payments for your employees and yourself as Business Owner. This records payments; it does not transfer money automatically.</p><div class="grid">
+ ${selectField("payrollStaff","Staff Member",staff.map(x=>'<option value="'+esc(x.id)+'">'+esc(staffName(x))+(x.personType==="owner"?" — Business Owner":"")+'</option>').join("")||'<option value="">No staff found</option>')}
  ${formField("payPeriod","Pay Period (YYYY-MM)","month")}${formField("basicSalary","Basic Salary (MK)","number","","0.01")}${formField("salaryAllowance","Allowances (MK)","number","","0.01")}${formField("salaryDeduction","Deductions (MK)","number","","0.01")}${formField("salaryDate","Payment Date","date")}${selectField("salaryStatus","Payment Status",'<option>Paid</option><option>Pending</option>')}
  </div><button onclick="savePayroll()">Save Payroll Record</button></div>
- <div class="card"><h3>Payroll History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.staffName)}</b><br>Period: ${esc(x.payPeriod)} · Status: ${esc(x.status)}<br>Basic: ${money(x.basicSalary)} · Allowances: ${money(x.allowances)} · Deductions: ${money(x.deductions)}<br><b>Net Pay: ${money(x.netPay)}</b><br>Payment Date: ${esc(x.paymentDate||"Not paid")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','payroll')">Delete</button></div></div>`).join("")||"<p class='muted'>No payroll records yet.</p>"}</div>`;
+ <div class="card"><h3>Payroll History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.staffName)}</b>${x.personType==="owner"?" — Business Owner":""}<br>Period: ${esc(x.payPeriod)} · Status: ${esc(x.status)}<br>Basic: ${money(x.basicSalary)} · Allowances: ${money(x.allowances)} · Deductions: ${money(x.deductions)}<br><b>Net Pay: ${money(x.netPay)}</b><br>Payment Date: ${esc(x.paymentDate||"Not paid")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','payroll')">Delete</button></div></div>`).join("")||"<p class='muted'>No payroll records yet.</p>"}</div>`;
 }
 async function savePayroll(){
- const staff=records("members").find(x=>x.id===val("payrollStaff"));
+ const staff=shopStaffPeople(true).find(x=>x.id===val("payrollStaff"));
  const basicSalary=num("basicSalary"),allowances=num("salaryAllowance"),deductions=num("salaryDeduction");
- if(!staff||!val("payPeriod")||basicSalary<0||allowances<0||deductions<0||!Number.isFinite(basicSalary+allowances+deductions)||basicSalary+allowances<deductions)return alert("Enter a staff member, pay period and valid salary amounts.");
+ if(!staff||!val("payPeriod")||basicSalary<0||allowances<0||deductions<0||!Number.isFinite(basicSalary+allowances+deductions)||basicSalary+allowances<deductions)return alert("Select a staff member, enter a pay period and valid salary amounts.");
  const netPay=basicSalary+allowances-deductions;
- try{await savePrivateRecord("payroll",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",payPeriod:val("payPeriod"),basicSalary,allowances,deductions,netPay,paymentDate:val("salaryDate"),status:val("salaryStatus")},"Saved staff payroll");say("Payroll record saved.");renderScreen();}catch(e){alert(e.message);}
-}
-function workersScreen(s){
-if(!isAdmin()){
-s.innerHTML="<div class='card'>Admin permission required.</div>";
-return;
-}
-s.innerHTML=`
-<div class="card">
-<h3>Member Management</h3>
-<p class="muted">Members must first create accounts using the sign-in screen. Their accounts can then be activated here.</p>
-<h3>Registered Members</h3>
-${records("members").filter(w=>w.active!==false).map(w=>`<div class="item">
-<b>👤 ${esc(w.name||w.displayName||w.fullName||"Name Not Set")}</b><br>
-Email: ${esc(w.email||w.userEmail||w.emailAddress||"Email Not Set")}<br>
-Role: ${esc(w.role||"worker")}<br>
-Status: ${w.active===false?"Inactive":"Active"}<br>
-<div class="actions">
-<button onclick="editWorkerName('${w.id}')">Edit Member Name</button>
-<button onclick="changeWorker('${w.id}')">Change Role / Status</button>
-</div>
-</div>
-`).join("")||"<p class='muted'>No active members found.</p>"}
-</div>`;
+ try{await savePrivateRecord("payroll",{staffUid:staff.id,staffName:staffName(staff),personType:staff.personType||"app_member",payPeriod:val("payPeriod"),basicSalary,allowances,deductions,netPay,paymentDate:val("salaryDate"),status:val("salaryStatus")} ,"Saved staff payroll");say("Payroll record saved.");renderScreen();}catch(e){alert(e.message);}
 }
 
 async function editWorkerName(id){
