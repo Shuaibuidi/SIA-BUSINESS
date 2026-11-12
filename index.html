@@ -472,6 +472,33 @@ body{
 #signInButton:disabled{opacity:.72;cursor:wait}
 #msg{display:block;min-height:1.4em;overflow-wrap:anywhere}
 \n/* Inventory price calculation tables */\n.inventory-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}\n.inventory-table-wrap table{min-width:560px;font-variant-numeric:tabular-nums}\n.inventory-table-wrap th,.inventory-table-wrap td{white-space:nowrap}\n.inventory-table-wrap th:first-child,.inventory-table-wrap td:first-child{white-space:normal;min-width:135px}\n
+
+
+/* Professional expandable navigation; dashboard content remains unchanged */
+#nav{z-index:500;gap:10px;justify-content:center;padding-left:12px;padding-right:12px}
+#nav button{flex:1 1 50%;min-width:0;max-width:220px;min-height:62px;font-size:12px}
+#nav button .nav-icon{font-size:22px}
+.drawer-backdrop{position:fixed!important;inset:0!important;z-index:12000!important;background:rgba(0,0,0,.72)!important;display:flex;align-items:stretch}
+.drawer-backdrop.hidden{display:none!important}
+.app-drawer{position:absolute!important;inset:0 auto 0 0!important;width:min(86vw,360px)!important;max-height:100dvh;overflow-y:auto!important;padding:24px 14px calc(24px + env(safe-area-inset-bottom))!important;background:#10151a!important;border-right:1px solid #303942;border-radius:0 22px 22px 0!important;box-shadow:12px 0 38px #0009!important}
+.drawer-heading{font-size:21px!important;font-weight:750!important;padding:8px 12px 4px!important;color:#fff!important}
+.drawer-caption{font-size:12px!important;padding:0 12px 18px!important;color:#aeb8c2!important;border-bottom:1px solid #303942!important}
+.drawer-nav{display:grid;gap:8px;padding-top:14px!important}
+.drawer-dashboard,.drawer-group summary{width:100%;display:flex;align-items:center;gap:12px;min-height:48px;padding:12px 14px!important;border:1px solid #303942!important;border-radius:13px!important;background:#1a2229!important;color:#f5f6f8!important;font-size:15px;font-weight:700;text-align:left;cursor:pointer;list-style:none}
+.drawer-dashboard.active{background:#28333c!important;border-color:#ffd33d!important;color:#fff!important}
+.drawer-group{border:1px solid #303942;border-radius:14px;background:#151c22;overflow:hidden}
+.drawer-group summary::-webkit-details-marker{display:none}
+.drawer-group summary{border:0!important;border-radius:0!important;background:transparent!important;font-size:14px!important}
+.drawer-group[open] summary{border-bottom:1px solid #303942!important;color:#ffdf78!important}
+.drawer-group-icon{width:24px;text-align:center;font-size:18px}
+.drawer-chevron{margin-left:auto;font-size:23px;line-height:1;transition:transform .15s ease}
+.drawer-group[open] .drawer-chevron{transform:rotate(90deg)}
+.drawer-group-items{display:grid;gap:3px;padding:7px 8px 9px}
+.drawer-group-items button{width:100%;min-height:42px;margin:0!important;padding:10px 14px 10px 48px!important;border-radius:10px!important;background:transparent!important;color:#dbe2e8!important;text-align:left;font-size:14px;font-weight:500;box-shadow:none!important}
+.drawer-group-items button.active{background:#28333c!important;color:#ffdf78!important;border-left:3px solid #ffd33d}
+@media(max-width:520px){#nav button{min-height:58px;font-size:12px}.app-drawer{width:min(88vw,340px)!important}}
+@media print{#nav,#appDrawerBackdrop{display:none!important}}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -482,7 +509,7 @@ body{
 <body><div class="wrap">
 <header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2></div></header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button id="signInButton" type="button" onclick="window.handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
-<section id="app" class="hidden"><nav id="nav" class="tabs no-print"></nav><main id="screen"></main><div id="status" class="muted"></div></section>
+<section id="app" class="hidden"><nav id="nav" class="tabs no-print" aria-label="Main navigation"></nav><div id="appDrawerBackdrop" class="drawer-backdrop hidden" onclick="closeAppDrawer()" aria-hidden="true"><aside class="app-drawer" role="dialog" aria-modal="true" aria-label="Business navigation" onclick="event.stopPropagation()"><div class="drawer-heading">Business Menu</div><div class="drawer-caption">All Business Records & Tools</div><div id="drawerNav" class="drawer-nav"></div></aside></div><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
 <section id="invoicePreview" class="invoice-overlay" aria-label="Invoice preview">
  <div class="invoice-controls no-print">
@@ -505,17 +532,43 @@ function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
 function invoiceRecordedLabel(x){if(x?.recordedByUid===BUSINESS_ID||x?.recordedBy==="Managing Director")return "Business Owner";if(x?.recordedByUid)return "Shop Manager";return x?.recordedBy||invoiceRecorder()}
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
-function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);if(isAdmin())a.push(["performance","Performance"]);a.push(["settings","Account Information"]);return a}
+function navItems(){
+ let a=[["dashboard","Dashboard"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["invoices","Invoices"],["stock","Stock"],["spares","Spare Parts"],["customers","Customers"]];
+ if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["workers","Members"],["reports","Reports"],["performance","Performance"]);
+ a.push(["settings","Account Information"]);
+ return a;
+}
+function navGroups(){
+ const available=new Map(navItems().map(item=>[item[0],item]));
+ const groups=[
+  {title:"Business Operations",icon:"🧾",items:["sales","jobs","services","invoices"]},
+  {title:"Stock & Purchases",icon:"📦",items:["stock","spares","purchases","suppliers"]},
+  {title:"Customers & Payments",icon:"👥",items:["customers"]},
+  {title:"Finance & Accounts",icon:"💳",items:["expenses","cashbook"]},
+  {title:"Staff & Management",icon:"🧑‍💼",items:["workers"]},
+  {title:"Reports & Security",icon:"📊",items:["reports","performance","settings"]}
+ ];
+ return groups.map(group=>({...group,items:group.items.map(id=>available.get(id)).filter(Boolean)})).filter(group=>group.items.length);
+}
 function renderNav(){
- const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
- const p=navItems();
- $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
+ const dashboardActive=current==="dashboard"?"active":"";
+ const menuActive=current!=="dashboard"?"active":"";
+ $('nav').innerHTML=
+  '<button type="button" class="'+dashboardActive+'" onclick="go(\\'dashboard\\')"><span class="nav-icon">⌂</span><span>Dashboard</span></button>'+
+  '<button type="button" class="'+menuActive+'" onclick="toggleAppDrawer()" aria-controls="drawerNav" aria-expanded="false"><span class="nav-icon">☰</span><span>Menu</span></button>';
 }
 function go(id){current=id;renderNav();renderDrawerNav();renderScreen();say("")}
 
 function renderDrawerNav(){
  const el=$("drawerNav");if(!el)return;
- el.innerHTML=navItems().map(function(item){return '<button type="button" class="'+(current===item[0]?'active':'')+'" onclick="goFromDrawer(\''+item[0]+'\')">'+item[1]+'</button>';}).join("");
+ let html='<button type="button" class="drawer-dashboard '+(current==="dashboard"?"active":"")+'" onclick="goFromDrawer(\\'dashboard\\')"><span>⌂</span> Dashboard</button>';
+ html+=navGroups().map(function(group){
+  const expanded=group.items.some(item=>item[0]===current);
+  return '<details class="drawer-group" '+(expanded?'open':'')+'><summary><span class="drawer-group-icon">'+group.icon+'</span><span>'+group.title+'</span><span class="drawer-chevron">›</span></summary><div class="drawer-group-items">'+group.items.map(function(item){
+   return '<button type="button" class="'+(current===item[0]?'active':'')+'" onclick="goFromDrawer(\\''+item[0]+'\\')">'+item[1]+'</button>';
+  }).join('')+'</div></details>';
+ }).join('');
+ el.innerHTML=html;
 }
 function toggleAppDrawer(){
  const back=$("appDrawerBackdrop");if(!back)return;
