@@ -843,7 +843,7 @@ ${esc(x.description)}<br>
 <b>${money(x.amount)}</b><br>
 Reference: ${esc(x.reference||"")}<br>
 <span class="muted">${dateText(x.createdAt)}</span>
-${adminDelete("expenses",x)}
+<div class="actions"><button type="button" onclick="printExpenseSlip('${x.id}')">Print Expense Slip</button></div>${adminDelete("expenses",x)}
 `)}
 </div>`;
 }
@@ -866,6 +866,14 @@ renderScreen();
 }catch(e){alert(e.message)}
 }
 
+function printExpenseSlip(id){
+if(!isAdmin())return alert("Admin permission required.");
+const x=records("expenses").find(v=>v.id===id);
+if(!x)return alert("Expense record not found.");
+const screen=$("screen"), old=screen.innerHTML;
+screen.innerHTML="<div style='background:white;color:black;padding:24px;font-family:Arial'><h2 style='text-align:center'>S I A TECH PRINT MEDIA</h2><h3 style='text-align:center'>EXPENSE PAYMENT SLIP</h3><p>Date: "+esc(dateText(x.createdAt))+"</p><p>Category: "+esc(x.category||"")+"</p><p>Description: "+esc(x.description||"")+"</p><p>Reference: "+esc(x.reference||"—")+"</p><h2 style='text-align:center'>Amount Paid: "+money(x.amount)+"</h2><p>Recorded By: "+esc(member?.name||user?.email||"")+"</p></div>";
+window.print();screen.innerHTML=old;
+}
 function cashbookScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
