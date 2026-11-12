@@ -504,8 +504,8 @@ body{
 #appHeader.premium-header{
   position:relative!important;top:auto!important;left:auto!important;right:auto!important;
   width:calc(100% + 24px)!important;margin:8px -12px 22px!important;
-  padding:calc(22px + env(safe-area-inset-top, 0px)) 20px 17px!important;display:flex!important;flex-direction:column!important;
-  gap:15px!important;background:
+  padding:calc(18px + env(safe-area-inset-top, 0px)) 20px 17px!important;display:flex!important;flex-direction:column!important;
+  gap:0!important;background:
     radial-gradient(ellipse at 2% 0%,rgba(225,169,32,.17),transparent 28%),
     linear-gradient(125deg,#080808 0%,#111 55%,#050505 100%)!important;
   border:0!important;border-bottom:1px solid #6c4b12!important;
@@ -599,14 +599,6 @@ body{
     <div class="brand-copy">
       <h1>Smart Business <span>Manager</span></h1>
       <div class="brand-subtitle">Manage. Record. Calculate. Grow.</div>
-    </div>
-  </div>
-  <div id="welcomePanel" class="welcome-panel hidden">
-    <div class="handshake-emblem" aria-hidden="true"><span>🤝</span></div>
-    <div class="welcome-divider"></div>
-    <div class="welcome-copy">
-      <h2 id="welcome">Welcome <span id="welcomeName">there</span></h2>
-      <div class="welcome-subtitle">Great to see you again!</div>
     </div>
   </div>
 </header>
@@ -2051,8 +2043,6 @@ return;
 role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
-if($("welcomePanel"))$("welcomePanel").classList.remove("hidden");
-$("welcomeName").textContent=(role==="admin"?"Shuaibu Idi":(member.name||user.email));
 
 renderNav();
 go("dashboard");
