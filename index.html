@@ -573,11 +573,16 @@ function renderDrawerNav(){
 function toggleAppDrawer(){
  const back=$("appDrawerBackdrop");if(!back)return;
  $("accountMenu")?.classList.add("hidden");renderDrawerNav();back.classList.toggle("hidden");
- const b=document.querySelector(".brand-menu");if(b)b.setAttribute("aria-expanded",String(!back.classList.contains("hidden")));
+ const opening=!back.classList.contains("hidden");
+ back.setAttribute("aria-hidden",String(!opening));
+ const menuButton=document.querySelector('#nav button[aria-controls="drawerNav"]');
+ if(menuButton)menuButton.setAttribute("aria-expanded",String(opening));
 }
 function closeAppDrawer(){
- $("appDrawerBackdrop")?.classList.add("hidden");
- const b=document.querySelector(".brand-menu");if(b)b.setAttribute("aria-expanded","false");
+ const back=$("appDrawerBackdrop");
+ if(back){back.classList.add("hidden");back.setAttribute("aria-hidden","true");}
+ const menuButton=document.querySelector('#nav button[aria-controls="drawerNav"]');
+ if(menuButton)menuButton.setAttribute("aria-expanded","false");
 }
 function goFromDrawer(id){closeAppDrawer();go(id);}
 function toggleAccountMenu(){
