@@ -1271,11 +1271,44 @@ async function savePayroll(){
  const netPay=basicSalary+allowances-deductions;
  try{await savePrivateRecord("payroll",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",payPeriod:val("payPeriod"),basicSalary,allowances,deductions,netPay,paymentDate:val("salaryDate"),status:val("salaryStatus")},"Saved staff payroll");say("Payroll record saved.");renderScreen();}catch(e){alert(e.message);}
 }
+function isBusinessOwner(){
+ return !!user && user.uid===BUSINESS_ID && isAdmin();
+}
+async function deleteAuditActivity(id){
+ if(!isBusinessOwner())return alert("Only the Business Owner can delete Audit Trail activities.");
+ if(!id)return alert("Audit activity ID is missing.");
+ if(!confirm("Permanently delete this individual Audit Trail activity? This cannot be undone."))return;
+ const activity=privateRecords("audit").find(x=>x.id===id);
+ if(!activity)return alert("This Audit Trail activity could not be found. Refresh and try again.");
+ try{
+  await db.doc(`${path("private")}/${id}`).delete();
+  try{
+   await db.collection(path("private")).add({
+    recordType:"audit",
+    action:"Deleted an Audit Trail activity",
+    recordTypeLabel:"audit",
+    recordId:id,
+    details:"Deleted activity: "+String(activity.action||"Activity")+" — "+String(activity.details||activity.recordTypeLabel||""),
+    deletedActivityId:id,
+    createdAt:stamp(),
+    createdBy:user.uid,
+    createdByEmail:user.email||""
+   });
+  }catch(logError){
+   console.error("The activity was deleted, but the deletion could not be recorded in the Audit Trail:",logError);
+   alert("The activity was deleted, but its deletion event could not be recorded. Check Firestore permissions.");
+  }
+  say("Audit activity deleted.");
+  renderScreen();
+ }catch(e){
+  alert("Could not delete Audit Trail activity: "+e.message);
+ }
+}
 function auditTrailScreen(s){
- if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ if(!isBusinessOwner())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
  const rows=privateRecords("audit").sort((a,b)=>{const da=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);const db=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);return db-da;});
- s.innerHTML=`<div class="card"><h3>Audit Trail</h3><p class="muted">This log records activity performed through the new asset, attendance and payroll sections. It will expand as additional app actions are connected.</p>
- ${rows.map(x=>`<div class="item"><b>${esc(x.action||"Activity")}</b><br>${esc(x.details||x.recordTypeLabel||"")}<br>By: ${esc(x.createdByEmail||x.createdBy||"")}<br><span class="muted">${dateText(x.createdAt)}</span></div>`).join("")||"<p class='muted'>No audit events recorded yet.</p>"}</div>`;
+ s.innerHTML=`<div class="card"><h3>Audit Trail</h3><p class="muted">This log records activity performed through the application. Only the Business Owner can delete individual activities.</p>
+ ${rows.map(x=>`<div class="item"><b>${esc(x.action||"Activity")}</b><br>${esc(x.details||x.recordTypeLabel||"")}<br>By: ${esc(x.createdByEmail||x.createdBy||"")}<br><span class="muted">${dateText(x.createdAt)}</span><div class="actions"><button class="danger" type="button" onclick="deleteAuditActivity('${esc(x.id)}')">Delete Activity</button></div></div>`).join("")||"<p class='muted'>No audit events recorded yet.</p>"}</div>`;
 }
 
 function workersScreen(s){
