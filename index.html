@@ -499,6 +499,84 @@ body{
 @media(max-width:520px){#nav button{min-height:58px;font-size:12px}.app-drawer{width:min(88vw,340px)!important}}
 @media print{#nav,#appDrawerBackdrop{display:none!important}}
 
+
+/* Premium black-and-gold header based on the approved handshake concept */
+#appHeader.premium-header{
+  position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+  width:calc(100% + 24px)!important;margin:-18px -12px 22px!important;
+  padding:18px 20px 17px!important;display:flex!important;flex-direction:column!important;
+  gap:15px!important;background:
+    radial-gradient(ellipse at 2% 0%,rgba(225,169,32,.17),transparent 28%),
+    linear-gradient(125deg,#080808 0%,#111 55%,#050505 100%)!important;
+  border:0!important;border-bottom:1px solid #6c4b12!important;
+  box-shadow:0 8px 25px rgba(0,0,0,.38)!important;z-index:100!important;
+  overflow:hidden!important;
+}
+#appHeader.premium-header:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.8;
+  background:linear-gradient(132deg,transparent 0 79%,rgba(225,170,35,.16) 79.2%,transparent 80.2%),
+             radial-gradient(circle at 96% 16%,rgba(244,184,43,.18) 1px,transparent 2px);
+  background-size:auto,13px 13px;
+}
+#appHeader .premium-brand{position:relative;display:flex;align-items:center;gap:15px;min-width:0}
+#appHeader .brand-mark{width:88px;height:88px;flex:0 0 88px;border:4px solid #dca92d;border-radius:50%;padding:5px;box-shadow:0 0 0 5px rgba(225,173,43,.12),0 0 20px rgba(224,167,37,.2)}
+#appHeader .brand-mark svg{width:100%;height:100%;display:block}
+#appHeader .brand-divider{height:70px;width:4px;flex:0 0 4px;background:#eab52e;border-radius:4px}
+#appHeader .brand-copy{min-width:0}
+#appHeader .brand-copy h1{margin:0!important;font-size:clamp(23px,4.8vw,38px)!important;line-height:1.12!important;letter-spacing:-.7px!important;font-weight:800!important;color:#f8f8f8!important}
+#appHeader .brand-copy h1 span{color:#efb923}
+#appHeader .brand-subtitle{font-size:clamp(13px,2.5vw,20px)!important;font-style:italic;color:#e1e1e1!important;letter-spacing:.1px;margin-top:7px!important}
+#appHeader .welcome-panel{
+  position:relative;display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  flex-wrap:nowrap!important;gap:16px!important;width:100%;min-width:0;
+  margin:0!important;padding:13px 17px!important;border:2px solid #dba728!important;
+  border-radius:34px!important;background:linear-gradient(110deg,#090909 0%,#17130b 52%,#090909 100%)!important;
+  box-shadow:inset 0 0 18px rgba(218,166,35,.12),0 4px 16px rgba(0,0,0,.35)!important;
+}
+#appHeader .welcome-panel:after{
+  content:"";position:absolute;right:0;bottom:0;width:36%;height:7px;
+  background:linear-gradient(90deg,transparent,#e7ae28);border-radius:100% 0 30px 0;opacity:.9;pointer-events:none
+}
+#appHeader .handshake-emblem{
+  width:82px;height:82px;flex:0 0 82px;border:3px solid #e2ae2e;border-radius:50%;
+  display:grid;place-items:center;background:radial-gradient(circle,#2a2110,#080808 72%);
+  box-shadow:0 0 14px rgba(227,174,43,.18);overflow:hidden
+}
+#appHeader .handshake-emblem span{
+  display:block;font-size:48px;line-height:1;filter:grayscale(1) sepia(1) saturate(5) hue-rotate(3deg) brightness(1.15);
+  transform-origin:50% 65%;animation:handshakeMotion 1.15s ease-in-out infinite
+}
+@keyframes handshakeMotion{
+  0%,100%{transform:rotate(-5deg) translateY(0) scale(1)}
+  25%{transform:rotate(5deg) translateY(-2px) scale(1.03)}
+  50%{transform:rotate(-4deg) translateY(1px) scale(1)}
+  75%{transform:rotate(4deg) translateY(-1px) scale(1.02)}
+}
+#appHeader .welcome-divider{width:4px;height:68px;flex:0 0 4px;background:#eab52e;border-radius:4px}
+#appHeader .welcome-copy{min-width:0}
+#appHeader #welcome{margin:0!important;font-size:clamp(21px,4.5vw,38px)!important;line-height:1.12!important;font-weight:750!important;color:#f7f7f7!important}
+#appHeader #welcomeName{color:#efb923}
+#appHeader .welcome-subtitle{margin-top:6px;font-size:clamp(14px,2.8vw,24px);font-style:italic;color:#e2e2e2;line-height:1.2}
+.wrap{padding-top:0!important}
+@media(max-width:520px){
+  #appHeader.premium-header{width:calc(100% + 18px)!important;margin:-15px -9px 18px!important;padding:14px 12px 14px!important;gap:12px!important}
+  #appHeader .premium-brand{gap:10px}
+  #appHeader .brand-mark{width:61px;height:61px;flex-basis:61px;border-width:3px;padding:4px}
+  #appHeader .brand-divider{height:53px;width:3px;flex-basis:3px}
+  #appHeader .brand-copy h1{font-size:clamp(19px,5.4vw,27px)!important;letter-spacing:-.5px!important}
+  #appHeader .brand-subtitle{font-size:clamp(11px,3vw,15px)!important;margin-top:5px!important}
+  #appHeader .welcome-panel{gap:10px!important;padding:10px 11px!important;border-radius:25px!important}
+  #appHeader .handshake-emblem{width:54px;height:54px;flex-basis:54px;border-width:2px}
+  #appHeader .handshake-emblem span{font-size:32px}
+  #appHeader .welcome-divider{height:48px;width:3px;flex-basis:3px}
+  #appHeader #welcome{font-size:clamp(18px,5vw,25px)!important}
+  #appHeader .welcome-subtitle{font-size:clamp(12px,3.4vw,16px);margin-top:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  #appHeader .handshake-emblem span{animation:none!important}
+}
+@media print{#appHeader.premium-header{display:none!important}}
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -507,7 +585,31 @@ body{
 <script src="social-login.js"></script>
 </head>
 <body><div class="wrap">
-<header id="appHeader"><div class="app-brand"><div><h1>Smart Business Manager</h1><div class="brand-subtitle">Manage. Record. Calculate. Grow.</div></div></div><div id="welcomePanel" class="welcome-panel hidden"><h2 id="welcome">Welcome</h2></div></header>
+<header id="appHeader" class="premium-header">
+  <div class="premium-brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 100 100" role="img">
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#eab52e" stroke-width="4"/>
+        <path d="M22 69 L22 55 L34 55 L34 69 M40 69 L40 43 L52 43 L52 69 M58 69 L58 30 L70 30 L70 69" fill="#f4f5f7"/>
+        <path d="M20 49 C37 45 53 35 72 17 M58 18 L73 16 L70 31" fill="none" stroke="#f0b92d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M19 75 Q50 88 80 72" fill="none" stroke="#eab52e" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="brand-divider"></div>
+    <div class="brand-copy">
+      <h1>Smart Business <span>Manager</span></h1>
+      <div class="brand-subtitle">Manage. Record. Calculate. Grow.</div>
+    </div>
+  </div>
+  <div id="welcomePanel" class="welcome-panel hidden">
+    <div class="handshake-emblem" aria-hidden="true"><span>🤝</span></div>
+    <div class="welcome-divider"></div>
+    <div class="welcome-copy">
+      <h2 id="welcome">Welcome <span id="welcomeName">there</span></h2>
+      <div class="welcome-subtitle">Great to see you again!</div>
+    </div>
+  </div>
+</header>
 <section id="login" class="card"><h2>Sign in</h2><label>Email</label><input id="email" type="email" autocomplete="username"><label>Password</label><input id="password" type="password" autocomplete="current-password"><button id="signInButton" type="button" onclick="window.handleSignIn()">Sign in</button><button class="secondary" onclick="register()">Create member account</button><div id="msg"></div><p class="muted">New accounts must be activated by the Admin in Firestore before they can use the app.</p></section>
 <section id="app" class="hidden"><nav id="nav" class="tabs no-print" aria-label="Main navigation"></nav><div id="appDrawerBackdrop" class="drawer-backdrop hidden" onclick="closeAppDrawer()" aria-hidden="true"><aside class="app-drawer" role="dialog" aria-modal="true" aria-label="Business navigation" onclick="event.stopPropagation()"><div class="drawer-heading">Business Menu</div><div class="drawer-caption">All Business Records & Tools</div><div id="drawerNav" class="drawer-nav"></div></aside></div><main id="screen"></main><div id="status" class="muted"></div></section>
 </div>
@@ -1950,7 +2052,7 @@ role=member.role||"worker";
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 if($("welcomePanel"))$("welcomePanel").classList.remove("hidden");
-$("welcome").textContent="Welcome "+(role==="admin"?"Shuaibu Idi":(member.name||user.email));
+$("welcomeName").textContent=(role==="admin"?"Shuaibu Idi":(member.name||user.email));
 
 renderNav();
 go("dashboard");
