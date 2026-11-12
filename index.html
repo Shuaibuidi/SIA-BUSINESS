@@ -503,8 +503,8 @@ body{
 /* Premium black-and-gold header based on the approved handshake concept */
 #appHeader.premium-header{
   position:relative!important;top:auto!important;left:auto!important;right:auto!important;
-  width:calc(100% + 24px)!important;margin:-18px -12px 22px!important;
-  padding:18px 20px 17px!important;display:flex!important;flex-direction:column!important;
+  width:calc(100% + 24px)!important;margin:8px -12px 22px!important;
+  padding:calc(22px + env(safe-area-inset-top, 0px)) 20px 17px!important;display:flex!important;flex-direction:column!important;
   gap:15px!important;background:
     radial-gradient(ellipse at 2% 0%,rgba(225,169,32,.17),transparent 28%),
     linear-gradient(125deg,#080808 0%,#111 55%,#050505 100%)!important;
@@ -559,7 +559,7 @@ body{
 #appHeader .welcome-subtitle{margin-top:6px;font-size:clamp(14px,2.8vw,24px);font-style:italic;color:#e2e2e2;line-height:1.2}
 .wrap{padding-top:0!important}
 @media(max-width:520px){
-  #appHeader.premium-header{width:calc(100% + 18px)!important;margin:-15px -9px 18px!important;padding:14px 12px 14px!important;gap:12px!important}
+  #appHeader.premium-header{width:calc(100% + 18px)!important;margin:8px -9px 18px!important;padding:calc(18px + env(safe-area-inset-top, 0px)) 12px 14px!important;gap:12px!important}
   #appHeader .premium-brand{gap:10px}
   #appHeader .brand-mark{width:61px;height:61px;flex-basis:61px;border-width:3px;padding:4px}
   #appHeader .brand-divider{height:53px;width:3px;flex-basis:3px}
