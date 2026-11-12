@@ -1245,7 +1245,7 @@ function workersScreen(s){
  <div class="grid">${formField("newStaffName","Full Name")}${formField("newStaffPhone","Phone Number","tel")}${formField("newStaffPosition","Job Title / Position")}${formField("newStaffAddress","Address")}${formField("newStaffStart","Employment Start Date","date")}${formField("newStaffSalary","Agreed Basic Salary (MK)","number","","0.01")}</div>
  <button onclick="addShopStaff()">Add Employee</button></div>
  <div class="card"><h3>Shop Employees</h3>${rows.map(w=>`<div class="item"><b>👤 ${esc(staffName(w))}</b><br>Position: ${esc(w.position||"Not set")}<br>Phone: ${esc(w.phone||"Not set")}<br>Address: ${esc(w.address||"Not set")}<br>Started: ${esc(w.startDate||"Not set")}<br>Basic Salary: ${money(w.basicSalary||0)}<br>Status: <b>${w.active===false?"Terminated / Inactive":"Active"}</b><div class="actions"><button onclick="editShopStaff('${w.id}')">Edit Details</button><button onclick="toggleShopStaff('${w.id}')">${w.active===false?"Reactivate":"Terminate Employment"}</button>${w.active===false?`<button class="danger" onclick="permanentlyDeleteShopStaff('${w.id}')">Permanently Delete Employee & Payroll</button>`:""}</div></div>`).join("")||"<p class='muted'>No manually registered employees yet.</p>"}</div>
- <div class="card"><h3>App Login Members</h3><p class="muted">These are existing accounts that can sign in. A manually registered employee above does not receive app access.</p>${appMembers.map(w=>`<div class="item"><b>${esc(staffName(w))}</b><br>${esc(w.email||"")} · ${w.active===false?"Inactive":"Active"}</div>`).join("")||"<p class='muted'>No worker app accounts.</p>"}</div>`;
+ <div class="card"><h3>App Login Members</h3><p class="muted">These are existing accounts that can sign in. A manually registered employee above does not receive app access.</p>${appMembers.map(w=>`<div class="item"><b>${esc(staffName(w))}</b><br>${esc(w.email||"")} · ${w.active===false?"Inactive":"Active"}<br>Role: ${esc(w.role||"worker")}<div class="actions"><button onclick="editAppMember('${w.id}')">Edit Member</button><button class="danger" onclick="deleteAppMember('${w.id}')">Delete Member</button></div></div>`).join("")||"<p class='muted'>No worker app accounts.</p>"}</div>`;
 }
 async function addShopStaff(){
  if(!isAdmin())return alert("Business Owner permission required.");
@@ -1354,6 +1354,46 @@ updatedAt:stamp()
 say("Member name updated successfully.");
 renderScreen();
 }catch(e){alert("Could not update worker name: "+e.message)}
+}
+
+async function editAppMember(id){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ const w=records("members").find(x=>x.id===id);
+ if(!w)return alert("Member record not found.");
+ if(w.role!=="worker")return alert("The Business Owner account cannot be edited here.");
+ const name=prompt("Member full name:",w.name||"");
+ if(name===null)return;
+ if(!name.trim())return alert("Member name cannot be empty.");
+ const roleChoice=prompt("Member role (worker or admin):",w.role||"worker");
+ if(roleChoice===null)return;
+ const newRole=roleChoice.trim().toLowerCase();
+ if(!["worker","admin"].includes(newRole))return alert("Enter worker or admin.");
+ const activeChoice=confirm("Should this member account be active?\n\nOK = Active\nCancel = Inactive");
+ try{
+  await db.doc(`${path("members")}/${id}`).update({
+   name:name.trim(),
+   role:newRole,
+   active:activeChoice,
+   updatedAt:stamp(),
+   updatedBy:user.uid
+  });
+  say("App login member updated successfully.");
+  renderScreen();
+ }catch(e){alert("Could not update member: "+e.message);}
+}
+
+async function deleteAppMember(id){
+ if(!isAdmin())return alert("Business Owner permission required.");
+ const w=records("members").find(x=>x.id===id);
+ if(!w)return alert("Member record not found.");
+ if(w.role!=="worker")return alert("The Business Owner account cannot be deleted here.");
+ const label=staffName(w);
+ if(!confirm("Remove app access for "+label+"?\n\nThis deletes the member's business access record. Their Firebase sign-in account itself cannot be deleted from this app."))return;
+ try{
+  await db.doc(`${path("members")}/${id}`).delete();
+  say("Member access record deleted. Their app access has been removed.");
+  renderScreen();
+ }catch(e){alert("Could not delete member access: "+e.message);}
 }
 
 async function changeWorker(id){
