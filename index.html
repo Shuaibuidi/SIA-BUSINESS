@@ -581,7 +581,20 @@ function formField(id,label,type="text",placeholder="",step=""){return `<div><la
 function selectField(id,label,opts){return `<div><label>${label}</label><select id="${id}">${opts}</select></div>`}
 async function addDoc(c,data){return db.collection(path(c)).add({...data,createdAt:stamp(),createdBy:user.uid})}
 async function updateDoc(c,id,data){return db.doc(`${path(c)}/${id}`).update({...data,updatedAt:stamp(),updatedBy:user.uid})}
-async function removeDoc(c,id){if(!isAdmin())return alert("Admin permission required.");if(!confirm("Delete this record permanently?"))return;try{await db.doc(`${path(c)}/${id}`).delete();say("Record deleted.")}catch(e){alert("Delete failed: "+e.message)}}
+async function removeDoc(c,id){
+ if(!isAdmin())return alert("Admin permission required.");
+ const labels={stock:"stock item",spareParts:"spare part",transactions:"sales transaction",spareSales:"spare-part sale",jobs:"repair job",services:"printing/service record",customers:"customer",suppliers:"supplier",purchases:"purchase record",expenses:"expense",cashbook:"cashbook entry",invoices:"invoice"};
+ const label=labels[c]||"record";
+ if(!confirm("Permanently delete this "+label+"? This cannot be undone."))return;
+ try{
+  await db.doc(`${path(c)}/${id}`).delete();
+  try{
+   await db.collection(path("private")).add({recordType:"audit",action:"Deleted "+label,recordTypeLabel:label,recordId:id,details:"Deleted from "+c,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
+  }catch(auditError){console.warn("Delete audit entry could not be saved:",auditError);}
+  say("Record deleted.");
+  if(typeof renderScreen==="function")renderScreen();
+ }catch(e){alert("Delete failed: "+e.message)}
+}
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
 function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,profitloss:profitLossScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,audit:auditTrailScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
