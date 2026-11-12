@@ -538,51 +538,26 @@ function navItems(){
  a.push(["settings","Account Information"]);
  return a;
 }
-function navGroups(){
- const available=new Map(navItems().map(item=>[item[0],item]));
- const groups=[
-  {title:"Business Operations",icon:"🧾",items:["sales","jobs","services","invoices"]},
-  {title:"Stock & Purchases",icon:"📦",items:["stock","spares","purchases","suppliers"]},
-  {title:"Customers & Payments",icon:"👥",items:["customers"]},
-  {title:"Finance & Accounts",icon:"💳",items:["expenses","cashbook"]},
-  {title:"Staff & Management",icon:"🧑‍💼",items:["workers"]},
-  {title:"Reports & Security",icon:"📊",items:["reports","performance","settings"]}
- ];
- return groups.map(group=>({...group,items:group.items.map(id=>available.get(id)).filter(Boolean)})).filter(group=>group.items.length);
-}
+function navItems(){let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];if(isAdmin())a.push(["workers","Members"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["reports","Reports"]);if(isAdmin())a.push(["performance","Performance"]);a.push(["settings","Account Information"]);return a}
 function renderNav(){
- const dashboardActive=current==="dashboard"?"active":"";
- const menuActive=current!=="dashboard"?"active":"";
- $('nav').innerHTML=
-  '<button type="button" class="'+dashboardActive+'" onclick="go(\'dashboard\')"><span class="nav-icon">⌂</span><span>Dashboard</span></button>'+
-  '<button type="button" class="'+menuActive+'" onclick="toggleAppDrawer()" aria-controls="drawerNav" aria-expanded="false"><span class="nav-icon">☰</span><span>Menu</span></button>';
+ const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',reports:'📊',settings:'⚙️'};
+ const p=navItems();
+ $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
 function go(id){current=id;renderNav();renderDrawerNav();renderScreen();say("")}
 
 function renderDrawerNav(){
  const el=$("drawerNav");if(!el)return;
- let html='<button type="button" class="drawer-dashboard '+(current==="dashboard"?"active":"")+'" onclick="goFromDrawer(\'dashboard\')"><span>⌂</span> Dashboard</button>';
- html+=navGroups().map(function(group){
-  const expanded=group.items.some(item=>item[0]===current);
-  return '<details class="drawer-group" '+(expanded?'open':'')+'><summary><span class="drawer-group-icon">'+group.icon+'</span><span>'+group.title+'</span><span class="drawer-chevron">›</span></summary><div class="drawer-group-items">'+group.items.map(function(item){
-   return '<button type="button" class="'+(current===item[0]?'active':'')+'" onclick="goFromDrawer(\''+item[0]+'\')">'+item[1]+'</button>';
-  }).join('')+'</div></details>';
- }).join('');
- el.innerHTML=html;
+ el.innerHTML=navItems().map(function(item){return '<button type="button" class="'+(current===item[0]?'active':'')+'" onclick="goFromDrawer(\''+item[0]+'\')">'+item[1]+'</button>';}).join("");
 }
 function toggleAppDrawer(){
  const back=$("appDrawerBackdrop");if(!back)return;
  $("accountMenu")?.classList.add("hidden");renderDrawerNav();back.classList.toggle("hidden");
- const opening=!back.classList.contains("hidden");
- back.setAttribute("aria-hidden",String(!opening));
- const menuButton=document.querySelector('#nav button[aria-controls="drawerNav"]');
- if(menuButton)menuButton.setAttribute("aria-expanded",String(opening));
+ const b=document.querySelector(".brand-menu");if(b)b.setAttribute("aria-expanded",String(!back.classList.contains("hidden")));
 }
 function closeAppDrawer(){
- const back=$("appDrawerBackdrop");
- if(back){back.classList.add("hidden");back.setAttribute("aria-hidden","true");}
- const menuButton=document.querySelector('#nav button[aria-controls="drawerNav"]');
- if(menuButton)menuButton.setAttribute("aria-expanded","false");
+ $("appDrawerBackdrop")?.classList.add("hidden");
+ const b=document.querySelector(".brand-menu");if(b)b.setAttribute("aria-expanded","false");
 }
 function goFromDrawer(id){closeAppDrawer();go(id);}
 function toggleAccountMenu(){
@@ -924,13 +899,40 @@ renderScreen();
 }catch(e){alert(e.message)}
 }
 
-function printExpenseSlip(id){
-if(!isAdmin())return alert("Admin permission required.");
-const x=records("expenses").find(v=>v.id===id);
-if(!x)return alert("Expense record not found.");
-const screen=$("screen"), old=screen.innerHTML;
-screen.innerHTML="<div style='background:white;color:black;padding:24px;font-family:Arial'><h2 style='text-align:center'>S I A TECH PRINT MEDIA</h2><h3 style='text-align:center'>EXPENSE PAYMENT SLIP</h3><p>Date: "+esc(dateText(x.createdAt))+"</p><p>Category: "+esc(x.category||"")+"</p><p>Description: "+esc(x.description||"")+"</p><p>Reference: "+esc(x.reference||"—")+"</p><h2 style='text-align:center'>Amount Paid: "+money(x.amount)+"</h2><p>Recorded By: "+esc(member?.name||user?.email||"")+"</p></div>";
-window.print();screen.innerHTML=old;
+async function printHtmlDocument(html,title){
+ const documentHtml="<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>"+esc(title||"Print")+"</title><style>"+
+ "html,body{background:#fff!important;color:#111!important;font-family:Arial,sans-serif;font-size:12px;margin:0;padding:0}body{padding:12mm}h1,h2,h3,h4,p,div,span,td,th{color:#111!important}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border-bottom:1px solid #bbb;padding:8px;text-align:left;vertical-align:top}.card,.item,.dashboard-panel{background:#fff!important;color:#111!important;border:1px solid #ddd!important;box-shadow:none!important;break-inside:avoid}.stat{color:#111!important}.muted,.small{color:#444!important}button,.actions,.no-print{display:none!important}@page{size:auto;margin:10mm}"+
+ "</style></head><body>"+html+"</body></html>";
+ try{
+  if(window.SIAPrinter&&typeof window.SIAPrinter.printHtml==="function"){
+   await window.SIAPrinter.printHtml(documentHtml);
+   return;
+  }
+  const win=window.open("","_blank");
+  if(!win)throw new Error("The print window was blocked. Please allow pop-ups and try again.");
+  win.document.open();win.document.write(documentHtml);win.document.close();
+  win.onload=function(){win.focus();win.print();};
+ }catch(e){
+  alert("Could not open the phone's print service: "+(e?.message||e));
+ }
+}
+async function printExpenseSlip(id){
+ if(!isAdmin())return alert("Admin permission required.");
+ const x=records("expenses").find(v=>v.id===id);
+ if(!x)return alert("Expense record not found.");
+ const slip="<div style='max-width:700px;margin:0 auto;padding:12px;border:1px solid #ddd'>"+
+ "<h2 style='text-align:center;margin-bottom:4px'>S I A TECH PRINT MEDIA</h2>"+
+ "<p style='text-align:center;margin-top:0'>Lunzu Matindi (Blantyre)<br>0888 290 495 / 0999 290 495<br>siatechprintmedia.mw@gmail.com</p>"+
+ "<hr><h3 style='text-align:center'>EXPENSE PAYMENT SLIP</h3>"+
+ "<p><b>Date:</b> "+esc(dateText(x.createdAt))+"</p>"+
+ "<p><b>Category:</b> "+esc(x.category||"")+"</p>"+
+ "<p><b>Description:</b> "+esc(x.description||"")+"</p>"+
+ "<p><b>Receipt / Reference:</b> "+esc(x.reference||"—")+"</p>"+
+ "<h2 style='text-align:center;margin:26px 0'>Amount Paid: "+money(x.amount)+"</h2>"+
+ "<p><b>Recorded By:</b> "+esc(member?.name||user?.email||"")+"</p>"+
+ "<div style='display:flex;justify-content:space-between;margin-top:55px'><span>____________________<br>Prepared By</span><span>____________________<br>Approved By</span></div>"+
+ "<p style='text-align:center;margin-top:35px'>Thank You For Your Support</p></div>";
+ await printHtmlDocument(slip,"Expense Payment Slip");
 }
 function cashbookScreen(s){
 if(!isAdmin()){
@@ -1389,7 +1391,7 @@ ${records("expenses").filter(x=>!x.purchase).map(x=>`<tr><td>${dateText(x.create
 <div class="card">
 <h3>Export Reports</h3>
 <button onclick="exportReport()">Download CSV Report</button>
-<button onclick="window.print()">Print Full Report</button>
+<button onclick="printFullReport()">Print Full Report</button>
 </div>`;
 }
 
@@ -1411,6 +1413,15 @@ a.href=url;
 a.download="SIA-Business-Report.csv";
 a.click();
 URL.revokeObjectURL(url);
+}
+
+async function printFullReport(){
+ if(!isAdmin())return alert("Admin permission required.");
+ const screen=$("screen");
+ if(!screen)return alert("Report screen is not ready.");
+ const copy=screen.cloneNode(true);
+ copy.querySelectorAll("button,.actions,.no-print").forEach(el=>el.remove());
+ await printHtmlDocument(copy.innerHTML,"Full Business Report");
 }
 
 
