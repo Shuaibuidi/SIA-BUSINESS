@@ -554,6 +554,7 @@ function dashboard(s){
  const services=records("services");
  const salesTotal=tx.reduce((n,x)=>n+Number(x.total||0),0);
  const salesProfit=tx.reduce((n,x)=>n+Number(x.profit||0),0);
+ const totalExpenses=records("expenses").filter(x=>!x.purchase).reduce((n,x)=>n+Number(x.amount||0),0);
  const serviceTotal=jobs.reduce((n,x)=>n+Number(x.fee||0),0)+services.reduce((n,x)=>n+Number(x.amount||0),0);
  const serviceProfit=jobs.reduce((n,x)=>n+Number(x.fee||0)-Number(x.partsCost||0),0)+services.reduce((n,x)=>n+Number(x.amount||0)-Number(x.cost||0),0);
  const today=new Date().toDateString();
@@ -571,6 +572,7 @@ function dashboard(s){
  s.innerHTML='<section class="dashboard-panel"><div class="panel-heading"><h3>Full Records</h3></div><div class="dashboard-metrics">'+
  '<div class="metric-card"><span class="metric-icon metric-blue">▥</span><div><div class="metric-label">Total Sales</div><div class="metric-value">'+money(salesTotal)+'</div></div></div>'+
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-green">↗</span><div><div class="metric-label">Sales Profits</div><div class="metric-value">'+money(salesProfit)+'</div></div></div>':'')+
+ (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">−</span><div><div class="metric-label">Total Expenses</div><div class="metric-value">'+money(totalExpenses)+'</div></div></div>':'')+
  '<div class="metric-card"><span class="metric-icon metric-purple">▤</span><div><div class="metric-label">Total Services</div><div class="metric-value">'+money(serviceTotal)+'</div></div></div>'+
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">◆</span><div><div class="metric-label">Service Profits</div><div class="metric-value">'+money(serviceProfit)+'</div></div></div>':'')+'</div></section>'+
  '<section class="dashboard-panel"><div class="panel-heading"><h3>Today’s Overview</h3><button type="button" class="text-action" onclick="go(\\\'reports\\\')">View All →</button></div><div class="today-grid">'+
