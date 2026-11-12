@@ -599,8 +599,7 @@ function dashboard(s){
  const totalExpenses=records("expenses").filter(x=>!x.purchase).reduce((n,x)=>n+Number(x.amount||0),0);
  const serviceTotal=jobs.reduce((n,x)=>n+Number(x.fee||0),0)+services.reduce((n,x)=>n+Number(x.amount||0),0);
  const serviceProfit=jobs.reduce((n,x)=>n+Number(x.fee||0)-Number(x.partsCost||0),0)+services.reduce((n,x)=>n+Number(x.amount||0)-Number(x.cost||0),0);
- const payrollTotal=privateRecords("payroll").reduce((n,x)=>n+Number(x.netPay||0),0);
- const fullProfits=salesProfit+serviceProfit-totalExpenses-payrollTotal;
+ const bankRecordedTotal=privateRecords("banking").reduce((n,x)=>n+Number(x.amount||0),0);
  const today=new Date().toDateString();
  const todayRecord=x=>{const d=x?.createdAt?.toDate?x.createdAt.toDate():x?.createdAt?new Date(x.createdAt):null;return !!d&&!Number.isNaN(d.getTime())&&d.toDateString()===today};
  const todayTx=tx.filter(todayRecord),todayJobs=jobs.filter(todayRecord),todayServices=services.filter(todayRecord);
@@ -619,7 +618,7 @@ function dashboard(s){
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">−</span><div><div class="metric-label">Total Expenses</div><div class="metric-value">'+money(totalExpenses)+'</div></div></div>':'')+
  '<div class="metric-card"><span class="metric-icon metric-purple">▤</span><div><div class="metric-label">Total Services</div><div class="metric-value">'+money(serviceTotal)+'</div></div></div>'+
  (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-orange">◆</span><div><div class="metric-label">Service Profits</div><div class="metric-value">'+money(serviceProfit)+'</div></div></div>':'')+
- (isAdmin()?'<div class="metric-card"><span class="metric-icon metric-green">✓</span><div><div class="metric-label">Full Profits</div><div class="metric-value">'+money(fullProfits)+'</div></div></div>':'')+'</div></section>'+
+ (isAdmin()?'<div class="metric-card" role="button" tabindex="0" onclick="go(\'banking\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \')go(\'banking\')"><span class="metric-icon metric-green">🏦</span><div><div class="metric-label">Money in Bank (Recorded)</div><div class="metric-value">'+money(bankRecordedTotal)+'</div></div></div>':'')+'</div></section>'+
  '<section class="dashboard-panel"><div class="panel-heading"><h3>Today’s Overview</h3><button type="button" class="text-action" onclick="go(\\\'reports\\\')">View All →</button></div><div class="today-grid">'+
  '<div class="today-stat"><span class="today-icon blue">▦</span><div><div class="metric-label">Today’s Sales</div><div class="metric-value">'+money(todaySales)+'</div></div></div>'+
  (isAdmin()?'<div class="today-stat"><span class="today-icon green">↗</span><div><div class="metric-label">Today’s Sales Profits</div><div class="metric-value">'+money(todaySalesProfit)+'</div></div></div>':'')+
@@ -1201,7 +1200,7 @@ function bankRecordsScreen(s){
  ${formField("bankDate","Date of Banking","date")}${formField("bankTime","Time of Banking","time")}${formField("bankAmount","Banking Amount (MK)","number","","0.01")}
  ${formField("bankReference","Transaction / Deposit Reference")}${formField("bankNotes","Notes / Description")}
  </div><button onclick="saveBankRecord()">Save Banking Record</button></div>
- <div class="card"><h3>Banking Summary</h3><p><b>Total recorded deposits: ${money(total)}</b></p><p class="muted">Number of records: ${rows.length}</p></div>
+ <div class="card"><h3>Money in Bank (Recorded)</h3><p><b>${money(total)}</b></p><p class="muted">Total of deposits you have recorded in this app. This is not a live balance from your bank.</p></div>
  <div class="card"><h3>Banking History</h3>${rows.map(x=>`<div class="item"><b>${esc(x.bankName||"Bank")}</b> — ${esc(x.accountName)}<br>Account Number: ${esc(x.accountNumber)} · Type: ${esc(x.accountType)}<br>Date: ${esc(x.bankDate)} · Time: ${esc(x.bankTime)}<br><b>Amount: ${money(x.amount)}</b><br>Reference: ${esc(x.reference||"—")}<br>${esc(x.notes||"")}<div class="actions"><button class="danger" onclick="deletePrivateRecord('${x.id}','banking')">Delete</button></div></div>`).join("")||"<p class='muted'>No banking records yet.</p>"}</div>`;
 }
 async function saveBankRecord(){
@@ -1876,7 +1875,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="assets"||current==="attendance"||current==="payroll"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="assets"||current==="attendance"||current==="payroll"){
 renderScreen();
 }
 if($("salesTotal")){
