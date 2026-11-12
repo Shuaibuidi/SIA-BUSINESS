@@ -533,14 +533,8 @@ function invoiceRecordedLabel(x){if(x?.recordedByUid===BUSINESS_ID||x?.recordedB
 function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"")||("item-"+Date.now())}
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
 function navItems(){
- let a=[["dashboard","Dashboard"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["invoices","Invoices"],["stock","Stock"],["spares","Spare Parts"],["customers","Customers"]];
- if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["workers","Members"],["reports","Reports"],["performance","Performance"]);
- a.push(["settings","Account Information"]);
- return a;
-}
-function navItems(){
  let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare Parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];
- if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["profitloss","Profit & Loss"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"],["audit","Audit Trail"]);
+ if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
  a.push(["settings","Account Information"]);
  return a;
 }
@@ -588,16 +582,13 @@ async function removeDoc(c,id){
  if(!confirm("Permanently delete this "+label+"? This cannot be undone."))return;
  try{
   await db.doc(`${path(c)}/${id}`).delete();
-  try{
-   await db.collection(path("private")).add({recordType:"audit",action:"Deleted "+label,recordTypeLabel:label,recordId:id,details:"Deleted from "+c,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
-  }catch(auditError){console.warn("Delete audit entry could not be saved:",auditError);}
   say("Record deleted.");
   if(typeof renderScreen==="function")renderScreen();
  }catch(e){alert("Delete failed: "+e.message)}
 }
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,profitloss:profitLossScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,audit:auditTrailScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -1190,9 +1181,6 @@ function privateRecords(type){
 async function savePrivateRecord(type,data,actionLabel){
  if(!isAdmin())throw new Error("Business Owner permission required.");
  const ref=await db.collection(path("private")).add({...data,recordType:type,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
- try{
-  await db.collection(path("private")).add({recordType:"audit",action:actionLabel||"Created "+type,recordTypeLabel:type,recordId:ref.id,details:data.description||data.name||data.staffName||"",createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});
- }catch(e){console.warn("Audit entry could not be saved:",e);}
  return ref;
 }
 async function deletePrivateRecord(id,type){
@@ -1200,25 +1188,8 @@ async function deletePrivateRecord(id,type){
  if(!confirm("Delete this record?"))return;
  try{
   await db.doc(path("private")+"/"+id).delete();
-  try{await db.collection(path("private")).add({recordType:"audit",action:"Deleted "+type,recordTypeLabel:type,recordId:id,createdAt:stamp(),createdBy:user.uid,createdByEmail:user.email||""});}catch(e){}
   say("Record deleted.");renderScreen();
  }catch(e){alert("Could not delete record: "+e.message);}
-}
-function profitLossScreen(s){
- if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
- const stock=records("transactions").reduce((a,x)=>a+Number(x.profit||0),0);
- const spares=records("spareSales").reduce((a,x)=>a+Number(x.profit||0),0);
- const printing=records("services").reduce((a,x)=>a+Number(x.amount||0)-Number(x.cost||0),0);
- const repairs=records("jobs").reduce((a,x)=>a+Number(x.fee||0)-Number(x.partsCost||0),0);
- const gross=stock+spares+printing+repairs;
- const expenses=records("expenses").filter(x=>!x.purchase).reduce((a,x)=>a+Number(x.amount||0),0);
- const payroll=privateRecords("payroll").reduce((a,x)=>a+Number(x.netPay||0),0);
- const net=gross-expenses-payroll;
- s.innerHTML=`<div class="card"><h3>Profit & Loss Statement</h3><p class="muted">Calculated from saved sales, repair, printing, expense and payroll records.</p>
- <table><tr><th>Income / Profit</th><th>Amount</th></tr>
- <tr><td>Accessories Sales Profit</td><td>${money(stock)}</td></tr><tr><td>Spare Parts Sales Profit</td><td>${money(spares)}</td></tr><tr><td>Printing Services Profit</td><td>${money(printing)}</td></tr><tr><td>Repair Services Profit</td><td>${money(repairs)}</td></tr>
- <tr><th>Gross Profit</th><th>${money(gross)}</th></tr><tr><td>Operating Expenses</td><td>${money(expenses)}</td></tr><tr><td>Salaries & Payroll</td><td>${money(payroll)}</td></tr><tr><th>NET PROFIT</th><th>${money(net)}</th></tr></table>
- <button onclick="printFullReport()">Print Profit & Loss</button></div>`;
 }
 function businessAssetsScreen(s){
  if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
@@ -1271,46 +1242,6 @@ async function savePayroll(){
  const netPay=basicSalary+allowances-deductions;
  try{await savePrivateRecord("payroll",{staffUid:staff.id,staffName:staff.name||staff.email||"Staff",payPeriod:val("payPeriod"),basicSalary,allowances,deductions,netPay,paymentDate:val("salaryDate"),status:val("salaryStatus")},"Saved staff payroll");say("Payroll record saved.");renderScreen();}catch(e){alert(e.message);}
 }
-function isBusinessOwner(){
- return !!user && user.uid===BUSINESS_ID && isAdmin();
-}
-async function deleteAuditActivity(id){
- if(!isBusinessOwner())return alert("Only the Business Owner can delete Audit Trail activities.");
- if(!id)return alert("Audit activity ID is missing.");
- if(!confirm("Permanently delete this individual Audit Trail activity? This cannot be undone."))return;
- const activity=privateRecords("audit").find(x=>x.id===id);
- if(!activity)return alert("This Audit Trail activity could not be found. Refresh and try again.");
- try{
-  await db.doc(`${path("private")}/${id}`).delete();
-  try{
-   await db.collection(path("private")).add({
-    recordType:"audit",
-    action:"Deleted an Audit Trail activity",
-    recordTypeLabel:"audit",
-    recordId:id,
-    details:"Deleted activity: "+String(activity.action||"Activity")+" — "+String(activity.details||activity.recordTypeLabel||""),
-    deletedActivityId:id,
-    createdAt:stamp(),
-    createdBy:user.uid,
-    createdByEmail:user.email||""
-   });
-  }catch(logError){
-   console.error("The activity was deleted, but the deletion could not be recorded in the Audit Trail:",logError);
-   alert("The activity was deleted, but its deletion event could not be recorded. Check Firestore permissions.");
-  }
-  say("Audit activity deleted.");
-  renderScreen();
- }catch(e){
-  alert("Could not delete Audit Trail activity: "+e.message);
- }
-}
-function auditTrailScreen(s){
- if(!isBusinessOwner())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
- const rows=privateRecords("audit").sort((a,b)=>{const da=a.createdAt?.toDate?a.createdAt.toDate():new Date(a.createdAt||0);const db=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||0);return db-da;});
- s.innerHTML=`<div class="card"><h3>Audit Trail</h3><p class="muted">This log records activity performed through the application. Only the Business Owner can delete individual activities.</p>
- ${rows.map(x=>`<div class="item"><b>${esc(x.action||"Activity")}</b><br>${esc(x.details||x.recordTypeLabel||"")}<br>By: ${esc(x.createdByEmail||x.createdBy||"")}<br><span class="muted">${dateText(x.createdAt)}</span><div class="actions"><button class="danger" type="button" onclick="deleteAuditActivity('${esc(x.id)}')">Delete Activity</button></div></div>`).join("")||"<p class='muted'>No audit events recorded yet.</p>"}</div>`;
-}
-
 function workersScreen(s){
 if(!isAdmin()){
 s.innerHTML="<div class='card'>Admin permission required.</div>";
@@ -1873,7 +1804,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="profitloss"||current==="assets"||current==="attendance"||current==="payroll"||current==="audit"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="assets"||current==="attendance"||current==="payroll"){
 renderScreen();
 }
 if($("salesTotal")){
