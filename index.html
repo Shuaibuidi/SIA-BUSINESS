@@ -628,12 +628,12 @@ function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowe
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
 function navItems(){
  let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare Parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];
- if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["banking","Bank Records"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
+ if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["banking","Bank Records"],["credentials","Credentials"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
  a.push(["settings","Account Information"]);
  return a;
 }
 function renderNav(){
- const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',banking:'🏦',reports:'📊',settings:'⚙️'};
+ const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',banking:'🏦',credentials:'🔐',reports:'📊',settings:'⚙️'};
  const p=navItems();
  $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
@@ -682,7 +682,7 @@ async function removeDoc(c,id){
 }
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,banking:bankRecordsScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,banking:bankRecordsScreen,credentials:credentialsScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -1301,6 +1301,132 @@ async function saveBankRecord(){
  const amount=num("bankAmount");
  if(!val("bankAccountName")||!val("bankAccountNumber")||!val("bankDate")||!val("bankTime")||!(amount>0)||!Number.isFinite(amount))return alert("Enter the account name, account number, banking date, time and a valid amount.");
  try{await savePrivateRecord("banking",{bankName:val("bankName"),accountName:val("bankAccountName"),accountNumber:val("bankAccountNumber"),accountType:val("bankAccountType"),bankDate:val("bankDate"),bankTime:val("bankTime"),amount,reference:val("bankReference"),notes:val("bankNotes")} ,"Recorded bank deposit");say("Banking record saved successfully.");renderScreen();}catch(e){alert("Could not save banking record: "+e.message);}
+}
+
+
+// Credentials Vault: sensitive fields are encrypted in the browser before being
+// written to Firestore. The master password is kept only in memory for this session.
+let credentialsVaultPassword = "";
+const credentialEncoder = new TextEncoder();
+const credentialDecoder = new TextDecoder();
+
+async function credentialKey(password, salt){
+ const material = await crypto.subtle.importKey("raw",credentialEncoder.encode(password),"PBKDF2",false,["deriveKey"]);
+ return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:310000,hash:"SHA-256"},material,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+function bytesToB64(bytes){
+ let binary="";bytes.forEach(b=>binary+=String.fromCharCode(b));return btoa(binary);
+}
+function b64ToBytes(value){
+ const binary=atob(value);return Uint8Array.from(binary,c=>c.charCodeAt(0));
+}
+async function encryptCredential(data,password){
+ const salt=crypto.getRandomValues(new Uint8Array(16));
+ const iv=crypto.getRandomValues(new Uint8Array(12));
+ const key=await credentialKey(password,salt);
+ const cipher=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,credentialEncoder.encode(JSON.stringify(data)));
+ return {salt:bytesToB64(salt),iv:bytesToB64(iv),ciphertext:bytesToB64(new Uint8Array(cipher)),encryption:"AES-GCM/PBKDF2-SHA256"};
+}
+async function decryptCredential(record,password){
+ const key=await credentialKey(password,b64ToBytes(record.salt));
+ const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(record.iv)},key,b64ToBytes(record.ciphertext));
+ return JSON.parse(credentialDecoder.decode(plain));
+}
+function credentialsScreen(s){
+ if(!isAdmin())return s.innerHTML="<div class='card'>Business Owner permission required.</div>";
+ if(!window.crypto?.subtle)return s.innerHTML="<div class='card'><h3>Credentials Vault</h3><p class='muted'>This browser does not support the encryption required for the Credentials Vault. Open the app in a secure HTTPS browser.</p></div>";
+ if(!credentialsVaultPassword){
+  s.innerHTML=`<div class="card"><h3>🔐 Credentials Vault</h3>
+   <p class="muted">Your bank, mobile money, email and social-media details are encrypted before they are saved. Create a strong Vault Password and keep it safe. It cannot be recovered if you forget it.</p>
+   <label>Vault Password</label><input id="vaultPassword" type="password" autocomplete="new-password" placeholder="Create or enter your Vault Password">
+   <button onclick="unlockCredentialsVault()">Unlock Vault</button>
+   <p class="small">The Vault Password is not stored in this app or in Firestore. You will need it again after signing out or reopening the app.</p>
+  </div>`;
+  return;
+ }
+ const rows=privateRecords("credentials");
+ s.innerHTML=`<div class="card"><div class="row"><h3>🔐 Credentials Vault</h3><button class="secondary" onclick="lockCredentialsVault()">Lock Vault</button></div>
+ <p class="muted">Sensitive details are encrypted on this device before they are uploaded. Only the Business Owner can open this section.</p>
+ <div class="grid">
+ ${selectField("credentialCategory","Account Category",'<option>Bank Account</option><option>Mobile Money / Mobile Banking</option><option>Social Media</option><option>Email Account</option><option>Business Website</option><option>Other</option>')}
+ ${formField("credentialTitle","Bank / Service / Account Name")}
+ ${formField("credentialUsername","Username / Account Name / Phone")}
+ ${formField("credentialIdentifier","Account Number / Email / Profile Link")}
+ ${formField("credentialPassword","Password / PIN / Secret","password")}
+ ${formField("credentialRecovery","Recovery Email / Phone / Codes")}
+ </div>
+ <label>Additional Private Notes</label><textarea id="credentialNotes" placeholder="Other details you need to keep safely"></textarea>
+ <button onclick="saveCredential()">Encrypt & Save Credential</button>
+ </div>
+ <div class="card"><h3>Saved Credentials (${rows.length})</h3><div id="credentialList"><p class="muted">Loading encrypted records…</p></div></div>`;
+ renderCredentialList();
+}
+async function unlockCredentialsVault(){
+ const password=val("vaultPassword");
+ if(password.length<10)return alert("Use a Vault Password with at least 10 characters.");
+ credentialsVaultPassword=password;
+ renderScreen();
+}
+function lockCredentialsVault(){credentialsVaultPassword="";renderScreen();}
+async function renderCredentialList(){
+ const target=$("credentialList");if(!target)return;
+ const rows=privateRecords("credentials");
+ if(!rows.length){target.innerHTML="<p class='muted'>No credentials saved yet. Add your first account above.</p>";return;}
+ const output=[];
+ for(const row of rows){
+  try{
+   const data=await decryptCredential(row,credentialsVaultPassword);
+   output.push(`<div class="item"><b>${esc(data.title||"Account")}</b><br><span class="muted">${esc(data.category||"Other")}</span>
+    <div class="actions"><button class="secondary" onclick="viewCredential('${row.id}')">View Details</button><button class="secondary" onclick="editCredential('${row.id}')">Edit</button><button class="danger" onclick="deletePrivateRecord('${row.id}','credentials')">Delete</button></div></div>`);
+  }catch(e){
+   output.push(`<div class="item"><b>Encrypted Credential</b><p class="muted">This record could not be unlocked with the current Vault Password.</p></div>`);
+  }
+ }
+ if($("credentialList"))$("credentialList").innerHTML=output.join("");
+}
+async function getCredential(id){
+ const row=privateRecords("credentials").find(x=>x.id===id);
+ if(!row)throw new Error("Credential record not found.");
+ return {row,data:await decryptCredential(row,credentialsVaultPassword)};
+}
+async function viewCredential(id){
+ try{
+  const {data}=await getCredential(id);
+  alert("Category: "+(data.category||"")+
+   "\\nAccount: "+(data.title||"")+
+   "\\nUsername / Account: "+(data.username||"")+
+   "\\nAccount Number / Email / Link: "+(data.identifier||"")+
+   "\\nPassword / PIN: "+(data.password||"")+
+   "\\nRecovery Details: "+(data.recovery||"")+
+   "\\nNotes: "+(data.notes||""));
+ }catch(e){alert("Could not open credential. Check your Vault Password. "+e.message);}
+}
+async function saveCredential(){
+ if(!isAdmin()||!credentialsVaultPassword)return alert("Unlock the Credentials Vault first.");
+ const data={category:val("credentialCategory"),title:val("credentialTitle"),username:val("credentialUsername"),identifier:val("credentialIdentifier"),password:val("credentialPassword"),recovery:val("credentialRecovery"),notes:val("credentialNotes")};
+ if(!data.title)return alert("Enter the bank, service or account name.");
+ try{
+  const encrypted=await encryptCredential(data,credentialsVaultPassword);
+  await db.collection(path("private")).add({...encrypted,recordType:"credentials",createdAt:stamp(),createdBy:user.uid});
+  say("Credential encrypted and saved.");
+  renderScreen();
+ }catch(e){alert("Could not encrypt and save credential: "+e.message);}
+}
+async function editCredential(id){
+ try{
+  const {data}=await getCredential(id);
+  const title=prompt("Account / service name:",data.title||"");if(title===null)return;
+  const username=prompt("Username / account name / phone:",data.username||"");if(username===null)return;
+  const identifier=prompt("Account number / email / profile link:",data.identifier||"");if(identifier===null)return;
+  const secret=prompt("Password / PIN / secret:",data.password||"");if(secret===null)return;
+  const recovery=prompt("Recovery email / phone / codes:",data.recovery||"");if(recovery===null)return;
+  const notes=prompt("Additional private notes:",data.notes||"");if(notes===null)return;
+  const updated={...data,title,username,identifier,password:secret,recovery,notes};
+  const encrypted=await encryptCredential(updated,credentialsVaultPassword);
+  await db.doc(path("private")+"/"+id).update({...encrypted,updatedAt:stamp(),updatedBy:user.uid});
+  say("Credential updated and encrypted.");
+  renderScreen();
+ }catch(e){alert("Could not update credential. Check your Vault Password. "+e.message);}
 }
 
 function businessAssetsScreen(s){
@@ -2009,7 +2135,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="assets"||current==="attendance"||current==="payroll"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="credentials"||current==="assets"||current==="attendance"||current==="payroll"){
 renderScreen();
 }
 if($("salesTotal")){
