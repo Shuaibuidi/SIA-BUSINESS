@@ -1376,13 +1376,32 @@ async function renderCredentialList(){
  for(const row of rows){
   try{
    const data=await decryptCredential(row,credentialsVaultPassword);
-   output.push(`<div class="item"><b>${esc(data.title||"Account")}</b><br><span class="muted">${esc(data.category||"Other")}</span>
-    <div class="actions"><button class="secondary" onclick="viewCredential('${row.id}')">View Details</button><button class="secondary" onclick="editCredential('${row.id}')">Edit</button><button class="danger" onclick="deletePrivateRecord('${row.id}','credentials')">Delete</button></div></div>`);
+   const safeId=String(row.id).replace(/[^a-zA-Z0-9_-]/g,"");
+   output.push(`<div class="item credential-entry">
+    <h3>${esc(data.title||"Account")}</h3>
+    <p><b>Account Type:</b> ${esc(data.category||"Other")}</p>
+    ${data.username ? `<p><b>Username / Account Name / Phone:</b> ${esc(data.username)}</p>` : ""}
+    ${data.identifier ? `<p><b>Account Number / Email / Profile Link:</b> ${esc(data.identifier)}</p>` : ""}
+    ${data.password ? `<p><b>Password / PIN:</b> <span id="credential-secret-${safeId}">••••••••</span> <button class="secondary" type="button" onclick="toggleCredentialSecret('${safeId}')">Show</button><span id="credential-secret-value-${safeId}" hidden>${esc(data.password)}</span></p>` : ""}
+    ${data.recovery ? `<p><b>Recovery Details:</b> ${esc(data.recovery)}</p>` : ""}
+    ${data.notes ? `<p><b>Additional Notes:</b> ${esc(data.notes)}</p>` : ""}
+    <div class="actions"><button class="secondary" onclick="editCredential('${row.id}')">Edit Details</button><button class="danger" onclick="deletePrivateRecord('${row.id}','credentials')">Delete Account</button></div>
+   </div>`);
   }catch(e){
    output.push(`<div class="item"><b>Encrypted Credential</b><p class="muted">This record could not be unlocked with the current Vault Password.</p></div>`);
   }
  }
  if($("credentialList"))$("credentialList").innerHTML=output.join("");
+}
+function toggleCredentialSecret(id){
+ const masked=$("credential-secret-"+id);
+ const actual=$("credential-secret-value-"+id);
+ if(!masked||!actual)return;
+ const showing=!actual.hidden;
+ masked.textContent=showing?"••••••••":actual.textContent;
+ actual.hidden=!showing;
+ const button=masked.parentElement?.querySelector("button");
+ if(button)button.textContent=showing?"Show":"Hide";
 }
 async function getCredential(id){
  const row=privateRecords("credentials").find(x=>x.id===id);
