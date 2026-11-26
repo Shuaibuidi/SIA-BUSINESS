@@ -619,6 +619,23 @@ const auth=firebase.auth(),db=firebase.firestore(),BUSINESS_ID="7RqIYO3IDSVCYex1
 // Keep Firebase Authentication signed in across app closes and phone restarts.
 // The user is signed out only by the explicit Sign Out action or account security checks.
 const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+// Accept a short-lived Firebase custom token from the SIA Digital Vision SSO hand-off.
+// The token is removed from the address bar immediately and is never stored locally.
+(async()=>{
+ try{
+  const params=new URLSearchParams(location.hash.replace(/^#/,""));
+  const ssoToken=params.get("sso");
+  if(!ssoToken)return;
+  history.replaceState(null,"",location.pathname+location.search);
+  $("msg").textContent="Completing secure sign-in from SIA Digital Vision...";
+  await authPersistenceReady;
+  await auth.signInWithCustomToken(ssoToken);
+  $("msg").textContent="Secure sign-in successful. Opening your business...";
+ }catch(e){
+  $("msg").textContent="SSO sign-in could not be completed: "+(e.message||"Please use your normal sign-in.");
+ }
+})();
+
 const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices","private"];
 let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`,isAdmin=()=>role==="admin",money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2}),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),stamp=()=>firebase.firestore.FieldValue.serverTimestamp(),val=id=>$(id)?.value?.trim()||"",num=id=>Number($(id)?.value||0),records=c=>cache[c]||[];
