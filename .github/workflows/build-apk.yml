@@ -5,6 +5,10 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'worker.html'
+      - 'catalogue.html'
+      - 'portal-admin.html'
+      - 'firestore.rules'
       - 'logo.png'
       - 'icon.png'
       - '.github/workflows/build-apk.yml'
@@ -44,6 +48,9 @@ jobs:
 
           mkdir -p www resources
           cp ../index.html www/index.html
+          cp ../worker.html www/worker.html
+          cp ../catalogue.html www/catalogue.html
+          cp ../portal-admin.html www/portal-admin.html
           cp ../logo.png www/logo.png
           cp ../icon.png resources/icon.png
 
