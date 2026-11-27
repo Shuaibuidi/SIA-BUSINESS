@@ -51,29 +51,30 @@ service cloud.firestore {
       }
 
       // Worker operational inventory contains no purchase cost or profit.
-      match /workerStock/{itemId} {
-        allow read: if activeMember(businessId);
-        allow create, delete: if admin(businessId);
-        allow update: if admin(businessId) || (
-          worker(businessId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastMovementId','updatedAt'])
-          && request.resource.data.quantity is int
-          && request.resource.data.quantity >= 0
-          && request.resource.data.lastMovementId is string
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.itemId == itemId
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.workerUid == request.auth.uid
-          && !exists(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId))
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.itemId == itemId
-          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.quantity is int
-          && (
-            (getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.direction == 'in'
-              && request.resource.data.quantity == resource.data.quantity + getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.quantity)
-            ||
-            (getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.direction == 'out'
-              && request.resource.data.quantity == resource.data.quantity - getAfter(/databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId)).data.quantity)
-          )
+    function validWorkerStockChange(businessId, itemId) {
+      let movementPath = /databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId);
+      let movement = getAfter(movementPath).data;
+      return worker(businessId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastMovementId','updatedAt'])
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 0
+        && request.resource.data.lastMovementId is string
+        && !exists(movementPath)
+        && movement.itemId == itemId
+        && movement.workerUid == request.auth.uid
+        && movement.quantity is int
+        && (
+          (movement.direction == 'in' && request.resource.data.quantity == resource.data.quantity + movement.quantity)
+          ||
+          (movement.direction == 'out' && request.resource.data.quantity == resource.data.quantity - movement.quantity)
         );
-      }
+    }
+
+    match /businesses/{businessId}/workerStock/{itemId} {
+      allow read: if activeMember(businessId);
+      allow create, delete: if admin(businessId);
+      allow update: if admin(businessId) || validWorkerStockChange(businessId, itemId);
+    }
 
       // Append-only worker movement ledger. Each movement must be paired atomically
       // with the matching quantity update in workerStock.
