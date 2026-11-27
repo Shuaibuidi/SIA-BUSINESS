@@ -2064,6 +2064,8 @@ ${isAdmin()?`<div class="card">
 <p class="muted">Business records are stored in Firebase Firestore.</p>
 <p id="connectionStatus">Connected account: ${esc(user.email)}</p>
 <button onclick="refreshData()">Refresh Business Records</button>
+<p><a href="portal-admin.html" style="color:#ffd33d">Open Worker & Customer Portal Publishing</a></p>
+<p><a href="catalogue.html" target="_blank" style="color:#ffd33d">Preview Customer Catalogue</a></p>
 </div>
 <div class="card">
 <h3>Google Drive Backup & Restore</h3>
@@ -2203,6 +2205,7 @@ $("msg").textContent="Your account is inactive. Contact the Business Owner.";
 return;
 }
 role=member.role||"worker";
+if(role==="worker"){location.replace("worker.html");return;}
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 
