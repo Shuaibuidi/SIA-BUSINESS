@@ -54,6 +54,18 @@ jobs:
           cp ../logo.png www/logo.png
           cp ../icon.png resources/icon.png
 
+          # Fail the build if any portal page is missing from the APK web assets.
+          for page in index.html worker.html portal-admin.html catalogue.html; do
+            test -s "www/$page" || { echo "ERROR: $page was not packaged"; exit 1; }
+          done
+
+          # Confirm the Worker page has the Firebase project configuration.
+          grep -q 'smart-business-manager-f319f.firebaseapp.com' www/worker.html || {
+            echo "ERROR: Worker page Firebase configuration is missing"
+            exit 1
+          }
+          echo "Verified Admin, Worker, Admin publishing, and Customer catalogue pages are packaged."
+
           # Bundle the native biometric plugin for this app's plain HTML interface.
           cat > biometric-auth.js <<'EOF'
           import { BiometricAuth, AndroidBiometryStrength } from '@aparajita/capacitor-biometric-auth';
