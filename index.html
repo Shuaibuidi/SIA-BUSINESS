@@ -636,7 +636,7 @@ const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LO
  }
 })();
 
-const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices","private"];
+const COLLECTIONS=["stock","spareParts","transactions","spareSales","jobs","services","customers","suppliers","purchases","expenses","cashbook","invoices","private","workerStock","stockMovements","publicCatalog","publicServices"];
 let user=null,member=null,role=null,current="dashboard",cache={},unsubs=[];
 const $=id=>document.getElementById(id),path=c=>`businesses/${BUSINESS_ID}/${c}`,isAdmin=()=>role==="admin",money=n=>"MK "+Number(n||0).toLocaleString("en-MW",{maximumFractionDigits:2}),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])),stamp=()=>firebase.firestore.FieldValue.serverTimestamp(),val=id=>$(id)?.value?.trim()||"",num=id=>Number($(id)?.value||0),records=c=>cache[c]||[];
 function invoiceRecorder(){return isAdmin()?"Business Owner":"Shop Manager"}
@@ -645,12 +645,12 @@ function say(t){$("status").textContent=t||""}function safeId(s){return s.toLowe
 function dateText(v){try{return v?.toDate?v.toDate().toLocaleString():v?new Date(v).toLocaleString():""}catch(e){return ""}}
 function navItems(){
  let a=[["dashboard","Dashboard"],["stock","Stock"],["spares","Spare Parts"],["sales","Sales"],["jobs","Repairs"],["services","Printing Services"],["customers","Customers"],["invoices","Invoices"]];
- if(isAdmin())a.push(["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["banking","Bank Records"],["credentials","Credentials"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
+ if(isAdmin())a.push(["movements","Stock Movements"],["purchases","Purchases"],["suppliers","Suppliers"],["expenses","Expenses"],["cashbook","Cashbook"],["banking","Bank Records"],["credentials","Credentials"],["assets","Business Assets"],["workers","Members / Staff"],["attendance","Staff Attendance"],["payroll","Salaries & Payroll"],["reports","Reports"]);
  a.push(["settings","Account Information"]);
  return a;
 }
 function renderNav(){
- const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',banking:'🏦',credentials:'🔐',reports:'📊',settings:'⚙️'};
+ const icons={dashboard:'⌂',performance:'📈',stock:'⬡',spares:'🔩',sales:'🛒',jobs:'🔧',services:'🖨️',customers:'👥',invoices:'🧾',workers:'👤',purchases:'📦',suppliers:'🏭',expenses:'💸',cashbook:'📒',banking:'🏦',credentials:'🔐',reports:'📊',settings:'⚙️',movements:'↕️'};
  const p=navItems();
  $('nav').innerHTML=p.map(function(x){return '<button type="button" class="'+(current===x[0]?'active':'')+'" onclick="go(\''+x[0]+'\')"><span class="nav-icon">'+(icons[x[0]]||'•')+'</span><span>'+x[1]+'</span></button>';}).join('');
 }
@@ -699,7 +699,7 @@ async function removeDoc(c,id){
 }
 function listHtml(c,render){return records(c).map(x=>`<div class="item">${render(x)}</div>`).join("")||`<p class="muted">No ${c} records yet.</p>`}
 function adminDelete(c,x){return isAdmin()?`<div class="actions"><button class="danger" onclick="removeDoc('${c}','${x.id}')">Delete</button></div>`:""}
-function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,banking:bankRecordsScreen,credentials:credentialsScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen};(f[current]||dashboard)(s)}
+function renderScreen(){let s=$("screen");if(!s)return;let f={dashboard,performance:performanceScreen,stock:stockScreen,spares:spareScreen,sales:salesScreen,jobs:jobsScreen,services:servicesScreen,customers:customersScreen,invoices:invoicesScreen,workers:workersScreen,purchases:purchasesScreen,suppliers:suppliersScreen,expenses:expensesScreen,cashbook:cashbookScreen,banking:bankRecordsScreen,credentials:credentialsScreen,assets:businessAssetsScreen,attendance:staffAttendanceScreen,payroll:payrollScreen,reports:reportsScreen,settings:settingsScreen,movements:movementsScreen};(f[current]||dashboard)(s)}
 
 function dashboard(s){
  const tx=[...records("transactions"),...records("spareSales")];
@@ -758,6 +758,11 @@ const sellingTable='<div class="card"><h3>'+title+' — Selling Price Calculatio
 return costTable+(collection==="stock"?"":sellingTable);
 }
 
+function movementsScreen(s){
+ if(!isAdmin()){s.innerHTML="<div class='card'>Admin permission required.</div>";return;}
+ const rows=records("stockMovements").slice().sort((a,b)=>{const da=a.createdAt?.toDate?a.createdAt.toDate().getTime():0,db=b.createdAt?.toDate?b.createdAt.toDate().getTime():0;return db-da;});
+ s.innerHTML='<div class="card"><h3>Worker Stock Movement Ledger</h3><p class="muted">Append-only record of stock received and stock issued by workers. Review this ledger before reconciling quantities in the Admin stock records.</p>'+ (rows.map(x=>'<div class="item"><b>'+esc(x.itemName)+'</b> · '+(x.direction==="in"?"<b>STOCK IN</b>":"<b>STOCK OUT</b>")+' · Qty '+Number(x.quantity||0)+'<br><span class="muted">'+esc(x.workerName||"Worker")+' · '+dateText(x.createdAt)+'</span><br>'+esc(x.reason||"No reference")+'</div>').join("")||'<p class="muted">No worker movements recorded yet.</p>')+'</div>';
+}
 function stockScreen(s){s.innerHTML=`${isAdmin()?'<div class="card"><h3>Stock management</h3><div class="grid">'+formField("stName","Product name")+formField("stQty","Quantity","number")+formField("stLow","Low-stock alert at","number")+formField("stBuy","Buying price (MK)","number","","0.01")+formField("stSell","Selling price (MK)","number","","0.01")+'</div><button onclick="saveStock()">Save stock item</button></div>':""}${inventoryValueTables("stock","Accessories Stock")}<div class="card"><h3>Stock list</h3>${listHtml("stock",p=>`<b>📦 ${esc(p.name)}</b><br><span class="muted">Available quantity: ${p.quantity} · Low-stock alert: ${Number(p.lowStockAt??5)}</span><br>${Number(p.quantity||0)<=Number(p.lowStockAt??5)?'<b style="color:#ffd18b">LOW STOCK</b><br>':""}<b>Selling price: ${money(p.sellingPrice)}</b>${isAdmin()?'<br>Buying: '+money(p.buyingPrice)+' · Profit/unit: '+money(Number(p.sellingPrice)-Number(p.buyingPrice))+'<div class="actions"><button onclick="editItem(\'stock\',\''+p.id+'\')">Edit</button><button class="danger" onclick="removeDoc(\'stock\',\''+p.id+'\')">Delete</button></div>':""}`)}</div>`}
 
 async function saveStock(){if(!isAdmin())return alert("Admin permission required.");let name=val("stName"),quantity=num("stQty"),lowStockAt=val("stLow")===""?5:num("stLow"),buyingPrice=num("stBuy"),sellingPrice=num("stSell");if(!name||!Number.isInteger(quantity)||quantity<0||!Number.isInteger(lowStockAt)||lowStockAt<0||buyingPrice<0||sellingPrice<0)return alert("Enter valid stock details.");try{await db.doc(`${path("stock")}/${safeId(name)}`).set({name,quantity,lowStockAt,buyingPrice,sellingPrice,createdAt:stamp(),createdBy:user.uid,updatedAt:stamp(),updatedBy:user.uid},{merge:true});say("Stock item saved.");renderScreen()}catch(e){alert("Could not save stock: "+e.message)}}
@@ -2064,6 +2069,8 @@ ${isAdmin()?`<div class="card">
 <p class="muted">Business records are stored in Firebase Firestore.</p>
 <p id="connectionStatus">Connected account: ${esc(user.email)}</p>
 <button onclick="refreshData()">Refresh Business Records</button>
+<p><a href="portal-admin.html" style="color:#ffd33d">Open Worker & Customer Portal Publishing</a></p>
+<p><a href="catalogue.html" target="_blank" style="color:#ffd33d">Preview Customer Catalogue</a></p>
 </div>
 <div class="card">
 <h3>Google Drive Backup & Restore</h3>
@@ -2171,7 +2178,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="credentials"||current==="assets"||current==="attendance"||current==="payroll"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="credentials"||current==="assets"||current==="attendance"||current==="payroll"||current==="movements"){
 renderScreen();
 }
 if($("salesTotal")){
@@ -2203,6 +2210,7 @@ $("msg").textContent="Your account is inactive. Contact the Business Owner.";
 return;
 }
 role=member.role||"worker";
+if(role==="worker"){location.replace("worker.html");return;}
 $("login").classList.add("hidden");
 $("app").classList.remove("hidden");
 
@@ -2225,6 +2233,10 @@ if(isAdmin()) collections.push("suppliers","purchases","expenses","cashbook","pr
 
     if(isAdmin()){
       listen("members");
+      listen("workerStock");
+      listen("stockMovements");
+      listen("publicCatalog");
+      listen("publicServices");
       // Run at most one successful automatic backup per local calendar day.
       // A failed or cancelled attempt remains eligible for retry next time the app opens.
       maybeRunDailyAutoBackup();

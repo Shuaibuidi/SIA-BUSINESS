@@ -14,29 +14,84 @@ service cloud.firestore {
     function admin(businessId) { return activeMember(businessId) && role(businessId) == 'admin'; }
     function worker(businessId) { return activeMember(businessId) && role(businessId) == 'worker'; }
 
-    // Existing legacy backup remains private to its signed-in account only.
     match /users/{uid}/appData/{docId} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
     match /businesses/{businessId} {
       allow read: if admin(businessId);
-      allow write: if false; // Admin SDK Cloud Functions only.
+      allow write: if false;
 
       match /members/{uid} {
         allow read: if admin(businessId) || (signedIn() && request.auth.uid == uid);
-        // Only an active admin may change a member's display name. Clients cannot
-        // create/delete members or change role, active status, email, or UID.
         allow update: if admin(businessId)
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt'])
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0;
         allow create, delete: if false;
       }
+
+      // Legacy inventory and transaction documents may contain private cost data.
+      // They are now Admin-only; workers use workerStock and stockMovements.
       match /stock/{itemId} {
-        allow read: if activeMember(businessId);
+        allow read, create, update, delete: if admin(businessId);
+      }
+      match /spareParts/{itemId} {
+        allow read, create, update, delete: if admin(businessId);
+      }
+
+      // Customer-facing catalogue contains only safe display fields.
+      match /publicCatalog/{itemId} {
+        allow read: if true;
         allow create, update, delete: if admin(businessId);
       }
+      match /publicServices/{serviceId} {
+        allow read: if true;
+        allow create, update, delete: if admin(businessId);
+      }
+
+      // Worker operational inventory contains no purchase cost or profit.
+    function validWorkerStockChange(businessId, itemId) {
+      let movementPath = /databases/$(database)/documents/businesses/$(businessId)/stockMovements/$(request.resource.data.lastMovementId);
+      let movement = getAfter(movementPath).data;
+      return worker(businessId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity','lastMovementId','updatedAt'])
+        && request.resource.data.quantity is int
+        && request.resource.data.quantity >= 0
+        && request.resource.data.lastMovementId is string
+        && !exists(movementPath)
+        && movement.itemId == itemId
+        && movement.workerUid == request.auth.uid
+        && movement.quantity is int
+        && (
+          (movement.direction == 'in' && request.resource.data.quantity == resource.data.quantity + movement.quantity)
+          ||
+          (movement.direction == 'out' && request.resource.data.quantity == resource.data.quantity - movement.quantity)
+        );
+    }
+
+    match /workerStock/{itemId} {
+      allow read: if activeMember(businessId);
+      allow create, delete: if admin(businessId);
+      allow update: if admin(businessId) || validWorkerStockChange(businessId, itemId);
+    }
+
+      // Append-only worker movement ledger. Each movement must be paired atomically
+      // with the matching quantity update in workerStock.
+      match /stockMovements/{movementId} {
+        allow read: if admin(businessId) || (worker(businessId) && resource.data.workerUid == request.auth.uid);
+        allow create: if worker(businessId)
+          && request.resource.data.keys().hasOnly(['itemId','itemName','direction','quantity','reason','workerUid','workerName','createdAt'])
+          && request.resource.data.itemId is string
+          && request.resource.data.itemName is string
+          && request.resource.data.direction in ['in','out']
+          && request.resource.data.quantity is int
+          && request.resource.data.quantity > 0
+          && request.resource.data.workerUid == request.auth.uid
+          && getAfter(/databases/$(database)/documents/businesses/$(businessId)/workerStock/$(request.resource.data.itemId)).data.lastMovementId == movementId;
+        allow update, delete: if false;
+      }
+
       match /customers/{customerId} {
         allow read: if activeMember(businessId);
         allow create: if activeMember(businessId)
@@ -45,8 +100,8 @@ service cloud.firestore {
         allow update, delete: if admin(businessId);
       }
       match /transactions/{transactionId} {
-        allow read: if admin(businessId) || (worker(businessId) && resource.data.workerUid == request.auth.uid);
-        allow create, update, delete: if false; // All transactions go through trusted callable functions.
+        allow read: if admin(businessId);
+        allow create, update, delete: if false;
       }
       match /private/{document=**} {
         allow read, write: if admin(businessId);
