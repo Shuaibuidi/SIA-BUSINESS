@@ -2178,7 +2178,7 @@ let ref=db.collection(path(collection));
 if(query)ref=query(ref);
 let unsub=ref.onSnapshot(snapshot=>{
 cache[collection]=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="credentials"||current==="assets"||current==="attendance"||current==="payroll"){
+if(current==="dashboard"||current==="performance"||current==="reports"||current==="invoices"||current==="workers"||current==="stock"||current==="spares"||current==="sales"||current==="jobs"||current==="services"||current==="customers"||current==="suppliers"||current==="purchases"||current==="expenses"||current==="cashbook"||current==="banking"||current==="credentials"||current==="assets"||current==="attendance"||current==="payroll"||current==="movements"){
 renderScreen();
 }
 if($("salesTotal")){
