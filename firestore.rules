@@ -70,7 +70,7 @@ service cloud.firestore {
         );
     }
 
-    match /businesses/{businessId}/workerStock/{itemId} {
+    match /workerStock/{itemId} {
       allow read: if activeMember(businessId);
       allow create, delete: if admin(businessId);
       allow update: if admin(businessId) || validWorkerStockChange(businessId, itemId);
